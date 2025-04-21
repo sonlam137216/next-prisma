@@ -2,18 +2,19 @@
 'use client';
 
 import BlogEditor from "@/components/BlogEditor";
-
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 export default function NewBlogPostPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create New Blog Post</h1>
-        <p className="text-muted-foreground">
-          Create and publish a new blog post
-        </p>
-      </div>
-
+    <div className="container mx-auto p-6">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Create New Blog Post</CardTitle>
+          <CardDescription>
+            Create and publish a new blog post
+          </CardDescription>
+        </CardHeader>
+      </Card>
       <BlogEditor />
     </div>
   );

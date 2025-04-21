@@ -1,177 +1,111 @@
-// app/components/ImageUploader.tsx
+// app/admin/blog/components/ImageUpload.tsx
 'use client';
 
-import { useState, useRef } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
+import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Upload, X, Check } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 
-interface ImageUploaderProps {
-  postSlug: string;
-  onImageUploaded: (imageUrl: string) => void;
+interface ImageUploadProps {
+  onFileChange: (file: File | null) => void;
+  previewUrl?: string;
+  className?: string;
 }
 
-export default function ImageUploader({ postSlug, onImageUploaded }: ImageUploaderProps) {
-  const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [altText, setAltText] = useState('');
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-    
-    setFile(selectedFile);
-    
-    // Generate preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(selectedFile);
+export function ImageUpload({ onFileChange, previewUrl, className = '' }: ImageUploadProps) {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
   };
-  
-  const resetForm = () => {
-    setFile(null);
-    setAltText('');
-    setPreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
   };
-  
-  const handleUpload = async () => {
-    if (!file || !postSlug) return;
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
     
-    setUploading(true);
-    
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('postSlug', postSlug);
-      
-      const response = await fetch('/api/admin/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to upload image');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        onFileChange(file);
       }
-      
-      // Generate markdown for the image with alt text
-      const imageMarkdown = `![${altText}](${data.url})`;
-      onImageUploaded(imageMarkdown);
-      
-      // Close dialog and reset form
-      setOpen(false);
-      resetForm();
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
-    } finally {
-      setUploading(false);
     }
   };
-  
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      onFileChange(e.target.files[0]);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    onFileChange(null);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setOpen(true)}
-          title="Upload Image"
-        >
-          <Upload className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Upload Image</DialogTitle>
-          <DialogDescription>
-            Upload an image to include in your blog post
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="image">Image File</Label>
-            <Input
-              id="image"
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
+    <div className={`relative ${className}`}>
+      {previewUrl ? (
+        <div className="relative w-full h-full rounded-md overflow-hidden group">
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="mr-2"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              <Upload className="h-4 w-4 mr-1" />
+              Change
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleRemoveImage}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Remove
+            </Button>
           </div>
-          
-          {preview && (
-            <div className="relative h-48 border rounded-md overflow-hidden">
-              <Image 
-                src={preview} 
-                alt="Preview" 
-                fill
-                className="object-contain"
-              />
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                onClick={resetForm}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="altText">Alt Text</Label>
-            <Input
-              id="altText"
-              value={altText}
-              onChange={(e) => setAltText(e.target.value)}
-              placeholder="Describe the image for accessibility"
-            />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src={previewUrl} 
+            alt="Featured image preview" 
+            className="object-cover w-full h-full"
+          />
         </div>
-        
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={uploading}
+      ) : (
+        <div
+          className={`border-2 border-dashed rounded-md flex flex-col items-center justify-center p-6 h-full ${
+            isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <Upload className="h-8 w-8 mb-2 text-gray-500" />
+          <p className="text-sm text-gray-500 mb-2">Drag and drop an image, or</p>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => document.getElementById('file-upload')?.click()}
           >
-            Cancel
+            Browse
           </Button>
-          <Button
-            onClick={handleUpload}
-            disabled={!file || uploading}
-          >
-            {uploading ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
-            ) : (
-              <Check className="mr-2 h-4 w-4" />
-            )}
-            Upload
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      )}
+      <input
+        id="file-upload"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+    </div>
   );
 }

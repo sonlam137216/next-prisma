@@ -20,7 +20,7 @@ export default function LayoutClient({
           </div>
         </div>
       )}
-      <main className={`flex-1 p-4 ${!isAdminRoute ? 'pt-20' : ''}`}>
+      <main className={`flex-1 ${!isAdminRoute ? 'pt-20' : ''}`}>
         <div className="mx-auto w-full">
           {children}
         </div>

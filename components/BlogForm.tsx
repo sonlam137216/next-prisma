@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Save, Undo2, CheckCircle } from 'lucide-react';
 import { BlogPost, useBlogStore } from '@/app/store/blogStore';
-import { MarkdownEditor } from './MarkdownEditor';
+import RichTextEditor from './rich-text-editor';
 import { ImageUpload } from './ImageUpload';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 
-
 const blogFormSchema = z.object({
   title: z.string().min(1, {
     message: "Title is required.",
@@ -45,11 +44,8 @@ const blogFormSchema = z.object({
   }).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
     message: "Slug must contain only lowercase letters, numbers, and hyphens.",
   }),
-  content: z.string().min(1, {
-    message: "Content is required.",
-  }),
   published: z.boolean().default(false),
-  coverImage: z.string().optional(),
+  path: z.string().optional(),
 });
 
 type BlogFormValues = z.infer<typeof blogFormSchema>;
@@ -64,23 +60,18 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
   const { createPost, updatePost } = useBlogStore();
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [content, setContent] = useState(post?.content || '');
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [featuredImagePreview, setFeaturedImagePreview] = useState<string>(post?.featuredImage || '');
 
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
-    defaultValues: post ? {
-      title: post.title,
-      description: post.description,
-      slug: post.slug,
-      content: post.content,
-      published: post.published,
-      coverImage: post.coverImage,
-    } : {
-      title: '',
-      description: '',
-      slug: '',
-      content: '',
-      published: false,
-      coverImage: '',
+    defaultValues: {
+      title: post?.title || '',
+      description: post?.description || '',
+      slug: post?.slug || '',
+      published: post?.published || false,
+      path: post?.path || '',
     },
   });
 
@@ -96,23 +87,49 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
     }
   }, [title, form, isEditing]);
 
+  const handleFeaturedImageChange = (file: File | null) => {
+    setFeaturedImage(file);
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFeaturedImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFeaturedImagePreview(post?.featuredImage || '');
+    }
+  };
+
   const onSubmit = async (data: BlogFormValues) => {
     setIsSaving(true);
     setSaveSuccess(false);
     
     try {
+      // Prepare the blog post object
+      const path = data.path || ''
+      const blogPost: BlogPost = {
+        ...data,
+        path,
+        id: post?.id,
+      };
+      
+      let success = false;
+      
       if (isEditing && post) {
-        await updatePost(post.id, data);
+        success = await updatePost(blogPost, content, featuredImage || undefined);
       } else {
-        await createPost(data);
+        success = await createPost(blogPost, content, featuredImage || undefined);
       }
       
-      setSaveSuccess(true);
-      
-      // Redirect after a delay
-      setTimeout(() => {
-        router.push('/admin/blog');
-      }, 1000);
+      if (success) {
+        setSaveSuccess(true);
+        
+        // Redirect after a delay
+        setTimeout(() => {
+          router.push('/admin/blog');
+        }, 1000);
+      }
     } catch (error) {
       console.error('Error saving post:', error);
     } finally {
@@ -130,7 +147,7 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
               <CardDescription>
                 {isEditing 
                   ? 'Update your blog post content and settings' 
-                  : 'Create a new blog post with markdown content'
+                  : 'Create a new blog post with rich text content'
                 }
               </CardDescription>
             </CardHeader>
@@ -187,23 +204,16 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <MarkdownEditor
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Write your post content here..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel>Content</FormLabel>
+                <FormControl>
+                  <RichTextEditor 
+                    content={content} 
+                    onChange={setContent} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             </CardContent>
           </Card>
           
@@ -236,25 +246,38 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="coverImage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <ImageUpload
-                        value={field.value}
-                        onChange={field.onChange}
-                        label="Cover Image"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      This will be displayed at the top of your post
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel>Featured Image</FormLabel>
+                <FormControl>
+                  <ImageUpload 
+                    onFileChange={handleFeaturedImageChange}
+                    previewUrl={featuredImagePreview}
+                    className="w-full aspect-video"
+                  />
+                </FormControl>
+                <FormDescription>
+                  This image will be displayed at the top of your post and in previews
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+              
+              {isEditing && post?.path && (
+                <FormField
+                  control={form.control}
+                  name="path"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File Path</FormLabel>
+                      <FormControl>
+                        <Input readOnly {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Content file location on the server
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              )}
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button

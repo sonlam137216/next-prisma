@@ -1,3 +1,4 @@
+// app/store/blogStore.ts (updated)
 import { create } from "zustand";
 
 export interface BlogPost {
@@ -87,39 +88,60 @@ export const useBlogStore = create<BlogState>((set) => ({
     try {
       // First create the post to get the ID
       const formData = new FormData();
+
+      // Make sure post data is properly formatted as JSON
       formData.append("postData", JSON.stringify(post));
 
+      // Add the featured image if provided
       if (featuredImage) {
         formData.append("featuredImage", featuredImage);
       }
 
+      // Add content and saveToFile flag
       formData.append("content", content);
+      formData.append("saveToFile", "true");
+
+      console.log("Sending request to create blog post...");
 
       const response = await fetch("/api/admin/blog", {
         method: "POST",
         body: formData,
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || "Failed to create blog post");
+        // Try to parse error message from response
+        let errorMessage = "Failed to create blog post";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // Fallback if response is not JSON
+          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
+
+      // Parse the response data
+      const data = await response.json();
+      console.log("Blog post created successfully:", data);
 
       // Update the posts list
       set((state) => ({
         posts: [...state.posts, data.post],
+        loading: false, // Make sure loading is set to false here
       }));
 
       return true;
     } catch (error) {
+      console.error("Error creating blog post:", error);
+
       set({
         error:
           error instanceof Error ? error.message : "An unknown error occurred",
+        loading: false, // Make sure loading is set to false here too
       });
+
       return false;
-    } finally {
-      set({ loading: false });
     }
   },
 
@@ -139,6 +161,7 @@ export const useBlogStore = create<BlogState>((set) => ({
 
       if (content) {
         formData.append("content", content);
+        formData.append("saveToFile", "true");
       }
 
       const response = await fetch(`/api/admin/blog/${post.id}`, {
