@@ -103,10 +103,13 @@ export const useBlogStore = create<BlogState>((set) => ({
 
       console.log("Sending request to create blog post...");
 
+      console.log("content", content);
       const response = await fetch("/api/admin/blog", {
         method: "POST",
         body: formData,
       });
+
+      console.log({ response });
 
       if (!response.ok) {
         // Try to parse error message from response

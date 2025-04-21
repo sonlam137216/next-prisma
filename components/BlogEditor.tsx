@@ -131,6 +131,8 @@ export default function BlogEditor({
       published,
       path: post?.path || '',
     };
+
+    console.log(postData)
     
     let success;
     
@@ -181,7 +183,7 @@ export default function BlogEditor({
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            Save
+            Save 1
           </Button>
         </div>
       </div>

@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
 
     // Parse post data
     const postData = JSON.parse(postDataStr);
+    console.log({ contentInAPI: content });
 
     // Process content
     if (saveToFile === "true" && content) {
