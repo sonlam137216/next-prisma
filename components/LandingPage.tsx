@@ -17,12 +17,12 @@ export default function LandingPage() {
   const [trending, setTrending] = useState<Product[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [email, setEmail] = useState("");
+  console.log(posts)
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
     fetchPosts();
-    console.log(posts)
   }, [fetchProducts, fetchCategories, fetchPosts]);
 
   useEffect(() => {

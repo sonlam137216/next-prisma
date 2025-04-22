@@ -28,6 +28,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log("post func");
     const formData = await req.formData();
     const postDataStr = formData.get("postData") as string;
     const content = formData.get("content") as string;
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     // Parse post data
     const postData = JSON.parse(postDataStr);
-    console.log({ contentInAPI: content });
+    console.log({ contentInAPI: "content" });
 
     // Process content
     if (saveToFile === "true" && content) {
@@ -52,8 +53,9 @@ export async function POST(req: NextRequest) {
       // Create HTML file with wrapped content
       const htmlFilePath = path.join(blogDir, `${slug}.html`);
       const wrappedContent = wrapContentWithHtml(content, postData.title);
+      console.log({ htmlFilePath });
       await fsPromises.writeFile(htmlFilePath, wrappedContent);
-
+      console.log("fsPromise");
       // Set the path in the database
       postData.path = `/blog-content/${slug}.html`;
     }
@@ -65,14 +67,25 @@ export async function POST(req: NextRequest) {
         /\s/g,
         "-"
       )}`;
-      const imagesDir = path.join(process.cwd(), "public", "uploads");
+      console.log("feature image 1");
 
-      if (!fs.existsSync(imagesDir)) {
-        await fsPromises.mkdir(imagesDir, { recursive: true });
+      // Use the specific directory for featured images
+      const featuredImagesDir = path.join(
+        process.cwd(),
+        "public",
+        "featured-images"
+      );
+
+      if (!fs.existsSync(featuredImagesDir)) {
+        await fsPromises.mkdir(featuredImagesDir, { recursive: true });
       }
 
-      await fsPromises.writeFile(path.join(imagesDir, filename), buffer);
-      postData.featuredImage = `/uploads/${filename}`;
+      await fsPromises.writeFile(
+        path.join(featuredImagesDir, filename),
+        buffer
+      );
+      console.log("feature image 2");
+      postData.featuredImage = `/featured-images/${filename}`;
     }
 
     // Save the post to the database using Prisma
@@ -81,19 +94,16 @@ export async function POST(req: NextRequest) {
         title: postData.title,
         slug: postData.slug,
         path: postData.path,
+        featuredImage: postData.featuredImage, // Add the featuredImage to the database
         published: postData.published || false,
       },
     });
 
-    // Return the created post with any additional fields
-    const savedPost = {
-      ...post,
-      featuredImage: postData.featuredImage,
-    };
+    console.log("post", post);
 
     return NextResponse.json({
       success: true,
-      post: savedPost,
+      post,
       message: "Post created successfully",
     });
   } catch (error) {
@@ -146,6 +156,11 @@ export async function PUT(req: NextRequest) {
       postData.path = `/blog-content/${slug}.html`;
     }
 
+    // Get the current post data to check if we already have a featuredImage
+    const currentPost = await prisma.blogPost.findUnique({
+      where: { id: Number(id) },
+    });
+
     // Handle featured image upload if provided
     if (featuredImage) {
       const buffer = Buffer.from(await featuredImage.arrayBuffer());
@@ -153,14 +168,44 @@ export async function PUT(req: NextRequest) {
         /\s/g,
         "-"
       )}`;
-      const imagesDir = path.join(process.cwd(), "public", "uploads");
 
-      if (!fs.existsSync(imagesDir)) {
-        await fsPromises.mkdir(imagesDir, { recursive: true });
+      // Use featured-images directory
+      const featuredImagesDir = path.join(
+        process.cwd(),
+        "public",
+        "featured-images"
+      );
+
+      if (!fs.existsSync(featuredImagesDir)) {
+        await fsPromises.mkdir(featuredImagesDir, { recursive: true });
       }
 
-      await fsPromises.writeFile(path.join(imagesDir, filename), buffer);
-      postData.featuredImage = `/uploads/${filename}`;
+      await fsPromises.writeFile(
+        path.join(featuredImagesDir, filename),
+        buffer
+      );
+
+      // Delete previous featured image if it exists
+      if (currentPost?.featuredImage) {
+        const previousImagePath = path.join(
+          process.cwd(),
+          "public",
+          currentPost.featuredImage.replace(/^\//, "")
+        );
+
+        try {
+          if (fs.existsSync(previousImagePath)) {
+            await fsPromises.unlink(previousImagePath);
+          }
+        } catch (err) {
+          console.error("Error deleting previous image:", err);
+        }
+      }
+
+      postData.featuredImage = `/featured-images/${filename}`;
+    } else {
+      // Keep the existing featured image if none provided
+      postData.featuredImage = currentPost?.featuredImage;
     }
 
     // Update the post in the database
@@ -170,19 +215,14 @@ export async function PUT(req: NextRequest) {
         title: postData.title,
         slug: postData.slug,
         path: postData.path,
+        featuredImage: postData.featuredImage,
         published: postData.published,
       },
     });
 
-    // Return the updated post with any additional fields
-    const updatedPost = {
-      ...post,
-      featuredImage: postData.featuredImage,
-    };
-
     return NextResponse.json({
       success: true,
-      post: updatedPost,
+      post,
       message: "Post updated successfully",
     });
   } catch (error) {

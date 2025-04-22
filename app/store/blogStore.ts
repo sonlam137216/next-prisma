@@ -1,5 +1,6 @@
-// app/store/blogStore.ts (updated)
+// app/store/blogStore.ts (updated with Axios)
 import { create } from "zustand";
+import axios from "axios";
 
 export interface BlogPost {
   id?: number;
@@ -35,6 +36,14 @@ interface BlogState {
   setCurrentPost: (post: BlogPost | null) => void;
 }
 
+// Create axios instance with default configuration
+const api = axios.create({
+  timeout: 30000, // 30 seconds timeout
+  headers: {
+    "Content-Type": "multipart/form-data",
+  },
+});
+
 export const useBlogStore = create<BlogState>((set) => ({
   posts: [],
   currentPost: null,
@@ -44,18 +53,13 @@ export const useBlogStore = create<BlogState>((set) => ({
   fetchPosts: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch("/api/admin/blog");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch blog posts");
-      }
-
-      set({ posts: data.posts });
+      const response = await api.get("/api/admin/blog");
+      set({ posts: response.data.posts });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        error: axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : "An unknown error occurred",
       });
     } finally {
       set({ loading: false });
@@ -65,18 +69,13 @@ export const useBlogStore = create<BlogState>((set) => ({
   fetchPostById: async (id: number) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/admin/blog/${id}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch blog post");
-      }
-
-      set({ currentPost: data.post });
+      const response = await api.get(`/api/admin/blog/${id}`);
+      set({ currentPost: response.data.post });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
+        error: axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : "An unknown error occurred",
       });
     } finally {
       set({ loading: false });
@@ -86,65 +85,77 @@ export const useBlogStore = create<BlogState>((set) => ({
   createPost: async (post: BlogPost, content: string, featuredImage?: File) => {
     set({ loading: true, error: null });
     try {
-      // First create the post to get the ID
+      // Create FormData for the multipart request
       const formData = new FormData();
 
-      // Make sure post data is properly formatted as JSON
+      // Add post data as JSON string
       formData.append("postData", JSON.stringify(post));
+
+      // Add content and saveToFile flag
+      formData.append("content", content);
+      formData.append("saveToFile", "true");
 
       // Add the featured image if provided
       if (featuredImage) {
         formData.append("featuredImage", featuredImage);
       }
 
-      // Add content and saveToFile flag
-      formData.append("content", content);
-      formData.append("saveToFile", "true");
-
       console.log("Sending request to create blog post...");
+      console.log("Content length:", content.length);
 
-      console.log("content", content);
-      const response = await fetch("/api/admin/blog", {
-        method: "POST",
-        body: formData,
-      });
-
-      console.log({ response });
-
-      if (!response.ok) {
-        // Try to parse error message from response
-        let errorMessage = "Failed to create blog post";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          // Fallback if response is not JSON
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
+      // Debug formData contents
+      for (let [key, value] of formData.entries()) {
+        if (key === "content") {
+          console.log(`${key}: [content length: ${value.toString().length}]`);
+        } else if (key === "featuredImage" && value instanceof File) {
+          console.log(
+            `${key}: [file name: ${value.name}, size: ${value.size}]`
+          );
+        } else {
+          console.log(`${key}: ${value}`);
         }
-        throw new Error(errorMessage);
       }
 
-      // Parse the response data
-      const data = await response.json();
-      console.log("Blog post created successfully:", data);
+      // Make the request with a specific timeout
+      const response = await api.post("/api/admin/blog", formData);
+
+      console.log("Response received:", response.status);
+      console.log("Blog post created successfully:", response.data);
 
       // Update the posts list
       set((state) => ({
-        posts: [...state.posts, data.post],
-        loading: false, // Make sure loading is set to false here
+        posts: [...state.posts, response.data.post],
       }));
 
       return true;
     } catch (error) {
       console.error("Error creating blog post:", error);
 
-      set({
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
-        loading: false, // Make sure loading is set to false here too
-      });
+      // Handle Axios errors with better details
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.message;
+        console.error("API Error details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: errorMessage,
+        });
+
+        set({
+          error: errorMessage,
+        });
+      } else {
+        set({
+          error:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
+        });
+      }
 
       return false;
+    } finally {
+      set({ loading: false });
     }
   },
 
@@ -167,29 +178,37 @@ export const useBlogStore = create<BlogState>((set) => ({
         formData.append("saveToFile", "true");
       }
 
-      const response = await fetch(`/api/admin/blog/${post.id}`, {
-        method: "PUT",
-        body: formData,
-      });
+      console.log("Sending request to update blog post...");
 
-      const data = await response.json();
+      const response = await api.put("/api/admin/blog", formData);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update blog post");
-      }
+      console.log("Blog post updated successfully:", response.data);
 
       // Update the posts list and current post
       set((state) => ({
-        posts: state.posts.map((p) => (p.id === post.id ? data.post : p)),
-        currentPost: data.post,
+        posts: state.posts.map((p) =>
+          p.id === post.id ? response.data.post : p
+        ),
+        currentPost: response.data.post,
       }));
 
       return true;
     } catch (error) {
-      set({
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
+      console.error("Error updating blog post:", error);
+
+      if (axios.isAxiosError(error)) {
+        set({
+          error: error.response?.data?.message || error.message,
+        });
+      } else {
+        set({
+          error:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
+        });
+      }
+
       return false;
     } finally {
       set({ loading: false });
@@ -199,15 +218,7 @@ export const useBlogStore = create<BlogState>((set) => ({
   deletePost: async (id: number) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`/api/admin/blog/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete blog post");
-      }
+      const response = await api.delete(`/api/admin/blog/${id}`);
 
       // Remove the post from the list
       set((state) => ({
@@ -217,10 +228,19 @@ export const useBlogStore = create<BlogState>((set) => ({
 
       return true;
     } catch (error) {
-      set({
-        error:
-          error instanceof Error ? error.message : "An unknown error occurred",
-      });
+      if (axios.isAxiosError(error)) {
+        set({
+          error: error.response?.data?.message || error.message,
+        });
+      } else {
+        set({
+          error:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
+        });
+      }
+
       return false;
     } finally {
       set({ loading: false });

@@ -49,11 +49,12 @@ model ProductImage {
 }
 
 model BlogPost {
-  id        Int      @id @default(autoincrement())
-  title     String
-  slug     String
-  path String // path related to mdx file content
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  title         String
+  slug          String   @unique
+  path          String
+  featuredImage String?
+  published     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
