@@ -28,6 +28,27 @@ export default function Header() {
   const { cart, toggleCart, categories, fetchCategories } = useDashboardStore();
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Add animation styles
+  useEffect(() => {
+    // Add the animation style to the global stylesheet
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -39,29 +60,16 @@ export default function Header() {
   }, [fetchCategories]);
 
   return (
-    <div className="w-full sticky top-0 bg-white z-40">
+    <div className="w-full sticky top-0 bg-white z-40 shadow-md">
       <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 relative">
-        {/* Logo container that spans both sections */}
-        <div className="absolute left-2 md:left-4 lg:left-4 top-0 bottom-0 flex items-center z-10 bg-white">
-          <Link href="/" prefetch={false}>
-            <Image
-              src="/logo/LOGO-4.png"
-              width={300}
-              height={400}
-              alt="Logo"
-              priority
-            />
-          </Link>
-        </div>
-
-        {/* Upper Header: Search, Cart */}
-        <div className="flex h-20 w-full items-center justify-between">
+        {/* Upper Header: Logo, Search, Cart */}
+        <div className="flex h-16 sm:h-20 w-full items-center justify-between z-10 relative">
           {/* Mobile Menu Button - Only visible on mobile */}
-          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 lg:hidden z-20">
+          <div className="lg:hidden z-20">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MenuIcon className="h-6 w-6" />
+                <Button variant="ghost" size="icon">
+                  <MenuIcon className="h-5 w-5" />
                   <span className="sr-only">Mở menu</span>
                 </Button>
               </SheetTrigger>
@@ -70,15 +78,7 @@ export default function Header() {
                   <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
 
-                <Link
-                  href="/"
-                  prefetch={false}
-                  className="flex items-center my-6"
-                >
-                  <ShirtIcon className="h-8 w-8 mr-2" />
-                  <span className="font-bold text-xl">ShadCN</span>
-                </Link>
-                <div className="grid gap-2 py-4">
+                <div className="grid gap-2 py-4 mt-8">
                   <h3 className="text-sm font-medium">Danh mục</h3>
                   {!isLoading &&
                     categories.map((category) => (
@@ -97,14 +97,21 @@ export default function Header() {
                     className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
                     prefetch={false}
                   >
-                    Tất cả sản phẩm
+                    Trang sức
+                  </Link>
+                  <Link
+                    href="/products"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
+                    prefetch={false}
+                  >
+                    Sản phẩm phong thủy
                   </Link>
                   <Link
                     href="/blog"
                     className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
                     prefetch={false}
                   >
-                    Blog
+                    Tin tức
                   </Link>
                   <Link
                     href="/contact"
@@ -118,39 +125,54 @@ export default function Header() {
             </Sheet>
           </div>
 
-          {/* Space for logo */}
-          <div className="w-32 md:w-48 lg:w-64"></div>
+          {/* Logo - Now only in the upper header */}
+          <div className="flex items-center">
+            <Link href="/" prefetch={false}>
+              <Image
+                src="/logo/LOGO-4.png"
+                width={300}
+                height={120}
+                alt="Logo"
+                className="h-auto w-36 sm:w-44 md:w-48 lg:w-56"
+                priority
+              />
+            </Link>
+          </div>
 
-          {/* Middle Section: Search Input */}
+          {/* Desktop Search Input */}
           <div className="hidden md:flex justify-center max-w-xl w-full mx-6">
             <div className="relative w-full">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
-                className="pl-10 pr-4 py-6 w-full border border-gray-300 rounded-full focus:ring-2 focus:ring-primary focus:border-primary"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full focus:ring-2 focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
 
-          {/* Right Section: Action Icons */}
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
+          {/* Mobile Search Toggle Button */}
+          <div className="md:hidden flex items-center">
             <Button
               variant="ghost"
-              size="lg"
+              size="icon"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
               aria-label="Tìm kiếm"
-              className="md:hidden"
             >
-              <SearchIcon className="h-6 w-6" />
+              <SearchIcon className="h-5 w-5" />
             </Button>
+          </div>
+
+          {/* Cart Button */}
+          <div className="flex items-center">
             <Button
               variant="ghost"
-              size="lg"
+              size="sm"
               aria-label="Giỏ hàng"
-              className="relative p-2"
+              className="relative p-1"
               onClick={toggleCart}
             >
-              <ShoppingBagIcon className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24" />
+              <ShoppingBagIcon className="h-6 w-6" />
               {cartItemCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
                   {cartItemCount > 99 ? "99+" : cartItemCount}
@@ -160,36 +182,50 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Lower Header: Right-aligned Categories Menu */}
-        <div className="border-t bg-white py-1">
-          <div className="flex items-center justify-end h-12">
-            {/* Space for logo */}
-            <div className="w-32 md:w-48 lg:w-64"></div>
+        {/* Mobile Search - Expandable */}
+        {isSearchOpen && (
+          <div className="md:hidden py-3 px-2 border-t border-gray-100 animate-fadeIn">
+            <div className="relative w-full">
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Tìm kiếm sản phẩm..."
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full focus:ring-2 focus:ring-primary focus:border-primary bg-gray-50"
+                autoFocus
+              />
+            </div>
+          </div>
+        )}
 
-            {/* Right: Navigation Menu */}
-            <NavigationMenu className="ml-auto">
-              <NavigationMenuList className="flex items-center gap-4">
+        {/* Navigation Menu - Completely separate from header with clear space */}
+        <div className="border-t border-gray-100 bg-white py-1">
+          <div className="h-12 flex items-center">
+            {/* Menu now starts from the left with higher z-index */}
+            <NavigationMenu className="hidden lg:flex z-20">
+              <NavigationMenuList className="flex items-center gap-8">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger>Giới thiệu</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="text-sm font-medium hover:text-primary">
+                    Giới thiệu
+                  </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="flex flex-col p-4">
+                    <div className="flex flex-col p-4 w-48 rounded-md shadow-md bg-white">
                       <Link
                         href="/about/gia-tri"
-                        className="py-2 text-sm hover:text-primary "
+                        className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
                         Giá trị
                       </Link>
                       <Link
                         href="/about/chat-luong"
-                        className="py-2 text-sm hover:text-primary"
+                        className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
                         Chất lượng
                       </Link>
                       <Link
                         href="/about/lich-su"
-                        className="py-2 text-sm hover:text-primary"
+                        className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
                         Lịch sử
@@ -200,7 +236,7 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/products"
-                    className="group inline-flex h-12 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors delay-100 duration-200 ease-in-out hover:bg-gray-100 hover:text-primary focus:bg-gray-100 focus:text-primary focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-gray-800 transition-colors hover:text-primary focus:text-primary focus:outline-none"
                     prefetch={false}
                   >
                     Trang sức
@@ -209,7 +245,7 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/products"
-                    className="group inline-flex h-12 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors delay-100 duration-200 ease-in-out hover:bg-gray-100 hover:text-primary focus:bg-gray-100 focus:text-primary focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-gray-800 transition-colors hover:text-primary focus:text-primary focus:outline-none"
                     prefetch={false}
                   >
                     Sản phẩm phong thủy
@@ -218,7 +254,7 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/blog"
-                    className="group inline-flex h-12 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors delay-100 duration-200 ease-in-out hover:bg-gray-100 hover:text-primary focus:bg-gray-100 focus:text-primary focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-gray-800 transition-colors hover:text-primary focus:text-primary focus:outline-none"
                     prefetch={false}
                   >
                     Tin tức
@@ -227,7 +263,7 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/contact"
-                    className="group inline-flex h-12 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors delay-100 duration-200 ease-in-out hover:bg-gray-100 hover:text-primary focus:bg-gray-100 focus:text-primary focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-gray-800 transition-colors hover:text-primary focus:text-primary focus:outline-none"
                     prefetch={false}
                   >
                     Liên hệ
@@ -262,25 +298,6 @@ function MenuIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
       <line x1="4" x2="20" y1="12" y2="12" />
       <line x1="4" x2="20" y1="6" y2="6" />
       <line x1="4" x2="20" y1="18" y2="18" />
-    </svg>
-  );
-}
-
-function ShirtIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" />
     </svg>
   );
 }
@@ -324,26 +341,6 @@ function SearchIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
     >
       <circle cx="11" cy="11" r="8" />
       <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-}
-
-function UserIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="8" r="5" />
-      <path d="M20 21a8 8 0 1 0-16 0" />
     </svg>
   );
 }
