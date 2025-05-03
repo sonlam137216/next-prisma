@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import HeroSlider from "./HeroSection";
 
 export default function LandingPage() {
-  const { products, categories, fetchProducts, fetchCategories } = useDashboardStore();
+  const { products, fetchProducts, fetchCategories } = useDashboardStore();
   const { posts, fetchPosts } = useBlogStore();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [trending, setTrending] = useState<Product[]>([]);
@@ -21,7 +21,6 @@ export default function LandingPage() {
 
   useEffect(() => {
     fetchProducts();
-    fetchCategories();
     fetchPosts();
   }, [fetchProducts, fetchCategories, fetchPosts]);
 
@@ -50,55 +49,6 @@ export default function LandingPage() {
 
       {/* Content Wrapper for all sections */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
-        {/* Categories Section */}
-        <section className="py-14 sm:py-16 bg-white">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold">Shop by Category</h2>
-            <Button variant="ghost" className="flex items-center gap-1 text-sm">
-              View All <ChevronRight size={14} />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {/* First large category */}
-            <div className="col-span-2 row-span-2 relative h-64 sm:h-72 group overflow-hidden rounded-lg">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70"></div>
-              <Image 
-                src={`/api/placeholder/600/800`}
-                alt={categories[0]?.name || "Featured Category"}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute bottom-0 left-0 p-4 w-full z-10">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-1">{categories[0]?.name || "Featured Category"}</h3>
-                <p className="text-gray-200 mb-3 text-sm line-clamp-2">{categories[0]?.description || "Explore our collection of unique items"}</p>
-                <Button variant="secondary" size="sm" className="group-hover:bg-primary group-hover:text-white transition-colors">
-                  Shop Now
-                </Button>
-              </div>
-            </div>
-            
-            {/* Smaller categories */}
-            {[1, 2, 3, 4].map((index) => (
-              <div key={index} className="relative h-32 group overflow-hidden rounded-lg">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/70"></div>
-                <Image 
-                  src={`/api/placeholder/${500 + index}/${400 + index}`}
-                  alt={categories[index]?.name || `Category ${index}`}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute bottom-0 left-0 p-3 w-full z-10">
-                  <h3 className="text-sm font-bold text-white">{categories[index]?.name || `Category ${index}`}</h3>
-                  <Button variant="link" size="sm" className="text-white p-0 mt-1 text-xs flex items-center">
-                    Explore <ChevronRight size={12} />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* Featured Products with Filters */}
         <section className="py-14 sm:py-16 bg-gray-50 -mx-4 sm:-mx-5 lg:-mx-6 px-4 sm:px-5 lg:px-6">
           <div className="max-w-[1200px] mx-auto">

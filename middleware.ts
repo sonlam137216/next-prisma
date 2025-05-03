@@ -1,9 +1,10 @@
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifyToken } from "./lib/jwt";
 
 // This function runs before the route is processed
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Check if the path starts with /admin and is not the login page
   if (
     request.nextUrl.pathname.startsWith("/admin") &&
@@ -11,24 +12,28 @@ export function middleware(request: NextRequest) {
   ) {
     // Check for authentication cookie
     const authToken = request.cookies.get("adminAuthToken")?.value;
+    console.log({ authToken });
 
-    // If no valid token exists, redirect to login
-    // if (!authToken) {
-    //   // Create the URL for the login page
-    //   const loginUrl = new URL("/admin/login", request.url);
+    // If no token exists, redirect to login
+    if (!authToken) {
+      // Create the URL for the login page
+      const loginUrl = new URL("/admin/login", request.url);
+      // Add the original URL as a parameter for redirect after login
+      loginUrl.searchParams.set("from", request.nextUrl.pathname);
+      // Redirect to the login page
+      return NextResponse.redirect(loginUrl);
+    }
 
-    //   // Add the original URL as a parameter for redirect after login
-    //   loginUrl.searchParams.set("from", request.nextUrl.pathname);
-
-    //   // Redirect to the login page
-    //   return NextResponse.redirect(loginUrl);
-    // }
-
-    // Optional: Verify token validity here
-    // const isValidToken = verifyToken(authToken);
-    // if (!isValidToken) {
-    //   return NextResponse.redirect(new URL('/admin/login', request.url));
-    // }
+    // Verify token validity
+    const payload = await verifyToken(authToken);
+    if (!payload || payload.role !== "admin") {
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("from", request.nextUrl.pathname);
+      // Clear the invalid token
+      const response = NextResponse.redirect(loginUrl);
+      response.cookies.delete("adminAuthToken");
+      return response;
+    }
   }
 
   // Continue to the requested page

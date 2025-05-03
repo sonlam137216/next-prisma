@@ -58,3 +58,48 @@ model BlogPost {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model Order {
+  id            Int           @id @default(autoincrement())
+  orderNumber   String        @unique
+  total         Float
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  firstName     String
+  lastName      String
+  email         String
+  phone         String
+  address       String
+  city          String
+  country       String
+  postalCode    String?
+  orderItems    OrderItem[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  price     Float
+  productId Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  name      String   // Store product name at time of order
+  imageUrl  String?  // Store image URL at time of order
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  COD
+}

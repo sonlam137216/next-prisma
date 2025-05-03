@@ -1,3 +1,4 @@
+// app/checkout/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -25,14 +26,14 @@ import {
 } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-
+import axios from 'axios';
 
 export default function PaymentPage() {
   const router = useRouter();
   const { cart, clearCart } = useDashboardStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card');
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -50,6 +51,7 @@ export default function PaymentPage() {
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  console.log(cart)
   const shippingCost = subtotal > 100 ? 0 : 10;
   const total = subtotal + shippingCost;
 
@@ -86,21 +88,58 @@ export default function PaymentPage() {
       return;
     }
 
-    // Simulate payment processing
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create order object
+      const orderData = {
+        total,
+        paymentMethod: paymentMethod === 'card' ? 'CARD' : 'COD',
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
+        postalCode: formData.postalCode || undefined,
+        orderItems: cart.map(item => ({
+          productId: Number(item.productId), // Ensure this is a number, not a string
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          imageUrl: item.imageUrl
+        }))
+      };
+
+      // Submit order directly using axios instead of the store
+      const response = await axios.post('/api/orders', orderData);
       
-      // Clear cart after successful payment
-      clearCart();
-      
-      // Redirect to success page (you'd need to create this)
-      router.push('/checkout/success');
-    } catch (error: unknown) {
-      setFormError("Payment processing failed. Please try again.");
+      if (response.status === 201) {
+        // Clear cart after successful order creation
+        clearCart();
+        
+        // Redirect to success page
+        router.push('/checkout/success');
+      } else {
+        setFormError("Order processing failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      setFormError(
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : "An unexpected error occurred. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // If cart is empty, redirect to cart page
+  // useEffect(() => {
+  //   if (cart.length === 0) {
+  //     router.push('/cart');
+  //   }
+  // }, [cart, router]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -234,7 +273,7 @@ export default function PaymentPage() {
                 <CardContent>
                   <RadioGroup 
                     value={paymentMethod} 
-                    onValueChange={setPaymentMethod} 
+                    onValueChange={(value: 'card' | 'cod') => setPaymentMethod(value)} 
                     className="space-y-3"
                   >
                     <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
@@ -383,7 +422,22 @@ export default function PaymentPage() {
 }
 
 // Order Summary Component (extracted to reduce repetition)
-function OrderSummary({ cart, subtotal, shippingCost, total }) {
+type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl?: string;
+};
+
+type OrderSummaryProps = {
+  cart: CartItem[];
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+};
+
+function OrderSummary({ cart, subtotal, shippingCost, total }: OrderSummaryProps) {
   return (
     <div>
       <div className="space-y-4 mb-5">

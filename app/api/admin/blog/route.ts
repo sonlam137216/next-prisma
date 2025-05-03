@@ -7,14 +7,89 @@ import { promises as fsPromises } from "fs";
 
 const prisma = new PrismaClient();
 
-// GET /api/admin/blog - List all blog posts
-export async function GET() {
+// GET /api/admin/blog - List all blog posts with pagination
+export async function GET(req: NextRequest) {
   try {
+    // Get pagination parameters from URL
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "9");
+
+    // Calculate skip for pagination
+    const skip = (page - 1) * pageSize;
+
+    // Get total count for pagination calculation
+    const totalPosts = await prisma.blogPost.count();
+    const totalPages = Math.ceil(totalPosts / pageSize);
+
+    // Get posts for the requested page
     const posts = await prisma.blogPost.findMany({
       orderBy: { createdAt: "desc" },
+      skip: skip,
+      take: pageSize,
     });
 
-    return NextResponse.json({ posts });
+    // For each post, extract description from HTML content if available
+    const postsWithDescription = await Promise.all(
+      posts.map(async (post) => {
+        let description = "";
+
+        if (post.path) {
+          try {
+            const filePath = path.join(
+              process.cwd(),
+              "public",
+              post.path.replace(/^\//, "")
+            );
+            if (fs.existsSync(filePath)) {
+              const content = await fsPromises.readFile(filePath, "utf-8");
+              // Try to extract description from meta tag
+              const descriptionMatch = content.match(
+                /<meta name="description" content="(.*?)"/
+              );
+              description = descriptionMatch ? descriptionMatch[1] : "";
+
+              // If no description found, extract first paragraph (up to 150 chars)
+              if (!description) {
+                const bodyMatch = content.match(
+                  /<body[^>]*>([\s\S]*?)<\/body>/
+                );
+                if (bodyMatch) {
+                  const firstParagraphMatch = bodyMatch[1].match(
+                    /<p[^>]*>([\s\S]*?)<\/p>/
+                  );
+                  if (firstParagraphMatch) {
+                    // Strip HTML tags and limit to 150 chars
+                    description = firstParagraphMatch[1]
+                      .replace(/<[^>]*>/g, "")
+                      .substring(0, 150);
+                    if (description.length === 150) description += "...";
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error(
+              `Error extracting description for ${post.slug}:`,
+              error
+            );
+          }
+        }
+
+        return {
+          ...post,
+          description,
+        };
+      })
+    );
+
+    return NextResponse.json({
+      posts: postsWithDescription,
+      page,
+      pageSize,
+      totalPosts,
+      totalPages,
+    });
   } catch (error) {
     console.error("Error fetching blog posts:", error);
     return NextResponse.json(
@@ -245,6 +320,7 @@ function wrapContentWithHtml(content: string, title: string) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+  <meta name="description" content="${extractDescription(content, 160)}">
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -263,6 +339,8 @@ function wrapContentWithHtml(content: string, title: string) {
       height: auto;
       display: block;
       margin: 2em auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     p {
       margin-bottom: 1.5em;
@@ -281,6 +359,24 @@ function wrapContentWithHtml(content: string, title: string) {
       margin-bottom: 1.5em;
       padding-left: 2em;
     }
+    code {
+      background: #f4f4f4;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 1em;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    blockquote {
+      border-left: 4px solid #ddd;
+      padding: 0 1em;
+      margin-left: 0;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -290,4 +386,19 @@ function wrapContentWithHtml(content: string, title: string) {
 </body>
 </html>
   `;
+}
+
+// Helper function to extract description from content
+function extractDescription(content: string, maxLength: number = 160) {
+  // Strip HTML tags and get plain text
+  const plainText = content.replace(/<[^>]*>/g, "");
+
+  // Limit to maxLength characters and add ellipsis if needed
+  let description = plainText.substring(0, maxLength).trim();
+  if (plainText.length > maxLength) {
+    description += "...";
+  }
+
+  // Escape double quotes for use in meta tag
+  return description.replace(/"/g, "&quot;");
 }

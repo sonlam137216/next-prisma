@@ -1,4 +1,4 @@
-// app/store/blogStore.ts (updated with Axios)
+// app/store/blogStore.ts
 import { create } from "zustand";
 import axios from "axios";
 
@@ -6,7 +6,7 @@ export interface BlogPost {
   id?: number;
   title: string;
   slug: string;
-  description: string;
+  description: string; // We'll extract this from HTML content
   path: string;
   published: boolean;
   createdAt?: Date;
@@ -15,12 +15,26 @@ export interface BlogPost {
   content?: string;
 }
 
+interface PaginationState {
+  page: number;
+  pageSize: number;
+  totalPosts: number;
+  totalPages: number;
+}
+
 interface BlogState {
   posts: BlogPost[];
   currentPost: BlogPost | null;
   loading: boolean;
   error: string | null;
-  fetchPosts: () => Promise<void>;
+  pagination: PaginationState;
+
+  // Pagination methods
+  setPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+
+  // Existing methods
+  fetchPosts: (page?: number, pageSize?: number) => Promise<void>;
   fetchPostById: (id: number) => Promise<void>;
   createPost: (
     post: BlogPost,
@@ -44,17 +58,61 @@ const api = axios.create({
   },
 });
 
-export const useBlogStore = create<BlogState>((set) => ({
+export const useBlogStore = create<BlogState>((set, get) => ({
   posts: [],
   currentPost: null,
   loading: false,
   error: null,
+  pagination: {
+    page: 1,
+    pageSize: 9, // Show 9 posts per page (3x3 grid)
+    totalPosts: 0,
+    totalPages: 1,
+  },
 
-  fetchPosts: async () => {
+  setPage: (page: number) => {
+    set((state) => ({
+      pagination: {
+        ...state.pagination,
+        page,
+      },
+    }));
+    // Fetch posts for the new page
+    get().fetchPosts(page, get().pagination.pageSize);
+  },
+
+  setPageSize: (pageSize: number) => {
+    set((state) => ({
+      pagination: {
+        ...state.pagination,
+        pageSize,
+        // Reset to page 1 when changing page size
+        page: 1,
+      },
+    }));
+    // Fetch posts with new page size
+    get().fetchPosts(1, pageSize);
+  },
+
+  fetchPosts: async (page?: number, pageSize?: number) => {
+    const currentPage = page || get().pagination.page;
+    const currentPageSize = pageSize || get().pagination.pageSize;
+
     set({ loading: true, error: null });
     try {
-      const response = await api.get("/api/admin/blog");
-      set({ posts: response.data.posts });
+      const response = await api.get(
+        `/api/admin/blog?page=${currentPage}&pageSize=${currentPageSize}`
+      );
+
+      set({
+        posts: response.data.posts,
+        pagination: {
+          page: currentPage,
+          pageSize: currentPageSize,
+          totalPosts: response.data.totalPosts,
+          totalPages: response.data.totalPages,
+        },
+      });
     } catch (error) {
       set({
         error: axios.isAxiosError(error)
@@ -178,11 +236,7 @@ export const useBlogStore = create<BlogState>((set) => ({
         formData.append("saveToFile", "true");
       }
 
-      console.log("Sending request to update blog post...");
-
       const response = await api.put("/api/admin/blog", formData);
-
-      console.log("Blog post updated successfully:", response.data);
 
       // Update the posts list and current post
       set((state) => ({
@@ -194,8 +248,6 @@ export const useBlogStore = create<BlogState>((set) => ({
 
       return true;
     } catch (error) {
-      console.error("Error updating blog post:", error);
-
       if (axios.isAxiosError(error)) {
         set({
           error: error.response?.data?.message || error.message,
@@ -218,13 +270,31 @@ export const useBlogStore = create<BlogState>((set) => ({
   deletePost: async (id: number) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.delete(`/api/admin/blog/${id}`);
+      await api.delete(`/api/admin/blog/${id}`);
 
-      // Remove the post from the list
-      set((state) => ({
-        posts: state.posts.filter((p) => p.id !== id),
-        currentPost: state.currentPost?.id === id ? null : state.currentPost,
-      }));
+      // Update pagination counts and remove the post from the list
+      set((state) => {
+        const newTotalPosts = state.pagination.totalPosts - 1;
+        const newTotalPages = Math.max(
+          1,
+          Math.ceil(newTotalPosts / state.pagination.pageSize)
+        );
+
+        return {
+          posts: state.posts.filter((p) => p.id !== id),
+          currentPost: state.currentPost?.id === id ? null : state.currentPost,
+          pagination: {
+            ...state.pagination,
+            totalPosts: newTotalPosts,
+            totalPages: newTotalPages,
+            // Adjust current page if necessary
+            page:
+              state.pagination.page > newTotalPages
+                ? newTotalPages
+                : state.pagination.page,
+          },
+        };
+      });
 
       return true;
     } catch (error) {

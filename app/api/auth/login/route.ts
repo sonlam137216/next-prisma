@@ -1,6 +1,7 @@
 // app/api/auth/login/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { signToken } from "@/lib/jwt";
 
 export async function POST(request: Request) {
   try {
@@ -11,24 +12,17 @@ export async function POST(request: Request) {
     // 1. Validate the input
     // 2. Check credentials against a database
     // 3. Use proper password hashing
-    // 4. Create a secure JWT token
 
     // This is a simplified example with hardcoded credentials
     if (username === "admin" && password === "admin") {
-      // Create a simple token (in a real app, use a proper JWT library)
-      const token = btoa(
-        JSON.stringify({
-          username,
-          role: "admin",
-          exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-        })
-      );
+      // Create a proper JWT token using Jose
+      const token = await signToken({
+        username,
+        role: "admin",
+      });
 
       // Set the token in a secure HTTP-only cookie
-      (
-        await // Set the token in a secure HTTP-only cookie
-        cookies()
-      ).set({
+      (await cookies()).set({
         name: "adminAuthToken",
         value: token,
         httpOnly: true,
