@@ -15,15 +15,22 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
   Card, 
-  CardContent 
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MinusIcon, PlusIcon, ArrowLeftIcon, ShoppingBagIcon } from 'lucide-react';
 import { Product, useDashboardStore } from '@/app/store/dashboardStore';
-import MainLayout from '@/components/MainLayout';
 import { toast } from 'sonner';
+import MainLayout from '@/components/MainLayout';
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+interface ProductDetailPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const router = useRouter();
   const { 
     products,
@@ -38,38 +45,58 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [selectedImage, setSelectedImage] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Fetch product data
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, [fetchProducts, fetchCategories]);
-  
-  // Find the product and related products once data is loaded
-  useEffect(() => {
-    if (products.length > 0) {
-      const paramId =  params.id;
-      const productId = parseInt(paramId);
-      const foundProduct = products.find(p => p.id === productId) || null;
-      setProduct(foundProduct);
-      
-      if (foundProduct) {
-        // Find related products in the same category
-        const related = products
-          .filter(p => p.categoryId === foundProduct.categoryId && p.id !== foundProduct.id)
-          .slice(0, 4);
-        setRelatedProducts(related);
+    const loadData = async () => {
+      try {
+        await fetchProducts();
+        await fetchCategories();
+        const resolvedParams = await params;
+        const productId = parseInt(resolvedParams.id);
+        const foundProduct = products.find(p => p.id === productId) || null;
+        setProduct(foundProduct);
+        
+        if (foundProduct && foundProduct.category) {
+          // Find related products in the same category
+          const related = products
+            .filter(p => p.category?.id === foundProduct.category?.id && p.id !== foundProduct.id)
+            .slice(0, 4);
+          setRelatedProducts(related);
+        }
+      } catch (error) {
+        console.error('Error loading product:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [products, params.id]);
+    };
+
+    loadData();
+  }, [fetchProducts, fetchCategories, params]);
+  
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
   
   if (!product) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center py-16">
-          <div className="text-center">
-            <h2 className="text-2xl font-medium mb-4">Đang tải sản phẩm...</h2>
-          </div>
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Product Not Found</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>The product you are looking for does not exist.</p>
+            </CardContent>
+          </Card>
         </div>
       </MainLayout>
     );

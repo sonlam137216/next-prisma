@@ -23,12 +23,15 @@ import { JSX, SVGProps, useState, useEffect } from "react";
 import { useDashboardStore } from "@/app/store/dashboardStore";
 import CartSidebar from "./CartSidebar";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const { cart, toggleCart, categories, fetchCategories } = useDashboardStore();
+  const router = useRouter();
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Add animation styles
   useEffect(() => {
@@ -58,6 +61,15 @@ export default function Header() {
 
     loadCategories();
   }, [fetchCategories]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setIsSearchOpen(false);
+    }
+  };
 
   return (
     <div className="w-full sticky top-0 bg-white z-40 shadow-md">
@@ -141,14 +153,16 @@ export default function Header() {
 
           {/* Desktop Search Input */}
           <div className="hidden md:flex justify-center max-w-xl w-full mx-6">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full focus:ring-2 focus:ring-primary focus:border-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
+            </form>
           </div>
 
           {/* Mobile Search Toggle Button */}
@@ -185,15 +199,17 @@ export default function Header() {
         {/* Mobile Search - Expandable */}
         {isSearchOpen && (
           <div className="md:hidden py-3 px-2 border-t border-gray-100 animate-fadeIn">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full focus:ring-2 focus:ring-primary focus:border-primary bg-gray-50"
                 autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </div>
+            </form>
           </div>
         )}
 

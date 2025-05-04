@@ -71,6 +71,10 @@ interface DashboardStore {
   loadingCategories: boolean;
   cart: CartItem[];
   isCartOpen: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalProducts: number;
+  pageSize: number;
 
   // Cart operations
   addToCart: (product: Product, quantity: number) => void;
@@ -80,7 +84,7 @@ interface DashboardStore {
   clearCart: () => void;
 
   // Product operations
-  fetchProducts: () => Promise<void>;
+  fetchProducts: (page?: number, pageSize?: number) => Promise<void>;
   addProduct: (formData: FormData) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
 
@@ -106,6 +110,10 @@ export const useDashboardStore = create<DashboardStore>()(
       loadingCategories: false,
       cart: [],
       isCartOpen: false,
+      currentPage: 1,
+      totalPages: 1,
+      totalProducts: 0,
+      pageSize: 8,
 
       // Cart operations
       addToCart: (product, quantity) => {
@@ -178,12 +186,18 @@ export const useDashboardStore = create<DashboardStore>()(
       },
 
       // Product operations
-      fetchProducts: async () => {
+      fetchProducts: async (page = 1, pageSize = 8) => {
         try {
-          const response = await fetch("/api/products");
+          const response = await fetch(`/api/products?page=${page}&pageSize=${pageSize}`);
           if (!response.ok) throw new Error("Failed to fetch products");
-          const products = await response.json();
-          set({ products });
+          const data = await response.json();
+          set({ 
+            products: data.products,
+            currentPage: data.currentPage,
+            totalPages: data.totalPages,
+            totalProducts: data.totalProducts,
+            pageSize: data.pageSize
+          });
         } catch (error) {
           console.error("Error fetching products:", error);
         }

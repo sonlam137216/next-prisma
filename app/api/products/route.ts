@@ -7,9 +7,19 @@ import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "8");
+    const skip = (page - 1) * pageSize;
+
+    // Get total count for pagination
+    const totalProducts = await prisma.product.count();
+
     const products = await prisma.product.findMany({
+      skip,
+      take: pageSize,
       orderBy: { createdAt: "desc" },
       include: {
         images: true,
@@ -17,7 +27,13 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(products);
+    return NextResponse.json({
+      products,
+      totalProducts,
+      totalPages: Math.ceil(totalProducts / pageSize),
+      currentPage: page,
+      pageSize,
+    });
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(
@@ -104,7 +120,10 @@ export async function POST(request: NextRequest) {
     // Fetch the complete product with images
     const completeProduct = await prisma.product.findUnique({
       where: { id: product.id },
-      include: { images: true },
+      include: { 
+        images: true,
+        category: true 
+      },
     });
 
     return NextResponse.json(completeProduct);

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { 
   Card, 
@@ -23,16 +23,18 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { FilterIcon, SlidersHorizontal } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useDashboardStore } from '../store/dashboardStore';
+import { useDashboardStore, Product } from '../store/dashboardStore';
 import MainLayout from '@/components/MainLayout';
 
 export default function ProductsPage() {
   const router = useRouter();
-  const { products, categories, fetchProducts, fetchCategories } = useDashboardStore();
-  
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get('search') || '';
+  const { products, fetchProducts, categories, fetchCategories } = useDashboardStore();
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [maxPrice, setMaxPrice] = useState(1000);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   
   // Fetch products and categories on component mount
   useEffect(() => {
@@ -40,29 +42,37 @@ export default function ProductsPage() {
     fetchCategories();
   }, [fetchProducts, fetchCategories]);
   
-  // Apply filters when dependencies change
   useEffect(() => {
-    if (!products.length) return;
-    
+    // Calculate max price from products
+    const max = Math.max(...products.map(p => p.price), 1000);
+    setMaxPrice(max);
+    setPriceRange([0, max]);
+  }, [products]);
+  
+  useEffect(() => {
     let filtered = [...products];
-    
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(
-        product => product.categoryId === parseInt(selectedCategory)
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(product => 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
-    // Filter by price
-    filtered = filtered.filter(
-      product => product.price >= priceRange[0] && product.price <= priceRange[1]
+
+    // Apply category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => 
+        product.category?.id === parseInt(selectedCategory)
+      );
+    }
+
+    // Apply price range filter
+    filtered = filtered.filter(product => 
+      product.price >= priceRange[0] && product.price <= priceRange[1]
     );
-    
+
     setFilteredProducts(filtered);
-  }, [products, selectedCategory, priceRange]);
-  
-  // Calculate price range for the slider
-  const maxPrice = Math.max(...products.map(product => product.price), 1000);
+  }, [products, searchQuery, selectedCategory, priceRange]);
   
   // Handle navigation to product detail
   const handleProductClick = (productId: number) => {
