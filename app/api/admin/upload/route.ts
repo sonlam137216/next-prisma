@@ -1,8 +1,9 @@
 // app/api/admin/upload/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { join } from "path";
 import { existsSync } from "fs";
+import { v4 as uuidv4 } from 'uuid'
 
 // Helper function to create directory if it doesn't exist
 async function ensureDirectory(dirPath: string) {
@@ -15,46 +16,34 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const postSlug = formData.get("postSlug") as string | null;
 
-    if (!file || !postSlug) {
+    if (!file) {
       return NextResponse.json(
-        { message: "File and post slug are required" },
+        { error: "No file uploaded" },
         { status: 400 }
       );
     }
 
-    // Determine file type and create appropriate path
-    const fileType = file.name.split(".").pop()?.toLowerCase();
-    const allowedTypes = ["jpg", "jpeg", "png", "gif", "webp", "svg"];
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    if (!fileType || !allowedTypes.includes(fileType)) {
-      return NextResponse.json(
-        { message: "Invalid file type. Only images are allowed." },
-        { status: 400 }
-      );
-    }
+    // Generate unique filename
+    const uniqueId = uuidv4();
+    const extension = file.name.split(".").pop();
+    const filename = `${uniqueId}.${extension}`;
 
-    // Create images directory for the post
-    const postsDir = path.join(process.cwd(), "public/blog-images", postSlug);
-    await ensureDirectory(postsDir);
-
-    // Generate filename with timestamp to prevent conflicts
-    const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-    const filePath = path.join(postsDir, filename);
-
-    // Save the file
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Save file to public/collections directory
+    const filePath = join(process.cwd(), "public", "collections", filename);
     await writeFile(filePath, buffer);
 
-    // Return the public URL
-    const publicUrl = `/blog-images/${postSlug}/${filename}`;
+    // Return the URL path
+    const url = `/collections/${filename}`;
 
-    return NextResponse.json({ url: publicUrl });
+    return NextResponse.json({ url });
   } catch (error) {
     console.error("Error uploading file:", error);
     return NextResponse.json(
-      { message: "Failed to upload file" },
+      { error: "Failed to upload file" },
       { status: 500 }
     );
   }

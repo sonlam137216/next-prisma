@@ -1,15 +1,29 @@
-'use client';
+// app/admin/dashboard/page.tsx
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/app/store/authStore';
-import { Users, Package, ShoppingCart, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/app/store/authStore";
+import {
+  Users,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mock data store using Zustand
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface DashboardState {
   users: { total: number; new: number; active: number };
@@ -26,44 +40,45 @@ const useDashboardStore = create<DashboardState>((set) => ({
   loading: false,
   fetchDashboardData: async () => {
     set({ loading: true });
-    
+
     // Simulate API call with setTimeout
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     set({
       users: { total: 1248, new: 42, active: 879 },
       products: { total: 584, inStock: 390, lowStock: 32 },
       orders: { total: 2945, pending: 38, completed: 2907 },
-      loading: false
+      loading: false,
     });
-  }
+  },
 }));
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { username } = useAuthStore();
-  const { users, products, orders, loading, fetchDashboardData } = useDashboardStore();
-  
+  const { users, products, orders, loading, fetchDashboardData } =
+    useDashboardStore();
+
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    description, 
+  const StatCard = ({
+    title,
+    value,
+    description,
     icon: Icon,
     trend = 0,
-    onClick
-  }: { 
-    title: string; 
-    value: number; 
-    description: string; 
+    onClick,
+  }: {
+    title: string;
+    value: number;
+    description: string;
     icon: React.ElementType;
     trend?: number;
     onClick?: () => void;
   }) => (
-    <Card 
+    <Card
       className="hover:border-primary/50 transition-all cursor-pointer"
       onClick={onClick}
     >
@@ -79,9 +94,13 @@ export default function AdminDashboardPage() {
           ) : trend < 0 ? (
             <ArrowDown className="mr-1 h-4 w-4 text-red-500" />
           ) : null}
-          
+
           {trend !== 0 ? (
-            <p className={`text-xs ${trend > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            <p
+              className={`text-xs ${
+                trend > 0 ? "text-emerald-500" : "text-red-500"
+              }`}
+            >
               {Math.abs(trend)}% from last month
             </p>
           ) : (
@@ -96,7 +115,9 @@ export default function AdminDashboardPage() {
     <div className="flex items-center justify-center h-64">
       <div className="flex flex-col items-center gap-2">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-        <p className="text-sm text-muted-foreground">Loading dashboard data...</p>
+        <p className="text-sm text-muted-foreground">
+          Loading dashboard data...
+        </p>
       </div>
     </div>
   );
@@ -106,7 +127,7 @@ export default function AdminDashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {username || 'Admin'}. Here is a summary of your store.
+          Welcome back, {username || "Admin"}. Here is a summary of your store.
         </p>
       </div>
 
@@ -116,7 +137,7 @@ export default function AdminDashboardPage() {
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="overview" className="space-y-4">
           {loading ? (
             renderLoadingState()
@@ -129,7 +150,7 @@ export default function AdminDashboardPage() {
                   description={`${users.new} new users this week`}
                   icon={Users}
                   trend={5.2}
-                  onClick={() => router.push('/admin/users')}
+                  onClick={() => router.push("/admin/users")}
                 />
                 <StatCard
                   title="Total Products"
@@ -137,7 +158,7 @@ export default function AdminDashboardPage() {
                   description={`${products.inStock} products in stock`}
                   icon={Package}
                   trend={-2.5}
-                  onClick={() => router.push('/admin/products')}
+                  onClick={() => router.push("/admin/products")}
                 />
                 <StatCard
                   title="Total Orders"
@@ -145,7 +166,7 @@ export default function AdminDashboardPage() {
                   description={`${orders.pending} orders pending`}
                   icon={ShoppingCart}
                   trend={12.3}
-                  onClick={() => router.push('/admin/orders')}
+                  onClick={() => router.push("/admin/orders")}
                 />
               </div>
 
@@ -153,15 +174,33 @@ export default function AdminDashboardPage() {
                 <Card className="col-span-1">
                   <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Latest actions in your store</CardDescription>
+                    <CardDescription>
+                      Latest actions in your store
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {[
-                        { user: 'John Doe', action: 'placed an order', time: '10 minutes ago' },
-                        { user: 'Jane Smith', action: 'registered a new account', time: '1 hour ago' },
-                        { user: 'Mike Johnson', action: 'updated their profile', time: '3 hours ago' },
-                        { user: 'Sarah Williams', action: 'left a product review', time: '5 hours ago' }
+                        {
+                          user: "John Doe",
+                          action: "placed an order",
+                          time: "10 minutes ago",
+                        },
+                        {
+                          user: "Jane Smith",
+                          action: "registered a new account",
+                          time: "1 hour ago",
+                        },
+                        {
+                          user: "Mike Johnson",
+                          action: "updated their profile",
+                          time: "3 hours ago",
+                        },
+                        {
+                          user: "Sarah Williams",
+                          action: "left a product review",
+                          time: "5 hours ago",
+                        },
                       ].map((activity, i) => (
                         <div key={i} className="flex items-center gap-4">
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -171,43 +210,45 @@ export default function AdminDashboardPage() {
                             <p className="text-sm font-medium leading-none">
                               {activity.user} {activity.action}
                             </p>
-                            <p className="text-xs text-muted-foreground">{activity.time}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {activity.time}
+                            </p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="col-span-1">
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
                     <CardDescription>Manage your store quickly</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button 
-                      onClick={() => router.push('/admin/products/new')}
+                    <Button
+                      onClick={() => router.push("/admin/products/new")}
                       className="w-full justify-start"
                     >
                       <Package className="mr-2 h-4 w-4" />
                       Add New Product
                     </Button>
-                    <Button 
-                      onClick={() => router.push('/admin/orders/pending')}
+                    <Button
+                      onClick={() => router.push("/admin/orders/pending")}
                       className="w-full justify-start"
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
                       View Pending Orders
                     </Button>
-                    <Button 
-                      onClick={() => router.push('/admin/users/new')}
+                    <Button
+                      onClick={() => router.push("/admin/users/new")}
                       className="w-full justify-start"
                     >
                       <Users className="mr-2 h-4 w-4" />
                       Create User Account
                     </Button>
-                    <Button 
-                      onClick={() => router.push('/admin/settings')}
+                    <Button
+                      onClick={() => router.push("/admin/settings")}
                       variant="outline"
                       className="w-full justify-start"
                     >
@@ -220,7 +261,7 @@ export default function AdminDashboardPage() {
             </>
           )}
         </TabsContent>
-        
+
         <TabsContent value="analytics">
           <Card>
             <CardHeader>
@@ -230,13 +271,13 @@ export default function AdminDashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[300px] flex items-center justify-center">
-              <Button onClick={() => router.push('/admin/analytics')}>
+              <Button onClick={() => router.push("/admin/analytics")}>
                 Go to Analytics
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="reports">
           <Card>
             <CardHeader>
@@ -246,7 +287,7 @@ export default function AdminDashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="h-[300px] flex items-center justify-center">
-              <Button onClick={() => router.push('/admin/reports')}>
+              <Button onClick={() => router.push("/admin/reports")}>
                 View Reports
               </Button>
             </CardContent>
