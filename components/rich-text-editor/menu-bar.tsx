@@ -31,23 +31,32 @@ import {
       return null;
     }
   
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files?.length) {
         const file = e.target.files[0];
-        const reader = new FileReader();
-        
-        reader.onload = (event) => {
-          if (event.target?.result) {
-            const url = event.target.result as string;
-            // Open the dialog for setting alt text
-            setImageUrl(url);
-            setImageAlt(file.name.split('.')[0] || '');
+
+        // Upload to API
+        const formData = new FormData();
+        formData.append("file", file);
+
+        setImageAlt(file.name.split('.')[0] || '');
+
+        try {
+          const res = await fetch("/api/blog/upload", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.url) {
+            setImageUrl(data.url);
             setImageDialog(true);
+          } else {
+            alert("Image upload failed");
           }
-        };
-        
-        reader.readAsDataURL(file);
-        
+        } catch (err) {
+          alert("Image upload failed");
+        }
+
         // Reset file input to allow selecting the same file again
         if (fileInputRef.current) {
           fileInputRef.current.value = '';

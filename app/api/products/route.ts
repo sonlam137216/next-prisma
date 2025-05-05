@@ -1,43 +1,95 @@
 // app/api/products/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const pageSize = parseInt(url.searchParams.get("pageSize") || "8");
+    const { searchParams } = new URL(request.url);
+    
+    // Pagination parameters
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '20');
     const skip = (page - 1) * pageSize;
 
-    // Get total count for pagination
-    const totalProducts = await prisma.product.count();
+    // Filter parameters
+    const search = searchParams.get('search') || '';
+    const categoryId = searchParams.get('categoryId');
+    const collectionId = searchParams.get('collectionId');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const sortBy = searchParams.get('sortBy') || 'newest';
 
+    // Build where clause
+    const where: any = {
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
+        ]
+      }),
+      ...(categoryId && { categoryId: parseInt(categoryId) }),
+      ...(collectionId && {
+        collections: {
+          some: {
+            id: parseInt(collectionId)
+          }
+        }
+      }),
+      ...(minPrice && maxPrice && {
+        price: {
+          gte: parseFloat(minPrice),
+          lte: parseFloat(maxPrice)
+        }
+      })
+    };
+
+    // Build orderBy clause
+    let orderBy: any = {};
+    switch (sortBy) {
+      case 'newest':
+        orderBy = { createdAt: 'desc' };
+        break;
+      case 'price-low':
+        orderBy = { price: 'asc' };
+        break;
+      case 'price-high':
+        orderBy = { price: 'desc' };
+        break;
+      case 'name-asc':
+        orderBy = { name: 'asc' };
+        break;
+      default:
+        orderBy = { createdAt: 'desc' };
+    }
+
+    // Get total count for pagination
+    const totalProducts = await prisma.product.count({ where });
+    const totalPages = Math.ceil(totalProducts / pageSize);
+
+    // Fetch products with filters and pagination
     const products = await prisma.product.findMany({
+      where,
+      orderBy,
       skip,
       take: pageSize,
-      orderBy: { createdAt: "desc" },
       include: {
         images: true,
         category: true,
+        collections: true,
       },
     });
 
     return NextResponse.json({
       products,
-      totalProducts,
-      totalPages: Math.ceil(totalProducts / pageSize),
       currentPage: page,
-      pageSize,
+      totalPages,
+      totalProducts,
+      pageSize
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error('Error fetching products:', error);
     return NextResponse.json(
-      { error: "Error fetching products" },
+      { error: 'Failed to fetch products' },
       { status: 500 }
     );
   }
@@ -46,91 +98,55 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const price = parseFloat(formData.get("price") as string);
-    const quantity = parseInt(formData.get("quantity") as string);
     const categoryId = parseInt(formData.get("categoryId") as string);
+    const collectionIds = formData.getAll("collectionIds").map(id => parseInt(id as string));
     const inStock = formData.get("inStock") === "true";
+    const quantity = parseInt(formData.get("quantity") as string);
+    const images = formData.getAll("images") as File[];
 
-    // For demonstration purposes, hardcoding an authorId
-    // In a real app, you'd get this from the authenticated user
+    if (!name || !description || !price || !categoryId || !quantity) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
 
-    // Create product in database first
+    // Create product
     const product = await prisma.product.create({
       data: {
         name,
         description,
         price,
-        quantity,
-        inStock,
         categoryId,
+        inStock,
+        quantity,
+        collections: {
+          connect: collectionIds.map(id => ({ id }))
+        }
       },
     });
 
-    // Get all the image files from the formData
-    const imageFiles: File[] = formData.getAll("images") as File[];
-
-    if (imageFiles && imageFiles.length > 0) {
-      // Create directory if it doesn't exist
-      const uploadDir = path.join(
-        process.cwd(),
-        "public",
-        "images",
-        "products"
-      );
-      try {
-        await mkdir(uploadDir, { recursive: true });
-      } catch (error) {
-        console.error("Error creating directory:", error);
-      }
-
-      // Process each image file
-      for (let i = 0; i < imageFiles.length; i++) {
-        const image = imageFiles[i];
-
-        // Generate unique filename
-        const fileExtension = image.name.split(".").pop();
-        const fileName = `${uuidv4()}.${fileExtension}`;
-        const filePath = path.join(uploadDir, fileName);
-
-        // Write file to disk
-        const buffer = Buffer.from(await image.arrayBuffer());
-        await writeFile(filePath, buffer);
-
-        // Set image URL relative to public directory
-        const imageUrl = `/images/products/${fileName}`;
-
-        // Check if this is the main image
-        const isMainStr = formData.get(`imageIsMain_${i}`);
-        const isMain = isMainStr === "true";
-
-        // Create image record in database
-        await prisma.productImage.create({
-          data: {
-            url: imageUrl,
-            isMain,
-            productId: product.id,
-          },
-        });
-      }
+    // Handle image uploads
+    if (images.length > 0) {
+      // TODO: Implement image upload to storage service
+      // For now, we'll just create placeholder image records
+      await prisma.productImage.createMany({
+        data: images.map((_, index) => ({
+          url: `/placeholder-${index + 1}.jpg`,
+          isMain: index === 0,
+          productId: product.id,
+        })),
+      });
     }
 
-    // Fetch the complete product with images
-    const completeProduct = await prisma.product.findUnique({
-      where: { id: product.id },
-      include: { 
-        images: true,
-        category: true 
-      },
-    });
-
-    return NextResponse.json(completeProduct);
+    return NextResponse.json(product);
   } catch (error) {
     console.error("Error creating product:", error);
     return NextResponse.json(
-      { error: "Error creating product" },
+      { error: "Failed to create product" },
       { status: 500 }
     );
   }

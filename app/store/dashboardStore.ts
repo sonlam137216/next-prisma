@@ -26,20 +26,26 @@ interface Category {
   products?: Product[];
 }
 
+export interface Collection {
+  id: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: number;
   name: string;
-  description: string | null;
+  description: string;
   price: number;
   quantity: number;
+  images: ProductImage[];
+  category?: Category;
+  collection?: Collection;
   inStock: boolean;
   createdAt: string;
-  updatedAt?: string;
-  authorId: number;
-  categoryId: number;
-  category?: Category;
-  author?: User;
-  images: ProductImage[];
+  updatedAt: string;
 }
 
 export interface CartItem {
@@ -75,6 +81,7 @@ interface DashboardStore {
   totalPages: number;
   totalProducts: number;
   pageSize: number;
+  isLoading: boolean;
 
   // Cart operations
   addToCart: (product: Product, quantity: number) => void;
@@ -84,7 +91,18 @@ interface DashboardStore {
   clearCart: () => void;
 
   // Product operations
-  fetchProducts: (page?: number, pageSize?: number) => Promise<void>;
+  fetchProducts: (
+    page?: number, 
+    pageSize?: number,
+    filters?: {
+      search?: string;
+      categoryId?: number;
+      collectionId?: number;
+      minPrice?: number;
+      maxPrice?: number;
+      sortBy?: string;
+    }
+  ) => Promise<void>;
   addProduct: (formData: FormData) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
 
@@ -113,7 +131,8 @@ export const useDashboardStore = create<DashboardStore>()(
       currentPage: 1,
       totalPages: 1,
       totalProducts: 0,
-      pageSize: 8,
+      pageSize: 20,
+      isLoading: false,
 
       // Cart operations
       addToCart: (product, quantity) => {
@@ -186,20 +205,37 @@ export const useDashboardStore = create<DashboardStore>()(
       },
 
       // Product operations
-      fetchProducts: async (page = 1, pageSize = 8) => {
+      fetchProducts: async (page = 1, pageSize = 20, filters = {}) => {
         try {
-          const response = await fetch(`/api/products?page=${page}&pageSize=${pageSize}`);
-          if (!response.ok) throw new Error("Failed to fetch products");
+          set({ isLoading: true });
+          
+          // Build query parameters
+          const params = new URLSearchParams({
+            page: page.toString(),
+            pageSize: pageSize.toString(),
+            ...(filters.search && { search: filters.search }),
+            ...(filters.categoryId && { categoryId: filters.categoryId.toString() }),
+            ...(filters.collectionId && { collectionId: filters.collectionId.toString() }),
+            ...(filters.minPrice && { minPrice: filters.minPrice.toString() }),
+            ...(filters.maxPrice && { maxPrice: filters.maxPrice.toString() }),
+            ...(filters.sortBy && { sortBy: filters.sortBy }),
+          });
+
+          const response = await fetch(`/api/products?${params.toString()}`);
+          if (!response.ok) throw new Error('Failed to fetch products');
+          
           const data = await response.json();
-          set({ 
+          set({
             products: data.products,
             currentPage: data.currentPage,
             totalPages: data.totalPages,
             totalProducts: data.totalProducts,
-            pageSize: data.pageSize
+            pageSize: data.pageSize,
+            isLoading: false
           });
         } catch (error) {
-          console.error("Error fetching products:", error);
+          console.error('Error fetching products:', error);
+          set({ isLoading: false });
         }
       },
 
@@ -330,8 +366,11 @@ export const useDashboardStore = create<DashboardStore>()(
       },
     }),
     {
-      name: "shopping-cart-storage", // name of the item in localStorage
-      partialize: (state) => ({ cart: state.cart }), // only persist cart data
+      name: 'dashboard-store',
+      partialize: (state) => ({
+        cart: state.cart,
+        isCartOpen: state.isCartOpen,
+      }),
     }
   )
 );

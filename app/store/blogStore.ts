@@ -36,6 +36,7 @@ interface BlogState {
   // Existing methods
   fetchPosts: (page?: number, pageSize?: number) => Promise<void>;
   fetchPostById: (id: number) => Promise<void>;
+  fetchPostBySlug: (slug: string) => Promise<void>;
   createPost: (
     post: BlogPost,
     content: string,
@@ -128,6 +129,22 @@ export const useBlogStore = create<BlogState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get(`/api/admin/blog/${id}`);
+      set({ currentPost: response.data.post });
+    } catch (error) {
+      set({
+        error: axios.isAxiosError(error)
+          ? error.response?.data?.message || error.message
+          : "An unknown error occurred",
+      });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchPostBySlug: async (slug: string) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await api.get(`/api/blog/${slug}`);
       set({ currentPost: response.data.post });
     } catch (error) {
       set({

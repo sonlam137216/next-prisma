@@ -11,6 +11,7 @@ import { useEffect, useState, useRef } from "react";
 import HeroSlider from "./HeroSection";
 import { useRouter } from 'next/navigation';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
+import Link from "next/link";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -109,6 +110,30 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* Hero Section with Video Background */}
       <HeroSlider />
+
+      {/* 3 Small Banners Row */}
+      <div className="w-full flex justify-center mt-8 mb-12">
+        <div className="flex gap-6">
+          {/* Banner 1 */}
+          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px]">
+            <span className="text-white text-2xl font-bold mb-2">🚚</span>
+            <span className="text-white font-semibold text-lg">Miễn phí giao hàng</span>
+            <span className="text-white/80 text-sm mt-1">Cho đơn từ 500K</span>
+          </div>
+          {/* Banner 2 */}
+          <div className="bg-gradient-to-br from-pink-500 to-pink-400 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px]">
+            <span className="text-white text-2xl font-bold mb-2">🎁</span>
+            <span className="text-white font-semibold text-lg">Quà tặng hấp dẫn</span>
+            <span className="text-white/80 text-sm mt-1">Khi mua combo</span>
+          </div>
+          {/* Banner 3 */}
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-300 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px]">
+            <span className="text-white text-2xl font-bold mb-2">⭐</span>
+            <span className="text-white font-semibold text-lg">Đổi trả dễ dàng</span>
+            <span className="text-white/80 text-sm mt-1">Trong 7 ngày</span>
+          </div>
+        </div>
+      </div>
 
       {/* Content Wrapper for all sections */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
@@ -375,82 +400,90 @@ export default function LandingPage() {
       {/* Content Wrapper for remaining sections */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
         {/* Blog Posts / Latest News */}
-        <section className="py-14 sm:py-16">
+        <section className="mt-20 py-14 sm:py-16">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold">Tin tức & Blog</h2>
-            <Button variant="ghost" className="flex items-center gap-1 text-sm">
-              Xem tất cả <ChevronRight size={14} />
+            <Button variant="ghost" className="flex items-center gap-1 text-sm" asChild>
+              <Link href="/blog">
+                Xem tất cả <ChevronRight size={14} />
+              </Link>
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Featured blog post */}
-            <Card className="overflow-hidden hover:shadow-md transition-shadow border-0 col-span-1 sm:col-span-2 lg:col-span-3">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-                <div className="relative h-48 lg:h-auto lg:col-span-2">
-                  <Image 
-                    src={posts[0]?.featuredImage || `/api/placeholder/800/400`}
-                    alt={posts[0]?.title || "Featured blog post"}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <Badge className="bg-primary text-white">
-                      {new Date(posts[0]?.createdAt || new Date()).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}
-                    </Badge>
-                  </div>
-                </div>
-                
-                <div className="p-4 flex flex-col justify-center">
-                  <h3 className="text-xl font-bold mb-2 line-clamp-2">
+            {posts[0] && (
+              <Link
+                href={`/blog/${posts[0].slug}`}
+                className="relative col-span-1 lg:col-span-2 rounded-2xl overflow-hidden shadow-lg group min-h-[320px] flex flex-col justify-end bg-gradient-to-t from-black/70 to-transparent"
+              >
+                <Image
+                  src={posts[0]?.featuredImage || `/api/placeholder/800/400`}
+                  alt={posts[0]?.title || "Featured blog post"}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+                <div className="relative z-20 p-8">
+                  <Badge className="bg-primary text-white mb-2">
+                    {new Date(posts[0]?.createdAt || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </Badge>
+                  <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2 drop-shadow-lg">
                     {posts[0]?.title || "Featured blog post title"}
                   </h3>
-                  <p className="text-gray-600 mb-4 line-clamp-3 text-sm">
+                  <p className="text-gray-200 mb-4 line-clamp-3 text-base drop-shadow">
                     {posts[0]?.description || "This is a placeholder for your featured blog post description."}
                   </p>
-                  <Button variant="ghost" className="text-primary hover:text-primary/80 p-0 flex items-center gap-1 text-sm w-fit">
-                    Đọc thêm <ChevronRight size={14} />
+                  <Button
+                    variant="secondary"
+                    className="text-primary bg-white hover:bg-primary hover:text-white transition-colors"
+                  >
+                    Đọc thêm <ChevronRight size={14} className="ml-1" />
                   </Button>
                 </div>
-              </div>
-            </Card>
-            
+              </Link>
+            )}
+
             {/* Regular blog posts */}
-            {posts.slice(1, 4).map((post, index) => (
-              <Card key={post?.id || index} className="overflow-hidden hover:shadow-md transition-shadow border-0">
-                <div className="relative h-40">
-                  <Image 
-                    src={post?.featuredImage || `/api/placeholder/${500 + index}/${350 + index}`}
-                    alt={post?.title || `Blog post ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="top-10 left-3">
-                    <Badge className="bg-primary text-white text-xs">
-                      {new Date(post?.createdAt || new Date()).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}
-                    </Badge>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+              {posts.slice(1, 4).map((post, index) => (
+                <Link
+                  key={post?.id || index}
+                  href={`/blog/${post.slug}`}
+                  className="bg-white rounded-2xl shadow-md overflow-hidden group flex flex-col h-full transition-transform hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="relative h-40">
+                    <Image
+                      src={post?.featuredImage || `/api/placeholder/${500 + index}/${350 + index}`}
+                      alt={post?.title || `Blog post ${index + 1}`}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <Badge className="bg-primary text-white text-xs">
+                        {new Date(post?.createdAt || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-                
-                <CardHeader className="py-3 px-4">
-                  <CardTitle className="text-base line-clamp-2">
-                    {post?.title || `Blog post title ${index + 1}`}
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="py-0 px-4">
-                  <CardDescription className="line-clamp-2 text-xs">
-                    {post?.description || "This is a placeholder for your blog post description."}
-                  </CardDescription>
-                </CardContent>
-                
-                <CardFooter className="py-3 px-4">
-                  <Button variant="ghost" className="text-primary hover:text-primary/80 p-0 flex items-center gap-1 text-xs">
-                    Đọc thêm <ChevronRight size={14} />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                  <div className="p-4 flex flex-col flex-1">
+                    <h4 className="text-lg font-semibold mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+                      {post?.title || `Blog post title ${index + 1}`}
+                    </h4>
+                    <p className="text-gray-600 mb-3 line-clamp-2 text-sm">
+                      {post?.description || "This is a placeholder for your blog post description."}
+                    </p>
+                    <div className="mt-auto">
+                      <Button
+                        variant="ghost"
+                        className="text-primary hover:text-primary/80 p-0 flex items-center gap-1 text-xs"
+                      >
+                        Đọc thêm <ChevronRight size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       </div>

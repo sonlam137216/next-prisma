@@ -8,6 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useBlogStore } from '../store/blogStore';
 import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight, Clock, Calendar, Tag, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function BlogPage() {
   const router = useRouter();
@@ -47,30 +48,10 @@ export default function BlogPage() {
     return format(date, 'MMM dd, yyyy');
   };
 
-  // Create pagination array
-  const getPaginationRange = () => {
-    const totalPages = pagination.totalPages;
-    const currentPage = pagination.page;
-    
-    if (totalPages <= 5) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    
-    if (currentPage <= 3) {
-      return [1, 2, 3, 4, 5, '...', totalPages];
-    }
-    
-    if (currentPage >= totalPages - 2) {
-      return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    }
-    
-    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-white">
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-5xl font-bold mb-4">Our Blog</h1>
           <p className="text-xl max-w-2xl mx-auto opacity-90">
@@ -83,17 +64,17 @@ export default function BlogPage() {
       <div className="container mx-auto px-4 py-12">
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
           <div className="text-center py-20">
-            <p className="text-red-500 text-xl">{error}</p>
-            <button 
+            <p className="text-destructive text-xl">{error}</p>
+            <Button 
               onClick={() => fetchPosts(page)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              className="mt-4"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-lg shadow-sm border">
@@ -124,7 +105,7 @@ export default function BlogPage() {
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100">
+                      <div className="flex items-center justify-center h-full w-full bg-gray-50">
                         <BookOpen size={48} className="text-gray-400" />
                       </div>
                     )}
@@ -142,7 +123,7 @@ export default function BlogPage() {
                       </div>
                     </div>
                     
-                    <h2 className="text-xl font-bold mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h2 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">
                       {post.title}
                     </h2>
                     
@@ -150,7 +131,7 @@ export default function BlogPage() {
                       {post.description || "Read this article to learn more..."}
                     </p>
                     
-                    <span className="inline-flex items-center text-blue-600 font-medium">
+                    <span className="inline-flex items-center text-primary font-medium">
                       Read more
                       <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
                     </span>
@@ -162,49 +143,35 @@ export default function BlogPage() {
             {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="flex justify-center mt-12">
-                <div className="flex items-center space-x-1">
-                  <button
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page === 1}
-                    className={`px-3 py-2 rounded-md flex items-center ${
-                      pagination.page === 1
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-200'
-                    }`}
                   >
                     <ChevronLeft size={16} />
-                    <span className="sr-only">Previous</span>
-                  </button>
+                  </Button>
                   
-                  {getPaginationRange().map((pageNum, index) => (
-                    <button
-                      key={index}
-                      onClick={() => typeof pageNum === 'number' && handlePageChange(pageNum)}
-                      disabled={pageNum === '...'}
-                      className={`px-3 py-1 rounded-md ${
-                        pageNum === pagination.page
-                          ? 'bg-blue-600 text-white font-medium'
-                          : pageNum === '...'
-                          ? 'text-gray-500'
-                          : 'text-gray-700 hover:bg-gray-200'
-                      }`}
+                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => (
+                    <Button
+                      key={pageNum}
+                      variant={pageNum === pagination.page ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => handlePageChange(pageNum)}
                     >
                       {pageNum}
-                    </button>
+                    </Button>
                   ))}
                   
-                  <button
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page === pagination.totalPages}
-                    className={`px-3 py-2 rounded-md flex items-center ${
-                      pagination.page === pagination.totalPages
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-200'
-                    }`}
                   >
                     <ChevronRight size={16} />
-                    <span className="sr-only">Next</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
