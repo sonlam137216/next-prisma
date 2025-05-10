@@ -18,7 +18,7 @@ export default function LayoutClient({
           <Header />
         </div>
       )}
-      <main className={`flex-1 ${!isAdminRoute ? 'pt-20' : ''}`}>
+      <main className={`flex-1 ${!isAdminRoute ? 'mt-[120px]' : ''}`}>
         {children}
       </main>
     </>

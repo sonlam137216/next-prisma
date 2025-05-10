@@ -3,11 +3,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import type { EmblaCarouselType as CarouselApi } from "embla-carousel";
 
 const HeroSlider = () => {
+  const [api, setApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
  
-  // Updated slider data with only images
   const slides = [
     {
       image: "/images/products/6a1996e6-935d-4a97-b842-0a0090dd1ba7.png"
@@ -20,81 +22,120 @@ const HeroSlider = () => {
     },
   ];
 
-  // Auto-rotate slides
+  useEffect(() => {
+    if (!api) return;
+
+    api.on("select", () => {
+      setCurrentSlide(api.selectedScrollSnap());
+    });
+  }, [api]);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+      api?.scrollNext();
     }, 5000);
    
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [api]);
 
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-  };
-
-  const goToPrevSlide = () => {
-    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-  };
-
-  const goToNextSlide = () => {
-    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  const getSlideIndex = (index: number) => {
+    if (index < 0) return slides.length - 1;
+    if (index >= slides.length) return 0;
+    return index;
   };
 
   return (
-    <section className="relative h-[calc(90vh-5rem)] overflow-hidden">
-      {/* Slider images */}
-      {slides.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            currentSlide === index ? "opacity-100" : "opacity-0"
-          }`}
+    <section className="relative h-[calc(100vh-180px)] overflow-hidden bg-white mt-4">
+      <div className="relative h-full w-full">
+        <Carousel
+          opts={{
+            align: "center",
+            loop: true,
+          }}
+          className="w-full h-full"
+          setApi={setApi}
         >
-          <Image
-            src={slide.image}
-            alt={`Slide ${index + 1}`}
-            fill
-            priority={index === 0}
-            className="object-cover"
-          />
-        </div>
-      ))}
-     
-      {/* Navigation arrows */}
-      <div className="absolute z-20 flex justify-between w-full top-1/2 transform -translate-y-1/2 px-4 sm:px-6">
-        <Button
-          onClick={goToPrevSlide}
-          variant="secondary"
-          size="icon"
-          className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border-0"
-        >
-          <ChevronLeft size={20} />
-        </Button>
-        <Button
-          onClick={goToNextSlide}
-          variant="secondary"
-          size="icon"
-          className="h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border-0"
-        >
-          <ChevronRight size={20} />
-        </Button>
-      </div>
-     
-      {/* Dot indicators */}
-      <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`h-2 rounded-full transition-all ${
-              currentSlide === index
-                ? "w-6 bg-primary"
-                : "w-2 bg-white/40 hover:bg-white/60"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
+          <CarouselContent className="h-full">
+            {slides.map((slide, index) => (
+              <CarouselItem key={index} className="h-full">
+                <div className="relative h-full w-full flex items-center justify-center gap-4">
+                  {/* Previous slide preview */}
+                  <div className="w-[10%] h-[95%] transition-all duration-700 ease-in-out transform hover:scale-105">
+                    <div className="relative h-full w-full rounded-lg overflow-hidden opacity-20 transition-all duration-700 ease-in-out">
+                      <Image
+                        src={slides[getSlideIndex(index - 1)].image}
+                        alt="Previous slide"
+                        fill
+                        className="object-cover transition-transform duration-700 ease-in-out"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Current slide */}
+                  <div className="relative w-[80%] h-[95%] transition-all duration-700 ease-in-out z-10">
+                    <div className="relative h-full w-full rounded-xl overflow-hidden shadow-2xl">
+                      <Image
+                        src={slide.image}
+                        alt={`Slide ${index + 1}`}
+                        fill
+                        priority={index === 0}
+                        className="object-cover transition-transform duration-700 ease-in-out"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Next slide preview */}
+                  <div className="w-[10%] h-[95%] transition-all duration-700 ease-in-out transform hover:scale-105">
+                    <div className="relative h-full w-full rounded-lg overflow-hidden opacity-20 transition-all duration-700 ease-in-out">
+                      <Image
+                        src={slides[getSlideIndex(index + 1)].image}
+                        alt="Next slide"
+                        fill
+                        className="object-cover transition-transform duration-700 ease-in-out"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          
+          {/* Custom Navigation Buttons */}
+          <div className="absolute z-20 flex justify-between w-full top-1/2 transform -translate-y-1/2 px-8">
+            <Button
+              onClick={() => api?.scrollPrev()}
+              variant="secondary"
+              size="icon"
+              className="h-12 w-12 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm text-black border-0 transition-all duration-300 hover:scale-110"
+            >
+              <ChevronLeft size={24} />
+            </Button>
+            <Button
+              onClick={() => api?.scrollNext()}
+              variant="secondary"
+              size="icon"
+              className="h-12 w-12 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm text-black border-0 transition-all duration-300 hover:scale-110"
+            >
+              <ChevronRight size={24} />
+            </Button>
+          </div>
+
+          {/* Dot indicators */}
+          <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-3">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => api?.scrollTo(index)}
+                className={`h-3 rounded-full transition-all duration-500 ease-in-out ${
+                  currentSlide === index
+                    ? "w-8 bg-black"
+                    : "w-3 bg-black/40 hover:bg-black/60"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </Carousel>
       </div>
     </section>
   );

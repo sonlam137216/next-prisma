@@ -24,7 +24,6 @@ export default function LandingPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const imageSliderRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState(1);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -85,16 +84,16 @@ export default function LandingPage() {
     setTimeout(() => setIsAnimating(false), 1000);
   };
 
-  const nextCollectionProducts = () => {
-    setCurrentProductIndex((prev) => (prev + 4) % 8);
-  };
-
-  const prevCollectionProducts = () => {
-    setCurrentProductIndex((prev) => (prev - 4 + 8) % 8);
-  };
-
   const visibleProducts = featuredProducts.slice(currentIndex, currentIndex + 4);
-  const collectionProducts = featuredProducts.slice(currentProductIndex, currentProductIndex + 4);
+
+  // Add this new function to group products
+  const getProductGroups = (products: Product[], groupSize: number) => {
+    const groups = [];
+    for (let i = 0; i < products.length; i += groupSize) {
+      groups.push(products.slice(i, i + groupSize));
+    }
+    return groups;
+  };
 
   const handleProductClick = (productId: number) => {
     router.push(`/products/${productId}`);
@@ -115,19 +114,19 @@ export default function LandingPage() {
       <div className="w-full flex justify-center mt-8 mb-12">
         <div className="flex gap-6">
           {/* Banner 1 */}
-          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px]">
+          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px] transition-all duration-300 hover:scale-105">
             <span className="text-white text-2xl font-bold mb-2">🚚</span>
             <span className="text-white font-semibold text-lg">Miễn phí giao hàng</span>
             <span className="text-white/80 text-sm mt-1">Cho đơn từ 500K</span>
           </div>
           {/* Banner 2 */}
-          <div className="bg-gradient-to-br from-pink-500 to-pink-400 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px]">
+          <div className="bg-gradient-to-br from-pink-500 to-pink-400 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px] transition-all duration-300 hover:scale-105">
             <span className="text-white text-2xl font-bold mb-2">🎁</span>
             <span className="text-white font-semibold text-lg">Quà tặng hấp dẫn</span>
             <span className="text-white/80 text-sm mt-1">Khi mua combo</span>
           </div>
           {/* Banner 3 */}
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-300 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px]">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-300 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px] transition-all duration-300 hover:scale-105">
             <span className="text-white text-2xl font-bold mb-2">⭐</span>
             <span className="text-white font-semibold text-lg">Đổi trả dễ dàng</span>
             <span className="text-white/80 text-sm mt-1">Trong 7 ngày</span>
@@ -142,87 +141,68 @@ export default function LandingPage() {
           <div className="max-w-[1200px] mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold">Sản phẩm mới nhất</h2>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={prevProduct}
-                  className="rounded-full hover:bg-primary/10 transition-colors"
-                  disabled={isAnimating}
-                >
-                  <ChevronLeft size={20} />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={nextProduct}
-                  className="rounded-full hover:bg-primary/10 transition-colors"
-                  disabled={isAnimating}
-                >
-                  <ChevronRightIcon size={20} />
-                </Button>
-              </div>
             </div>
             
-            <div className="relative overflow-hidden">
-              <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 transition-transform duration-1000 ease-in-out ${
-                isAnimating ? 'transform -translate-x-1' : ''
-              }`}>
-                {visibleProducts.map((product) => (
-                  <Card 
-                    key={product.id} 
-                    className="group overflow-hidden hover:shadow-md transition-all duration-300 border-0 bg-white rounded-lg transform hover:scale-[1.02] cursor-pointer"
-                    onClick={() => handleProductClick(product.id)}
-                  >
-                    <div className="relative h-40 sm:h-48">
-                      <div className="absolute top-2 right-2 z-10 flex gap-1">
-                        <Button 
-                          size="icon" 
-                          variant="secondary" 
-                          className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
-                        >
-                          <Heart size={14} />
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="secondary" 
-                          className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
-                        >
-                          <Search size={14} />
-                        </Button>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {featuredProducts.map((product) => (
+                  <CarouselItem key={product.id} className="md:basis-1/4">
+                    <Card 
+                      className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] cursor-pointer"
+                      onClick={() => handleProductClick(product.id)}
+                    >
+                      <div className="relative h-40 sm:h-48">
+                        <div className="absolute top-2 right-2 z-10 flex gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
+                          >
+                            <Heart size={14} />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
+                          >
+                            <Search size={14} />
+                          </Button>
+                        </div>
+                        
+                        <Image 
+                          src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
+                          alt={product.name}
+                          fill
+                          className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                        />
                       </div>
                       
-                      <Image 
-                        src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    
-                    <CardHeader className="py-2 px-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <Badge variant="outline" className="font-normal text-xs transition-colors group-hover:bg-primary/10">
-                          {product.category?.name || "Category"}
-                        </Badge>
-                        <Badge variant="secondary" className="font-medium text-sm transition-colors group-hover:bg-primary">
-                          ${product.price}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-sm transition-colors group-hover:text-primary">
-                        {product.name}
-                      </CardTitle>
-                    </CardHeader>
-                    
-                    <CardContent className="py-0 px-3">
-                      <CardDescription className="line-clamp-1 text-gray-600 text-xs transition-colors group-hover:text-gray-800">
-                        {product.description || "No description available"}
-                      </CardDescription>
-                    </CardContent>
-                  </Card>
+                      <CardHeader className="py-2 px-3">
+                        <div className="flex justify-between items-center mb-1">
+                          <Badge variant="outline" className="font-normal text-xs transition-all duration-300 group-hover:bg-primary/10">
+                            {product.category?.name || "Category"}
+                          </Badge>
+                          <Badge variant="secondary" className="font-medium text-sm transition-all duration-300 group-hover:bg-primary">
+                            ${product.price}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-sm transition-all duration-300 group-hover:text-primary">
+                          {product.name}
+                        </CardTitle>
+                      </CardHeader>
+                      
+                      <CardContent className="py-0 px-3">
+                        <CardDescription className="line-clamp-1 text-gray-600 text-xs transition-all duration-300 group-hover:text-gray-800">
+                          {product.description || "No description available"}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
                 ))}
-              </div>
-            </div>
+              </CarouselContent>
+              <CarouselPrevious className="text-black hover:text-primary border-black hover:border-primary" />
+              <CarouselNext className="text-black hover:text-primary border-black hover:border-primary" />
+            </Carousel>
           </div>
         </section>
 
@@ -233,76 +213,64 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Left side - Image Slider */}
               <div className="relative h-[500px] overflow-hidden rounded-lg">
-                {collectionImages.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 transition-opacity duration-1000 ${
-                      index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <Image
-                      src={image}
-                      alt={`Collection ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
-                <div className="absolute bottom-4 left-4 flex gap-2">
-                  {collectionImages.map((_, index) => (
-                    <button
-                      key={index}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        index === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    />
-                  ))}
-                </div>
+                <Carousel className="w-full h-full">
+                  <CarouselContent>
+                    {collectionImages.map((image, index) => (
+                      <CarouselItem key={index} className="h-full">
+                        <div className="relative h-full w-full">
+                          <Image
+                            src={image}
+                            alt={`Collection ${index + 1}`}
+                            fill
+                            className="object-cover transition-transform duration-700 ease-in-out"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="text-white hover:text-primary border-white hover:border-primary" />
+                  <CarouselNext className="text-white hover:text-primary border-white hover:border-primary" />
+                </Carousel>
               </div>
 
               {/* Right side - Product Grid */}
               <div className="relative h-[500px]">
-                <div className="grid grid-cols-2 gap-4 h-full">
-                  {collectionProducts.map((product) => (
-                    <Card 
-                      key={product.id} 
-                      className="group overflow-hidden hover:shadow-md transition-all duration-300 border-0 bg-white rounded-lg transform hover:scale-[1.02] h-full cursor-pointer"
-                      onClick={() => handleProductClick(product.id)}
-                    >
-                      <div className="relative h-[200px] -mt-1">
-                        <Image 
-                          src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
-                          alt={product.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm transition-colors group-hover:text-primary">
-                          {product.name}
-                        </CardTitle>
-                        <Badge variant="secondary" className="font-medium text-sm transition-colors group-hover:bg-primary">
-                          ${product.price}
-                        </Badge>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-                <div className="absolute left-0 top-1/2 -translate-y-1/2">
-                  <ChevronLeft 
-                    size={24} 
-                    className="text-white bg-black/50 p-1 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
-                    onClick={prevCollectionProducts}
-                  />
-                </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                  <ChevronRightIcon 
-                    size={24} 
-                    className="text-white bg-black/50 p-1 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
-                    onClick={nextCollectionProducts}
-                  />
-                </div>
+                <Carousel className="w-full h-full">
+                  <CarouselContent>
+                    {getProductGroups(featuredProducts, 4).map((productGroup, groupIndex) => (
+                      <CarouselItem key={groupIndex} className="md:basis-1/1">
+                        <div className="grid grid-cols-2 gap-4 h-full">
+                          {productGroup.map((product) => (
+                            <Card 
+                              key={product.id}
+                              className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] h-full cursor-pointer"
+                              onClick={() => handleProductClick(product.id)}
+                            >
+                              <div className="relative h-[200px] -mt-1">
+                                <Image 
+                                  src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                                />
+                              </div>
+                              <CardHeader className="py-2 px-3">
+                                <CardTitle className="text-sm transition-all duration-300 group-hover:text-primary">
+                                  {product.name}
+                                </CardTitle>
+                                <Badge variant="secondary" className="font-medium text-sm transition-all duration-300 group-hover:bg-primary">
+                                  ${product.price}
+                                </Badge>
+                              </CardHeader>
+                            </Card>
+                          ))}
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="text-black hover:text-primary border-black hover:border-primary" />
+                  <CarouselNext className="text-black hover:text-primary border-black hover:border-primary" />
+                </Carousel>
               </div>
             </div>
           </div>
