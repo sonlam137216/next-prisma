@@ -59,8 +59,11 @@ model BlogPost {
   id            Int      @id @default(autoincrement())
   title         String
   slug          String   @unique
-  path          String
+  description   String?  @db.Text
   featuredImage String?
+  path          String?
+  category      String   @default("Uncategorized")
+  readingTime   Int      @default(5) // in minutes
   published     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

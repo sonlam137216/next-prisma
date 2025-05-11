@@ -38,7 +38,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     fetchProducts(1, 8); // Fetch first page with 8 items
-    fetchPosts();
+    fetchPosts(1);
     fetchCategories();
   }, [fetchProducts, fetchCategories, fetchPosts]);
 

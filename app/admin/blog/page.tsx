@@ -1,217 +1,146 @@
 // app/admin/blog/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useBlogStore } from '@/app/store/blogStore';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { useBlogStore } from "@/app/store/blogStore";
+import { format } from "date-fns";
+import { MoreHorizontal, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 
-export default function BlogListPage() {
+export default function BlogAdminPage() {
   const router = useRouter();
   const { posts, loading, error, fetchPosts, deletePost } = useBlogStore();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(1);
   }, [fetchPosts]);
 
-  const handleDelete = async () => {
-    if (postToDelete !== null) {
-      await deletePost(postToDelete);
-      setIsDeleteDialogOpen(false);
-      setPostToDelete(null);
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+      try {
+        await deletePost(id);
+        toast.success("Xóa bài viết thành công");
+      } catch (error) {
+        toast.error("Có lỗi xảy ra khi xóa bài viết");
+      }
     }
   };
 
-  const confirmDelete = (id: number) => {
-    setPostToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
+  const filteredPosts = posts.filter((post) =>
+    post.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const formatDate = (dateString: string | Date) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(date);
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-            <p className="text-sm text-muted-foreground">Loading blog posts...</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-red-500 mb-2">Error loading blog posts</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
-            <Button 
-              variant="outline" 
-              onClick={() => fetchPosts()} 
-              className="mt-4"
-            >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    if (posts.length === 0) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-lg mb-2">No blog posts found</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create your first blog post to get started
-            </p>
-            <Button 
-              onClick={() => router.push('/admin/blog/new')}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Blog Post
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Updated</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {posts.map((post) => (
-            <TableRow key={post.id}>
-              <TableCell className="font-medium">{post.title}</TableCell>
-              <TableCell>
-                {post.published ? (
-                  <Badge variant="default" className="bg-green-500">Published</Badge>
-                ) : (
-                  <Badge variant="outline">Draft</Badge>
-                )}
-              </TableCell>
-              <TableCell>{formatDate(post.createdAt!)}</TableCell>
-              <TableCell>{formatDate(post.updatedAt!)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => router.push(`/admin/blog/${post.id}/edit`)}
-                    title="Edit"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => confirmDelete(post.id!)}
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => router.push(`/blog/preview/${post.slug}`)}
-                    title={post.published ? "View" : "Preview"}
-                  >
-                    {post.published ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
-  };
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Blog Management</h1>
-          <p className="text-muted-foreground">Manage your blog posts</p>
-        </div>
-        <Button onClick={() => router.push('/admin/blog/new')}>
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Quản lý bài viết</h1>
+        <Button onClick={() => router.push("/admin/blog/new")}>
           <Plus className="mr-2 h-4 w-4" />
-          New Post
+          Thêm bài viết mới
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Posts</CardTitle>
-          <CardDescription>
-            View and manage all your blog posts
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {renderContent()}
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Tìm kiếm bài viết..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      </div>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the blog post.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Tiêu đề</TableHead>
+              <TableHead>Danh mục</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead>Ngày tạo</TableHead>
+              <TableHead className="w-[100px]">Thao tác</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredPosts.map((post) => (
+              <TableRow key={post.id}>
+                <TableCell className="font-medium">{post.title}</TableCell>
+                <TableCell>{post.category}</TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      post.published
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {post.published ? "Đã xuất bản" : "Bản nháp"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {format(new Date(post.createdAt), "dd/MM/yyyy")}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => router.push(`/admin/blog/${post.id}`)}
+                      >
+                        Chỉnh sửa
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => router.push(`/blog/${post.slug}`)}
+                      >
+                        Xem trước
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDelete(post.id)}
+                      >
+                        Xóa
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

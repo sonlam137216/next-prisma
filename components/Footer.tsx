@@ -1,134 +1,85 @@
 import Link from "next/link"
-import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { FaFacebook, FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa';
 
 export function Footer() {
   return (
-    <div className="bg-background border-t">
-      <div className="container px-4 md:px-6 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">A</span>
+    <footer className="bg-primary text-white pt-10 pb-4">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+          {/* Company Info */}
+          <div className="md:col-span-2">
+            <div className="flex items-center mb-4">
+              <div>
+                <div className="text-2xl font-bold leading-tight">CÔNG TY TNHH GEM PHONG THUY</div>
               </div>
-              <span className="text-xl font-bold">Acme Inc</span>
             </div>
-            <p className="text-muted-foreground">
-              Making the world a better place through innovative solutions and exceptional customer service.
+            <p className="mb-2 text-sm">
+              Mắt Việt tự hào là chuỗi bán lẻ kính mắt chính hãng tại thị trường Việt Nam từ năm 1989.
             </p>
-            <div className="flex space-x-4">
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Facebook className="h-5 w-5" />
-                <span className="sr-only">Facebook</span>
+            <p className="mb-2 text-sm">
+              Hệ thống hơn 30 cửa hàng từ Bắc chí Nam tại các trung tâm thương mại lớn và các con đường sầm uất.
+            </p>
+            <p className="mb-2 text-sm">
+              Điểm đến tin cậy để đo mắt và tư vấn thị lực theo tiêu chuẩn quốc tế bằng những dịch vụ chăm sóc khách hàng tận tâm, chuyên nghiệp.
+            </p>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <div className="font-bold mb-2">THÔNG TIN LIÊN HỆ</div>
+            <div className="text-sm mb-1">- SH1-08 Khu Đô Thị Sala, 153 Nguyễn Cơ Thạch ,<br/>Phường An Lợi Đông, TP. Thủ Đức, TP. Hồ Chí Minh, Việt Nam.</div>
+            <div className="text-sm mb-1">- Điện thoại: 028 73006061</div>
+            <div className="text-sm mb-1">- Email: cskh@matviet.vn</div>
+            <div className="flex items-center mt-2">
+              <span className="bg-yellow-400 text-[#062366] font-bold px-4 py-2 rounded flex items-center gap-2">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#062366" strokeWidth="2" d="M6.5 7.5A5.5 5.5 0 0 1 12 2a5.5 5.5 0 0 1 5.5 5.5c0 2.5-1.5 4.5-5.5 9.5-4-5-5.5-7-5.5-9.5Z"/><circle cx="12" cy="7.5" r="1.5" fill="#062366"/></svg>
+                Hotline: <span className="text-xl">19006081</span>
+              </span>
+            </div>
+          </div>
+
+          {/* About & Policy */}
+          <div>
+            <div className="font-bold mb-2">VỀ MẮT VIỆT</div>
+            <div className="text-sm mb-1"><Link href="#">Giới Thiệu Mắt Việt</Link></div>
+            <div className="text-sm mb-1"><Link href="#">Hệ thống cửa hàng</Link></div>
+            <div className="font-bold mt-4 mb-2">CHÍNH SÁCH</div>
+            {/* <div className="text-sm mb-1"><Link href="#">Điều khoản dịch vụ</Link></div> */}
+            {/* <div className="text-sm mb-1"><Link href="#">Chính sách thanh toán</Link></div> */}
+            <div className="text-sm mb-1"><Link href="#">Chính sách giao hàng</Link></div>
+            <div className="text-sm mb-1"><Link href="#">Chính sách đổi trả</Link></div>        </div>
+
+          {/* Customer Support */}
+          <div>
+
+          <div>
+            <div className="font-bold mb-2">HỖ TRỢ KHÁCH HÀNG</div>
+            <div className="text-sm mb-1"><Link href="#">Liên hệ</Link></div>
+          </div>
+          <div className="mt-4">
+            <div className="font-bold mb-2">KẾT NỐI VỚI MẮT VIỆT</div>
+            <div className="flex justify-start gap-4 text-2xl">
+              <Link href="#" className="flex items-center gap-1">
+                <FaFacebook />
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Twitter className="h-5 w-5" />
-                <span className="sr-only">Twitter</span>
+              <Link href="#" className="flex items-center gap-1">
+                <FaInstagram />
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Instagram className="h-5 w-5" />
-                <span className="sr-only">Instagram</span>
+              <Link href="#" className="flex items-center gap-1">
+                <FaTiktok />
               </Link>
-              <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Linkedin className="h-5 w-5" />
-                <span className="sr-only">LinkedIn</span>
+              <Link href="#" className="flex items-center gap-1">
+                <FaYoutube />
               </Link>
             </div>
           </div>
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium uppercase tracking-wider">Products</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Integrations
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Changelog
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Documentation
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium uppercase tracking-wider">Company</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Customers
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Partners
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium uppercase tracking-wider">Subscribe</h3>
-            <p className="text-muted-foreground">Subscribe to our newsletter for the latest updates and offers.</p>
-            <div className="flex space-x-2">
-              <Input type="email" placeholder="Enter your email" className="max-w-[220px]" />
-              <Button type="submit" variant="default">
-                Subscribe
-              </Button>
-            </div>
           </div>
         </div>
-        <Separator className="my-8" />
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Acme Inc. All rights reserved.
-          </p>
-          <div className="flex space-x-4 mt-4 md:mt-0">
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Cookie Policy
-            </Link>
-          </div>
-        </div>
+
+        <div className="border-t border-white/20 my-8"></div>
       </div>
-    </div>
+    </footer>
   )
 }
 

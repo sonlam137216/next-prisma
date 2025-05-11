@@ -31,7 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useDashboardStore } from "@/app/store/dashboardStore";
+import { useDashboardStore, Product } from "@/app/store/dashboardStore";
 import { Upload, X, Star } from "lucide-react";
 
 const productFormSchema = z.object({
@@ -54,17 +54,48 @@ interface ImagePreview {
 interface ProductFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  product?: Product | null;
 }
 
-export function ProductForm({ open, onOpenChange }: ProductFormProps) {
-  const { addProduct, categories, fetchCategories } = useDashboardStore();
+export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
+  const { addProduct, updateProduct, categories, fetchCategories } = useDashboardStore();
   const [images, setImages] = useState<ImagePreview[]>([]);
 
   useEffect(() => {
     if (open) {
       fetchCategories();
+      if (product) {
+        // Set form values for editing
+        form.reset({
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          quantity: product.quantity,
+          inStock: product.inStock,
+          categoryId: product.category?.id.toString() || "",
+        });
+        // Set existing images
+        setImages(
+          product.images.map((img) => ({
+            file: new File([], img.url), // Create a dummy file since we can't recreate the original
+            preview: img.url,
+            isMain: img.isMain,
+          }))
+        );
+      } else {
+        // Reset form for new product
+        form.reset({
+          name: "",
+          description: "",
+          price: 0,
+          quantity: 0,
+          inStock: true,
+          categoryId: "",
+        });
+        setImages([]);
+      }
     }
-  }, [open, fetchCategories]);
+  }, [open, product, fetchCategories]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -144,12 +175,16 @@ export function ProductForm({ open, onOpenChange }: ProductFormProps) {
     });
 
     try {
-      await addProduct(formData);
+      if (product) {
+        await useDashboardStore.getState().updateProduct(product.id, formData);
+      } else {
+        await useDashboardStore.getState().addProduct(formData);
+      }
       form.reset();
       setImages([]);
       onOpenChange(false);
     } catch (error) {
-      console.error("Failed to add product:", error);
+      console.error("Failed to submit product:", error);
     }
   };
 
@@ -157,9 +192,11 @@ export function ProductForm({ open, onOpenChange }: ProductFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>{product ? "Edit Product" : "Add New Product"}</DialogTitle>
           <DialogDescription>
-            Fill in the details to add a new product to your inventory.
+            {product
+              ? "Update the product details below."
+              : "Fill in the details to add a new product to your inventory."}
           </DialogDescription>
         </DialogHeader>
 
@@ -284,74 +321,57 @@ export function ProductForm({ open, onOpenChange }: ProductFormProps) {
                   <div className="space-y-1 leading-none">
                     <FormLabel>In Stock</FormLabel>
                   </div>
-                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <FormLabel>Product Images</FormLabel>
-              <div className="flex items-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById("image-upload")?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Images
-                </Button>
-                <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+              <div className="grid grid-cols-4 gap-4">
+                {images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image.preview}
+                      alt={`Product image ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMainImage(index)}
+                      className={`absolute top-1 left-1 p-1 rounded-full transition-opacity ${
+                        image.isMain
+                          ? "bg-yellow-400 opacity-100"
+                          : "bg-gray-500 opacity-0 group-hover:opacity-100"
+                      }`}
+                    >
+                      <Star className="h-4 w-4 text-white" />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex items-center justify-center w-full h-24 border-2 border-dashed rounded-md cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <Upload className="h-8 w-8 text-gray-400" />
+                </label>
               </div>
-              
-              {images.length > 0 && (
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={image.preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-20 object-cover rounded-md border"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-white hover:text-red-500"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className={`h-8 w-8 ${image.isMain ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`}
-                          onClick={() => setMainImage(index)}
-                        >
-                          <Star className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {image.isMain && (
-                        <div className="absolute top-0 right-0 bg-yellow-400 text-xs px-1 rounded-bl-md rounded-tr-md">
-                          Main
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             <DialogFooter>
-              <Button type="submit">Add Product</Button>
+              <Button type="submit">
+                {product ? "Update Product" : "Add Product"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

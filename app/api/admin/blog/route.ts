@@ -4,310 +4,190 @@ import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
 import { promises as fsPromises } from "fs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { writeFile } from "fs/promises";
+import { v4 as uuidv4 } from "uuid";
+import { Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 // GET /api/admin/blog - List all blog posts with pagination
-export async function GET(req: NextRequest) {
+export async function GET(request: Request) {
   try {
-    // Get pagination parameters from URL
-    const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const pageSize = parseInt(url.searchParams.get("pageSize") || "9");
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "9");
+    const category = searchParams.get("category");
 
-    // Calculate skip for pagination
+
     const skip = (page - 1) * pageSize;
 
-    // Get total count for pagination calculation
-    const totalPosts = await prisma.blogPost.count();
+    const where: Prisma.BlogPostWhereInput = {
+      published: true,
+      ...(category && category !== 'Tất cả' ? { category } : {}),
+    };
+
+
+    const [posts, totalPosts] = await Promise.all([
+      prisma.blogPost.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: pageSize,
+      }),
+      prisma.blogPost.count({ where }),
+    ]);
+
+
     const totalPages = Math.ceil(totalPosts / pageSize);
 
-    // Get posts for the requested page
-    const posts = await prisma.blogPost.findMany({
-      orderBy: { createdAt: "desc" },
-      skip: skip,
-      take: pageSize,
-    });
-
-    // For each post, extract description from HTML content if available
-    const postsWithDescription = await Promise.all(
-      posts.map(async (post) => {
-        let description = "";
-
-        if (post.path) {
-          try {
-            const filePath = path.join(
-              process.cwd(),
-              "public",
-              post.path.replace(/^\//, "")
-            );
-            if (fs.existsSync(filePath)) {
-              const content = await fsPromises.readFile(filePath, "utf-8");
-              // Try to extract description from meta tag
-              const descriptionMatch = content.match(
-                /<meta name="description" content="(.*?)"/
-              );
-              description = descriptionMatch ? descriptionMatch[1] : "";
-
-              // If no description found, extract first paragraph (up to 150 chars)
-              if (!description) {
-                const bodyMatch = content.match(
-                  /<body[^>]*>([\s\S]*?)<\/body>/
-                );
-                if (bodyMatch) {
-                  const firstParagraphMatch = bodyMatch[1].match(
-                    /<p[^>]*>([\s\S]*?)<\/p>/
-                  );
-                  if (firstParagraphMatch) {
-                    // Strip HTML tags and limit to 150 chars
-                    description = firstParagraphMatch[1]
-                      .replace(/<[^>]*>/g, "")
-                      .substring(0, 150);
-                    if (description.length === 150) description += "...";
-                  }
-                }
-              }
-            }
-          } catch (error) {
-            console.error(
-              `Error extracting description for ${post.slug}:`,
-              error
-            );
-          }
-        }
-
-        return {
-          ...post,
-          description,
-        };
-      })
-    );
-
-    return NextResponse.json({
-      posts: postsWithDescription,
+    const response = {
+      posts,
       page,
       pageSize,
       totalPosts,
       totalPages,
-    });
+    };
+
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching blog posts:", error);
     return NextResponse.json(
-      { message: "Failed to fetch blog posts" },
+      { message: "Internal server error" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
-export async function POST(req: NextRequest) {
+// POST /api/admin/blog
+export async function POST(request: Request) {
   try {
-    console.log("post func");
-    const formData = await req.formData();
-    const postDataStr = formData.get("postData") as string;
-    const content = formData.get("content") as string;
-    const featuredImage = formData.get("featuredImage") as File;
-    const saveToFile = formData.get("saveToFile") as string;
-
-    // Parse post data
-    const postData = JSON.parse(postDataStr);
-    console.log({ contentInAPI: "content" });
-
-    // Process content
-    if (saveToFile === "true" && content) {
-      const slug = postData.slug;
-      const publicDir = path.join(process.cwd(), "public");
-      const blogDir = path.join(publicDir, "blog-content");
-
-      // Create blog directory if it doesn't exist
-      if (!fs.existsSync(blogDir)) {
-        await fsPromises.mkdir(blogDir, { recursive: true });
-      }
-
-      // Create HTML file with wrapped content
-      const htmlFilePath = path.join(blogDir, `${slug}.html`);
-      const wrappedContent = wrapContentWithHtml(content, postData.title);
-      console.log({ htmlFilePath });
-      await fsPromises.writeFile(htmlFilePath, wrappedContent);
-      console.log("fsPromise");
-      // Set the path in the database
-      postData.path = `/blog-content/${slug}.html`;
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Handle featured image upload if provided
+    const formData = await request.formData();
+    const postData = JSON.parse(formData.get("postData") as string);
+    const content = formData.get("content") as string;
+    const featuredImage = formData.get("featuredImage") as File | null;
+
+    // Generate slug from title
+    const slug = postData.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    // Save content to file
+    const contentPath = `/blog-content/${slug}.html`;
+    const fullPath = path.join(process.cwd(), "public", contentPath);
+    await writeFile(fullPath, content);
+
+    // Handle featured image if provided
+    let featuredImagePath = null;
     if (featuredImage) {
       const buffer = Buffer.from(await featuredImage.arrayBuffer());
-      const filename = `${Date.now()}-${featuredImage.name.replace(
-        /\s/g,
-        "-"
-      )}`;
-      console.log("feature image 1");
-
-      // Use the specific directory for featured images
-      const featuredImagesDir = path.join(
-        process.cwd(),
-        "public",
-        "featured-images"
-      );
-
-      if (!fs.existsSync(featuredImagesDir)) {
-        await fsPromises.mkdir(featuredImagesDir, { recursive: true });
-      }
-
-      await fsPromises.writeFile(
-        path.join(featuredImagesDir, filename),
-        buffer
-      );
-      console.log("feature image 2");
-      postData.featuredImage = `/featured-images/${filename}`;
+      const fileName = `${uuidv4()}-${featuredImage.name}`;
+      const imagePath = `/blog-images/${fileName}`;
+      const fullImagePath = path.join(process.cwd(), "public", imagePath);
+      await writeFile(fullImagePath, buffer);
+      featuredImagePath = imagePath;
     }
 
-    // Save the post to the database using Prisma
+    // Create blog post without content
     const post = await prisma.blogPost.create({
       data: {
-        title: postData.title,
-        slug: postData.slug,
-        path: postData.path,
-        featuredImage: postData.featuredImage, // Add the featuredImage to the database
-        published: postData.published || false,
+        ...postData,
+        slug,
+        path: contentPath,
+        featuredImage: featuredImagePath,
       },
     });
 
-    console.log("post", post);
-
-    return NextResponse.json({
-      success: true,
-      post,
-      message: "Post created successfully",
-    });
+    return NextResponse.json({ post });
   } catch (error) {
-    console.error("Error creating post:", error);
+    console.error("Error creating blog post:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to create post" },
+      { message: "Internal server error" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
-export async function PUT(req: NextRequest) {
+// PUT /api/admin/blog
+export async function PUT(request: Request) {
   try {
-    const formData = await req.formData();
-    const postDataStr = formData.get("postData") as string;
-    const content = formData.get("content") as string;
-    const featuredImage = formData.get("featuredImage") as File;
-    const saveToFile = formData.get("saveToFile") as string;
-
-    // Parse post data
-    const postData = JSON.parse(postDataStr);
-    const id = postData.id;
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: "Post ID is required" },
-        { status: 400 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // Process content
-    if (saveToFile === "true" && content) {
-      const slug = postData.slug;
-      const publicDir = path.join(process.cwd(), "public");
-      const blogDir = path.join(publicDir, "blog-content");
+    const formData = await request.formData();
+    const postData = JSON.parse(formData.get("postData") as string);
+    const content = formData.get("content") as string | null;
+    const featuredImage = formData.get("featuredImage") as File | null;
 
-      // Create blog directory if it doesn't exist
-      if (!fs.existsSync(blogDir)) {
-        await fsPromises.mkdir(blogDir, { recursive: true });
-      }
-
-      // Create HTML file with wrapped content
-      const htmlFilePath = path.join(blogDir, `${slug}.html`);
-      const wrappedContent = wrapContentWithHtml(content, postData.title);
-      await fsPromises.writeFile(htmlFilePath, wrappedContent);
-
-      // Set the path in the database
-      postData.path = `/blog-content/${slug}.html`;
-    }
-
-    // Get the current post data to check if we already have a featuredImage
-    const currentPost = await prisma.blogPost.findUnique({
-      where: { id: Number(id) },
-    });
-
-    // Handle featured image upload if provided
+    // Handle featured image if provided
+    let featuredImagePath = postData.featuredImage;
     if (featuredImage) {
       const buffer = Buffer.from(await featuredImage.arrayBuffer());
-      const filename = `${Date.now()}-${featuredImage.name.replace(
-        /\s/g,
-        "-"
-      )}`;
-
-      // Use featured-images directory
-      const featuredImagesDir = path.join(
-        process.cwd(),
-        "public",
-        "featured-images"
-      );
-
-      if (!fs.existsSync(featuredImagesDir)) {
-        await fsPromises.mkdir(featuredImagesDir, { recursive: true });
-      }
-
-      await fsPromises.writeFile(
-        path.join(featuredImagesDir, filename),
-        buffer
-      );
-
-      // Delete previous featured image if it exists
-      if (currentPost?.featuredImage) {
-        const previousImagePath = path.join(
-          process.cwd(),
-          "public",
-          currentPost.featuredImage.replace(/^\//, "")
-        );
-
-        try {
-          if (fs.existsSync(previousImagePath)) {
-            await fsPromises.unlink(previousImagePath);
-          }
-        } catch (err) {
-          console.error("Error deleting previous image:", err);
-        }
-      }
-
-      postData.featuredImage = `/featured-images/${filename}`;
-    } else {
-      // Keep the existing featured image if none provided
-      postData.featuredImage = currentPost?.featuredImage;
+      const fileName = `${uuidv4()}-${featuredImage.name}`;
+      const imagePath = `/blog-images/${fileName}`;
+      const fullImagePath = path.join(process.cwd(), "public", imagePath);
+      await writeFile(fullImagePath, buffer);
+      featuredImagePath = imagePath;
     }
 
-    // Update the post in the database
+    // Update content file if provided
+    if (content) {
+      const contentPath = `/blog-content/${postData.slug}.html`;
+      const fullPath = path.join(process.cwd(), "public", contentPath);
+      await writeFile(fullPath, content);
+      postData.path = contentPath;
+    }
+
+    // Update blog post without content
     const post = await prisma.blogPost.update({
-      where: { id: Number(id) },
+      where: { id: postData.id },
       data: {
-        title: postData.title,
-        slug: postData.slug,
-        path: postData.path,
-        featuredImage: postData.featuredImage,
-        published: postData.published,
+        ...postData,
+        featuredImage: featuredImagePath,
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      post,
-      message: "Post updated successfully",
-    });
+    return NextResponse.json({ post });
   } catch (error) {
-    console.error("Error updating post:", error);
+    console.error("Error updating blog post:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to update post" },
+      { message: "Internal server error" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
+  }
+}
+
+// DELETE /api/admin/blog/[id]
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = parseInt(params.id);
+    await prisma.blogPost.delete({ where: { id } });
+
+    return NextResponse.json({ message: "Blog post deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting blog post:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -323,7 +203,7 @@ function wrapContentWithHtml(content: string, title: string) {
   <meta name="description" content="${extractDescription(content, 160)}">
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: 'Montserrat', "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       line-height: 1.6;
       max-width: 800px;
       margin: 0 auto;

@@ -38,7 +38,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     categories,
     fetchCategories, 
     addToCart, 
-    toggleCart 
+    toggleCart,
+    fetchProduct 
   } = useDashboardStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -51,15 +52,19 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        await fetchProducts();
-        await fetchCategories();
         const resolvedParams = await params;
         const productId = parseInt(resolvedParams.id);
-        const foundProduct = products.find(p => p.id === productId) || null;
+        
+        // Fetch all products first to have them available for related products
+        await fetchProducts();
+        await fetchCategories();
+        
+        // Fetch the specific product
+        const foundProduct = await fetchProduct(productId);
         setProduct(foundProduct);
         
+        // Set related products after we have both the current product and all products
         if (foundProduct && foundProduct.category) {
-          // Find related products in the same category
           const related = products
             .filter(p => p.category?.id === foundProduct.category?.id && p.id !== foundProduct.id)
             .slice(0, 4);
@@ -73,7 +78,17 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     };
 
     loadData();
-  }, [fetchProducts, fetchCategories, params]);
+  }, [params]); // Only depend on params since we want to reload when the product ID changes
+  
+  // Update related products when products array changes
+  useEffect(() => {
+    if (product && product.category && products.length > 0) {
+      const related = products
+        .filter(p => p.category?.id === product.category?.id && p.id !== product.id)
+        .slice(0, 4);
+      setRelatedProducts(related);
+    }
+  }, [products, product]);
   
   if (isLoading) {
     return (
@@ -205,7 +220,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <p className="text-3xl font-bold mb-4">${product.price.toFixed(2)}</p>
             
             {/* Chi tiết sản phẩm */}
-            <div className="bg-gray-50 rounded-md p-4 mb-6">
+            <div className="bg-gray-50 rounded-md mb-6">
               <h2 className="text-lg font-semibold mb-2">Chi tiết sản phẩm</h2>
               <p className="text-gray-700">{product.description || 'Không có mô tả chi tiết cho sản phẩm này.'}</p>
             </div>

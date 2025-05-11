@@ -1,141 +1,267 @@
 // app/admin/blog/[id]/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { format } from 'date-fns';
-import ReactMarkdown from 'react-markdown';
-import { Loader2, ArrowLeft, Edit, Clock, Calendar, Eye } from 'lucide-react';
-import { useBlogStore, BlogPost } from '@/app/store/blogStore';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useBlogStore, BlogPost } from "@/app/store/blogStore";
+import { toast } from "sonner";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
 
-export default function ViewBlogPage() {
-  const params = useParams();
+// Dynamically import the editor to avoid SSR issues
+const Editor = dynamic(() => import("@/components/editor"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
+  ),
+});
+
+const categories = [
+  "Phong thủy",
+  "Đá quý",
+  "Kiến thức",
+  "Tin tức",
+];
+
+export default function BlogPostEditor({ params }: { params: { id: string } }) {
+  console.log('BlogPostEditor rendered with params:', params);
+  
   const router = useRouter();
-  const { posts, fetchPostById, fetchPosts, currentPost } = useBlogStore();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isNewPost = params.id === "new";
+  const { currentPost, loading, error, fetchPostById, createPost, updatePost } =
+    useBlogStore();
 
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+    description: "",
+    category: "Phong thủy",
+    published: false,
+    featuredImage: null as File | null,
+    existingFeaturedImage: "",
+  });
+
+  // Fetch post data when component mounts
   useEffect(() => {
-    const loadPost = async () => {
-      setLoading(true);
-      
-      if (posts.length === 0) {
-        await fetchPosts();
-      }
-      
-      const postId = params.id as unknown as number
-      console.log({ postId })
-      await fetchPostById(postId);
-      
-      if (currentPost) {
-        setPost(currentPost);
-      } else {
-        router.push('/admin/blog');
-      }
-      
-      setLoading(false);
-    };
-    
-    loadPost();
-  }, [params.id, fetchPostById, fetchPosts, posts.length, router]);
+    console.log('Component mounted, isNewPost:', isNewPost);
+    if (!isNewPost) {
+      const postId = parseInt(params.id);
+      console.log('Fetching post with ID:', postId);
+      fetchPostById(postId);
+    }
+  }, [isNewPost, params.id, fetchPostById]);
 
-  if (loading) {
+  // Update form data when currentPost changes
+  useEffect(() => {
+    console.log('Current post changed:', currentPost);
+    if (currentPost && !isNewPost) {
+      console.log('Setting form data with post:', currentPost);
+      setFormData({
+        title: currentPost.title,
+        content: currentPost.content || "",
+        description: currentPost.description || "",
+        category: currentPost.category,
+        published: currentPost.published,
+        featuredImage: null,
+        existingFeaturedImage: currentPost.featuredImage || "",
+      });
+    }
+  }, [currentPost, isNewPost]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const postData: Partial<BlogPost> = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        published: formData.published,
+        readingTime: 5, // Default reading time
+      };
+
+      if (!isNewPost && currentPost) {
+        postData.id = currentPost.id;
+        postData.slug = currentPost.slug;
+        postData.createdAt = currentPost.createdAt;
+        postData.updatedAt = new Date().toISOString();
+      }
+
+      if (isNewPost) {
+        await createPost(postData as BlogPost, formData.content, formData.featuredImage || undefined);
+        toast.success("Tạo bài viết thành công");
+      } else {
+        await updatePost(postData as BlogPost, formData.content, formData.featuredImage || undefined);
+        toast.success("Cập nhật bài viết thành công");
+      }
+      router.push("/admin/blog");
+    } catch (error) {
+      toast.error("Có lỗi xảy ra");
+    }
+  };
+
+  if (loading && !isNewPost) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="mt-2 text-muted-foreground">Loading post...</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Đang tải bài viết...</p>
+        </div>
       </div>
     );
   }
 
-  if (!post) {
-    return null;
+  if (error && !isNewPost) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi</h2>
+          <p className="text-muted-foreground">{error}</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => router.push("/admin/blog")}
+          >
+            Quay lại
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={() => router.push('/admin/blog')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to all posts
-        </Button>
-        
-        <Link href={`/admin/blog/${post.id}/edit`}>
-          <Button variant="outline" size="sm">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-        </Link>
-      </div>
+    <div className="container mx-auto py-10">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">
+          {isNewPost ? "Tạo bài viết mới" : "Chỉnh sửa bài viết"}
+        </h1>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          {post.featuredImage && (
-            <div className="aspect-video w-full overflow-hidden rounded-t-md">
-              <img
-                src={post.featuredImage}
-                alt={post.title}
-                className="h-full w-full object-cover"
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Tiêu đề</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                required
               />
             </div>
-          )}
-          
-          <CardHeader>
-            <div className="flex flex-wrap gap-2 mb-2">
-              <Badge variant={post.published ? "default" : "outline"}>
-                {post.published ? "Published" : "Draft"}
-              </Badge>
+
+            <div>
+              <Label htmlFor="description">Mô tả ngắn</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="h-20"
+              />
             </div>
-            <CardTitle className="text-2xl md:text-3xl">{post.title}</CardTitle>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="prose max-w-none">
-              <ReactMarkdown>{post.content}</ReactMarkdown>
+
+            <div>
+              <Label htmlFor="category">Danh mục</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn danh mục" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Post Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Created:</span>
-              <span>{format(new Date(post.createdAt!), 'PPP')}</span>
+
+            <div>
+              <Label htmlFor="featuredImage">Ảnh bìa</Label>
+              {formData.existingFeaturedImage && (
+                <div className="mt-2 mb-4">
+                  <img 
+                    src={formData.existingFeaturedImage} 
+                    alt="Current featured image" 
+                    className="w-32 h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+              <Input
+                id="featuredImage"
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    featuredImage: e.target.files?.[0] || null,
+                  })
+                }
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                {formData.existingFeaturedImage 
+                  ? "Chọn ảnh mới để thay thế ảnh hiện tại" 
+                  : "Chọn ảnh bìa cho bài viết"}
+              </p>
             </div>
-            
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Updated:</span>
-              <span>{format(new Date(post.updatedAt!), 'PPP')}</span>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="published"
+                checked={formData.published}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, published: checked })
+                }
+              />
+              <Label htmlFor="published">Xuất bản</Label>
             </div>
-            
-            <div className="flex items-center gap-2 text-sm">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Visibility:</span>
-              <span>{post.published ? 'Published' : 'Draft'}</span>
+          </div>
+
+          <div>
+            <Label>Nội dung</Label>
+            <div className="mt-2 border rounded-md">
+              <Editor
+                value={formData.content}
+                onChange={(content) =>
+                  setFormData({ ...formData, content })
+                }
+              />
             </div>
-            
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground mb-1">Permalink:</p>
-              <code className="text-xs bg-muted p-1 rounded">
-                /blog/{post.slug}
-              </code>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/admin/blog")}
+            >
+              Hủy
+            </Button>
+            <Button type="submit">
+              {isNewPost ? "Tạo bài viết" : "Cập nhật"}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );

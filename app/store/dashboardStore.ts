@@ -103,7 +103,9 @@ interface DashboardStore {
       sortBy?: string;
     }
   ) => Promise<void>;
+  fetchProduct: (id: number) => Promise<Product | null>;
   addProduct: (formData: FormData) => Promise<void>;
+  updateProduct: (id: number, formData: FormData) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
 
   // Category operations
@@ -239,6 +241,21 @@ export const useDashboardStore = create<DashboardStore>()(
         }
       },
 
+      fetchProduct: async (id) => {
+        try {
+          const response = await fetch(`/api/products/${id}`);
+          if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error('Failed to fetch product');
+          }
+          const product = await response.json();
+          return product;
+        } catch (error) {
+          console.error('Error fetching product:', error);
+          return null;
+        }
+      },
+
       addProduct: async (formData) => {
         try {
           const response = await fetch("/api/products", {
@@ -253,6 +270,26 @@ export const useDashboardStore = create<DashboardStore>()(
           return newProduct;
         } catch (error) {
           console.error("Error adding product:", error);
+          throw error;
+        }
+      },
+
+      updateProduct: async (id, formData) => {
+        try {
+          const response = await fetch(`/api/products/${id}`, {
+            method: "PUT",
+            body: formData,
+          });
+          if (!response.ok) throw new Error("Failed to update product");
+          const updatedProduct = await response.json();
+          set((state) => ({
+            products: state.products.map((product) =>
+              product.id === id ? updatedProduct : product
+            ),
+          }));
+          return updatedProduct;
+        } catch (error) {
+          console.error("Error updating product:", error);
           throw error;
         }
       },

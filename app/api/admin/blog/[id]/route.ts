@@ -4,16 +4,34 @@ import { PrismaClient } from "@prisma/client";
 import path from "path";
 import fs from "fs";
 import { promises as fsPromises } from "fs";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/jwt";
 
 const prisma = new PrismaClient();
 
 export async function GET(
-  req: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    
+    // Check for authentication cookie
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get("adminAuthToken")?.value;
+    
+    if (!authToken) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
+    // Verify token
+    const payload = await verifyToken(authToken);
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const id = parseInt(params.id);
+    
+    // Validate ID
     if (isNaN(id)) {
       return NextResponse.json(
         { message: "Invalid ID format" },
@@ -26,21 +44,20 @@ export async function GET(
     });
 
     if (!post) {
-      return NextResponse.json({ message: "Post not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Blog post not found" },
+        { status: 404 }
+      );
     }
 
-    // Get content if available
+    // Read content from file if path exists
     let content = "";
-
     if (post.path) {
-      const filePath = path.join(
-        process.cwd(),
-        "public",
-        post.path.replace(/^\//, "")
-      );
-
-      if (fs.existsSync(filePath)) {
-        content = await fsPromises.readFile(filePath, "utf-8");
+      try {
+        const fullPath = path.join(process.cwd(), "public", post.path);
+        content = await fsPromises.readFile(fullPath, "utf-8");
+      } catch (error) {
+        console.error("Error reading content file:", error);
       }
     }
 
@@ -71,18 +88,19 @@ export async function GET(
       }
     }
 
-    // Return post with content and description
-    return NextResponse.json({
+    const response = {
       post: {
         ...post,
         content,
         description,
       },
-    });
+    };
+    
+    return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching blog post:", error);
+    console.error("Error in request handling:", error);
     return NextResponse.json(
-      { message: "Failed to fetch blog post" },
+      { message: "Internal server error" },
       { status: 500 }
     );
   } finally {

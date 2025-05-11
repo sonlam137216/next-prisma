@@ -60,9 +60,6 @@ export default function CartSidebar() {
                 {totalItems}
               </span>
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={toggleCart} className="h-8 w-8">
-              <XIcon size={16} />
-            </Button>
           </div>
         </SheetHeader>
         

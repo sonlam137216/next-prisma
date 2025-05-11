@@ -6,6 +6,137 @@ import path from "path";
 
 const prisma = new PrismaClient();
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const productId = parseInt(params.id);
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        images: true,
+        category: true,
+        collections: true,
+      },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(product);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return NextResponse.json(
+      { error: "Error fetching product" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const productId = parseInt(params.id);
+    const formData = await request.formData();
+
+    // Get the product first to check if it exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { images: true },
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    // Extract form data
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const price = parseFloat(formData.get("price") as string);
+    const quantity = parseInt(formData.get("quantity") as string);
+    const categoryId = formData.get("categoryId") ? parseInt(formData.get("categoryId") as string) : null;
+    const collectionId = formData.get("collectionId") ? parseInt(formData.get("collectionId") as string) : null;
+    const inStock = formData.get("inStock") === "true";
+
+    // Update the product
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        name,
+        description,
+        price,
+        quantity,
+        categoryId: categoryId || existingProduct.categoryId,
+        inStock,
+        collections: collectionId ? {
+          set: [{ id: collectionId }]
+        } : undefined
+      },
+      include: {
+        images: true,
+        category: true,
+        collections: true,
+      },
+    });
+
+    // Handle image uploads if any
+    const imageFiles = formData.getAll("images") as File[];
+    if (imageFiles.length > 0) {
+      // Delete old images if requested
+      const deleteImages = formData.get("deleteImages") as string;
+      if (deleteImages) {
+        const imageIdsToDelete = JSON.parse(deleteImages);
+        for (const imageId of imageIdsToDelete) {
+          const image = existingProduct.images.find(img => img.id === imageId);
+          if (image) {
+            try {
+              const imagePath = path.join(process.cwd(), "public", image.url);
+              await fs.unlink(imagePath);
+            } catch (error) {
+              console.error("Error deleting image file:", error);
+            }
+          }
+        }
+        await prisma.productImage.deleteMany({
+          where: { id: { in: imageIdsToDelete } },
+        });
+      }
+
+      // Upload new images
+      for (const file of imageFiles) {
+        if (file.size > 0) {
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const fileName = `${Date.now()}-${file.name}`;
+          const filePath = path.join(process.cwd(), "public", "uploads", fileName);
+          await fs.writeFile(filePath, buffer);
+
+          await prisma.productImage.create({
+            data: {
+              url: `/uploads/${fileName}`,
+              isMain: existingProduct.images.length === 0, // Make first image main if no images exist
+              productId,
+            },
+          });
+        }
+      }
+    }
+
+    return NextResponse.json(updatedProduct);
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return NextResponse.json(
+      { error: "Error updating product" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }

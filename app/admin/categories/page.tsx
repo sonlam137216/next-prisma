@@ -1,36 +1,43 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import CategoryList from '@/components/CategoryList';
-import CategoryForm from '@/components/CategoryForm';
 import { useDashboardStore } from '@/app/store/dashboardStore';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { CategoriesTable } from '@/components/admin/categories-table';
+import CategoryForm from '@/components/CategoryForm';
+import { toast } from 'sonner';
+
+interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  products?: any[];
+}
 
 export default function CategoriesPage() {
-  // Local UI state
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-
-  // Only use store for API-related operations
-  const {
-    categories,
-    loadingCategories,
-    fetchCategories,
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const { 
+    categories, 
+    loadingCategories: loading, 
+    fetchCategories, 
     deleteCategory,
     addCategory,
-    updateCategory
+    updateCategory 
   } = useDashboardStore();
 
+  // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+  }, []); // Empty dependency array since we only want to fetch on mount
 
   const handleAddNew = () => {
     setEditingCategory(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (category) => {
+  const handleEdit = (category: Category) => {
     setEditingCategory(category);
     setIsFormOpen(true);
   };
@@ -40,12 +47,16 @@ export default function CategoriesPage() {
     setEditingCategory(null);
   };
 
-  const handleFormSubmit = async (formData) => {
+  const handleFormSubmit = async (formData: Partial<Category>) => {
     try {
       if (editingCategory) {
+        // Update category
         await updateCategory(editingCategory.id, formData);
+        toast.success('Category updated successfully');
       } else {
-        await addCategory(formData);
+        // Add new category
+        await addCategory(formData as Omit<Category, 'id' | 'createdAt' | 'products'>);
+        toast.success('Category added successfully');
       }
       
       // Refresh the list
@@ -55,37 +66,30 @@ export default function CategoriesPage() {
       handleFormClose();
     } catch (error) {
       console.error('Error submitting category:', error);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteCategory(id);
-      // Refresh the list
-      await fetchCategories();
-    } catch (error) {
-      console.error('Error deleting category:', error);
+      toast.error('Failed to save category');
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
-        <Button onClick={handleAddNew}>Add New Category</Button>
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Categories</h1>
+        <Button onClick={handleAddNew}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Category
+        </Button>
       </div>
-      {loadingCategories ? (
-        <div className="flex justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+
+      {loading ? (
+        <div>Loading...</div>
       ) : (
-        <CategoryList
+        <CategoriesTable
           categories={categories}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={deleteCategory}
         />
       )}
-      
+
       <CategoryForm
         open={isFormOpen}
         onClose={handleFormClose}

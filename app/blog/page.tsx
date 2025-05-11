@@ -1,182 +1,210 @@
 // app/blog/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useBlogStore } from '../store/blogStore';
-import { format } from 'date-fns';
-import { ChevronLeft, ChevronRight, Clock, Calendar, Tag, BookOpen } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { CalendarDays, Clock, ArrowRight } from "lucide-react";
+import { useBlogStore } from "@/app/store/blogStore";
+import { format } from "date-fns";
 
 export default function BlogPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const page = parseInt(searchParams.get('page') || '1');
-  
-  const { 
-    posts, 
-    loading, 
-    error, 
-    pagination, 
-    fetchPosts, 
-    setPage 
+  const {
+    posts,
+    featuredPost,
+    categories,
+    selectedCategory,
+    loading,
+    error,
+    pagination,
+    setSelectedCategory,
+    fetchPosts,
+    fetchFeaturedPost,
+    fetchCategories,
   } = useBlogStore();
 
-  // State for category filter (if you want to add this later)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  // Initialize blog data
   useEffect(() => {
-    fetchPosts(page);
-  }, [fetchPosts, page]);
+    fetchPosts(1);
+    fetchFeaturedPost();
+    fetchCategories();
+  }, [fetchPosts, fetchFeaturedPost, fetchCategories]);
 
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > pagination.totalPages) return;
-    
-    // Update the URL with the new page
-    const params = new URLSearchParams(searchParams);
-    params.set('page', newPage.toString());
-    router.push(`/blog?${params.toString()}`);
+  const handlePageChange = (page: number) => {
+    fetchPosts(page, selectedCategory === "Tất cả" ? undefined : selectedCategory);
   };
 
-  // Format date function
-  const formatDate = (dateString: string | Date) => {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return format(date, 'MMM dd, yyyy');
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white">
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-5xl font-bold mb-4">Our Blog</h1>
-          <p className="text-xl max-w-2xl mx-auto opacity-90">
-            Insights, stories, and ideas from our team on technology, design, and innovation.
-          </p>
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
-      
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-20">
-            <p className="text-destructive text-xl">{error}</p>
-            <Button 
-              onClick={() => fetchPosts(page)}
-              className="mt-4"
-            >
-              Try Again
-            </Button>
-          </div>
-        ) : posts.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-lg shadow-sm border">
-            <div className="inline-flex justify-center items-center w-20 h-20 bg-gray-100 rounded-full mb-6">
-              <BookOpen size={32} className="text-gray-400" />
-            </div>
-            <p className="text-2xl font-medium text-gray-800 mb-2">No blog posts found</p>
-            <p className="text-gray-500 max-w-md mx-auto">
-              It seems we don't have any blog posts yet. Check back later for new content.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Blog Posts Grid */}
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post) => (
-                <Link 
-                  href={`/blog/${post.slug}`}
-                  key={post.slug}
-                  className="group bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
-                >
-                  <div className="relative h-56 w-full bg-gray-100 overflow-hidden">
-                    {post.featuredImage ? (
-                      <Image
-                        src={post.featuredImage}
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full w-full bg-gray-50">
-                        <BookOpen size={48} className="text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="flex items-center text-sm text-gray-500 mb-3 space-x-4">
-                      <div className="flex items-center">
-                        <Calendar size={14} className="mr-1" />
-                        <span>{post.createdAt && formatDate(post.createdAt)}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Clock size={14} className="mr-1" />
-                        <span>5 min read</span>
-                      </div>
-                    </div>
-                    
-                    <h2 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                      {post.title}
-                    </h2>
-                    
-                    <p className="text-gray-600 line-clamp-3 mb-4">
-                      {post.description || "Read this article to learn more..."}
-                    </p>
-                    
-                    <span className="inline-flex items-center text-primary font-medium">
-                      Read more
-                      <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+    );
+  }
+
+  return (
+    <div className="max-w-[1400px] mx-auto py-12 px-4 md:px-6">
+      {/* Hero Section */}
+      <div className="text-center mb-16">
+        <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">
+          Blog & Tin Tức
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          Khám phá những bài viết mới nhất về phong thủy, đá quý và những câu
+          chuyện thú vị từ chúng tôi
+        </p>
+        <Separator className="my-8" />
+      </div>
+
+      {/* Featured Post */}
+      {featuredPost && (
+        <div className="mb-16">
+          <Card className="border-none shadow-lg overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="relative h-[400px] md:h-full">
+                <Image
+                  src={featuredPost.featuredImage || "/api/placeholder/800/600"}
+                  alt={featuredPost.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-8 flex flex-col justify-center">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4" />
+                    <span>
+                      {format(new Date(featuredPost.createdAt), "dd/MM/yyyy")}
                     </span>
                   </div>
-                </Link>
-              ))}
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{featuredPost.readingTime} phút đọc</span>
+                  </div>
+                </div>
+                <h2 className="text-3xl font-bold mb-4">{featuredPost.title}</h2>
+                <p className="text-muted-foreground mb-6">
+                  {featuredPost.description}
+                </p>
+                <Button asChild className="w-fit">
+                  <Link href={`/blog/${featuredPost.slug}`}>
+                    Đọc thêm
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
-            
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="flex justify-center mt-12">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                  >
-                    <ChevronLeft size={16} />
-                  </Button>
-                  
-                  {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <Button
-                      key={pageNum}
-                      variant={pageNum === pagination.page ? "default" : "outline"}
-                      size="icon"
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  ))}
-                  
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page === pagination.totalPages}
-                  >
-                    <ChevronRight size={16} />
-                  </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* Categories */}
+      <div className="mb-12">
+        <div className="flex flex-wrap gap-4 justify-center">
+          {["Tất cả", ...categories].map((category) => (
+            <Button
+              key={category}
+              variant={category === selectedCategory ? "default" : "outline"}
+              className="rounded-full"
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Blog Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {posts.map((post) => (
+          <Card key={post.id} className="border-none shadow-lg overflow-hidden group">
+            <div className="relative h-48">
+              <Image
+                src={post.featuredImage || `/api/placeholder/400/300?${post.id}`}
+                alt={post.title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+            <CardHeader>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4" />
+                  <span>
+                    {format(new Date(post.createdAt), "dd/MM/yyyy")}
+                  </span>
                 </div>
               </div>
-            )}
-          </>
+              <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+              </CardTitle>
+              <CardDescription className="line-clamp-2">
+                {post.description}
+              </CardDescription>
+            </CardHeader>
+            <CardFooter>
+              <Button
+                variant="ghost"
+                className="p-0 h-auto hover:bg-transparent group-hover:text-primary"
+              >
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="flex items-center gap-2"
+                >
+                  Đọc thêm
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="mt-12 flex justify-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={pagination.page === 1}
+          onClick={() => handlePageChange(pagination.page - 1)}
+        >
+          <span className="sr-only">Previous page</span>
+          <ArrowRight className="h-4 w-4 rotate-180" />
+        </Button>
+        {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+          (page) => (
+            <Button
+              key={page}
+              variant={page === pagination.page ? "default" : "outline"}
+              size="icon"
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </Button>
+          )
         )}
+        <Button
+          variant="outline"
+          size="icon"
+          disabled={pagination.page === pagination.totalPages}
+          onClick={() => handlePageChange(pagination.page + 1)}
+        >
+          <span className="sr-only">Next page</span>
+          <ArrowRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

@@ -24,9 +24,12 @@ import { useDashboardStore } from "@/app/store/dashboardStore";
 import CartSidebar from "./CartSidebar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useBlogStore } from "@/app/store/blogStore";
+import { ChevronDown } from "lucide-react";
 
 export default function Header() {
   const { cart, toggleCart, categories, fetchCategories } = useDashboardStore();
+  const { categories: blogCategories } = useBlogStore();
   const router = useRouter();
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,7 +75,7 @@ export default function Header() {
   };
 
   return (
-    <div className="w-full sticky top-0 bg-[#B65001] z-40 shadow-md">
+    <div className="w-full sticky top-0 bg-primary z-40 shadow-md">
       <div className="w-full px-4 md:px-8 lg:px-12 relative">
         {/* Upper Header: Logo, Search, Cart */}
         <div className="flex h-16 sm:h-20 w-full items-center justify-between z-10 relative">
@@ -118,13 +121,31 @@ export default function Header() {
                   >
                     Sản phẩm phong thủy
                   </Link>
-                  <Link
-                    href="/blog"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary-foreground transition-colors"
-                    prefetch={false}
-                  >
-                    Tin tức
-                  </Link>
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-sm font-medium">Tin tức</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </div>
+                    <div className="pl-4 space-y-2">
+                      <Link
+                        href="/blog"
+                        className="flex w-full items-center py-2 text-sm hover:text-primary-foreground transition-colors"
+                        prefetch={false}
+                      >
+                        Tất cả
+                      </Link>
+                      {blogCategories.map((category) => (
+                        <Link
+                          key={category}
+                          href={`/blog?category=${encodeURIComponent(category)}`}
+                          className="flex w-full items-center py-2 text-sm hover:text-primary-foreground transition-colors"
+                          prefetch={false}
+                        >
+                          {category}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                   <Link
                     href="/contact"
                     className="flex w-full items-center py-2 text-sm font-medium hover:text-primary-foreground transition-colors"
@@ -158,7 +179,7 @@ export default function Header() {
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
-                className="pl-10 pr-4 py-2 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-primary-foreground focus:border-primary-foreground bg-[#B65001] text-white placeholder:text-white/70"
+                className="pl-10 pr-4 py-2 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-primary-foreground focus:border-primary-foreground bg-primary text-white placeholder:text-white/70"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -215,9 +236,9 @@ export default function Header() {
         )}
 
         {/* Navigation Menu - Full width, colored, and text updated for contrast */}
-        <div className="border-t border-white/20 bg-[#B65001] py-1 w-full">
+        <div className="border-t border-white/20 bg-primary py-1 w-full">
           <div className="h-12 flex items-center w-full">
-            <NavigationMenu className="hidden lg:flex z-20 w-full">
+            <NavigationMenu className="hidden lg:flex z-20 w-full" viewport={false}>
               <NavigationMenuList className="flex items-center gap-8 w-full">
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary-foreground bg-transparent hover:bg-[#B65001]/90">
@@ -267,15 +288,32 @@ export default function Header() {
                     Sản phẩm phong thủy
                   </Link>
                 </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/blog"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary-foreground focus:text-primary-foreground focus:outline-none"
-                    prefetch={false}
-                  >
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary-foreground bg-transparent hover:bg-[#B65001]/90">
                     Tin tức
-                  </Link>
-                </NavigationMenuLink>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="flex flex-col p-4 w-48 rounded-md shadow-md bg-white">
+                      <Link
+                        href="/blog"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Tất cả
+                      </Link>
+                      {blogCategories.map((category) => (
+                        <Link
+                          key={category}
+                          href={`/blog?category=${encodeURIComponent(category)}`}
+                          className="py-2 text-sm hover:text-primary transition-colors"
+                          prefetch={false}
+                        >
+                          {category}
+                        </Link>
+                      ))}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
                     href="/contact"

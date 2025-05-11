@@ -1,340 +1,258 @@
 // app/store/blogStore.ts
 import { create } from "zustand";
 import axios from "axios";
+import { format } from 'date-fns';
 
 export interface BlogPost {
-  id?: number;
+  id: number;
   title: string;
   slug: string;
-  description: string; // We'll extract this from HTML content
-  path: string;
-  published: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  description?: string;
   featuredImage?: string;
+  path?: string;
   content?: string;
-}
-
-interface PaginationState {
-  page: number;
-  pageSize: number;
-  totalPosts: number;
-  totalPages: number;
+  category: string;
+  readingTime: number;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface BlogState {
   posts: BlogPost[];
   currentPost: BlogPost | null;
+  featuredPost: BlogPost | null;
+  categories: string[];
+  selectedCategory: string;
   loading: boolean;
   error: string | null;
-  pagination: PaginationState;
-
-  // Pagination methods
-  setPage: (page: number) => void;
-  setPageSize: (size: number) => void;
-
-  // Existing methods
-  fetchPosts: (page?: number, pageSize?: number) => Promise<void>;
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalPosts: number;
+  };
+  setSelectedCategory: (category: string) => void;
+  fetchPosts: (page: number, category?: string) => Promise<void>;
   fetchPostById: (id: number) => Promise<void>;
   fetchPostBySlug: (slug: string) => Promise<void>;
-  createPost: (
-    post: BlogPost,
-    content: string,
-    featuredImage?: File
-  ) => Promise<boolean>;
-  updatePost: (
-    post: BlogPost,
-    content?: string,
-    featuredImage?: File
-  ) => Promise<boolean>;
+  fetchFeaturedPost: () => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  createPost: (post: BlogPost, content: string, featuredImage?: File) => Promise<boolean>;
+  updatePost: (post: BlogPost, content?: string, featuredImage?: File) => Promise<boolean>;
   deletePost: (id: number) => Promise<boolean>;
   setCurrentPost: (post: BlogPost | null) => void;
 }
 
+// Predefined categories
+const CATEGORIES = [
+  "Phong thủy",
+  "Đá quý",
+  "Kiến thức",
+  "Tin tức",
+];
+
 // Create axios instance with default configuration
 const api = axios.create({
+  baseURL: '/api',
   timeout: 30000, // 30 seconds timeout
   headers: {
-    "Content-Type": "multipart/form-data",
+    'Content-Type': 'application/json',
   },
 });
 
 export const useBlogStore = create<BlogState>((set, get) => ({
   posts: [],
   currentPost: null,
+  featuredPost: null,
+  categories: CATEGORIES, // Initialize with predefined categories
+  selectedCategory: 'Tất cả',
   loading: false,
   error: null,
   pagination: {
     page: 1,
-    pageSize: 9, // Show 9 posts per page (3x3 grid)
-    totalPosts: 0,
+    pageSize: 9,
     totalPages: 1,
+    totalPosts: 0,
   },
 
-  setPage: (page: number) => {
-    set((state) => ({
-      pagination: {
-        ...state.pagination,
-        page,
-      },
-    }));
-    // Fetch posts for the new page
-    get().fetchPosts(page, get().pagination.pageSize);
+  setSelectedCategory: (category) => {
+    set({ selectedCategory: category });
+    get().fetchPosts(1, category === 'Tất cả' ? undefined : category);
   },
 
-  setPageSize: (pageSize: number) => {
-    set((state) => ({
-      pagination: {
-        ...state.pagination,
-        pageSize,
-        // Reset to page 1 when changing page size
-        page: 1,
-      },
-    }));
-    // Fetch posts with new page size
-    get().fetchPosts(1, pageSize);
-  },
-
-  fetchPosts: async (page?: number, pageSize?: number) => {
-    const currentPage = page || get().pagination.page;
-    const currentPageSize = pageSize || get().pagination.pageSize;
-
-    set({ loading: true, error: null });
+  fetchPosts: async (page, category) => {
     try {
-      const response = await api.get(
-        `/api/admin/blog?page=${currentPage}&pageSize=${currentPageSize}`
-      );
+      set({ loading: true, error: null });
+      const params = {
+        page,
+        pageSize: 9,
+        category: category && category !== 'Tất cả' ? category : undefined,
+      };
+      
+      const { data } = await api.get('/admin/blog', { params });
+
+      if (!data.posts) {
+        console.error('No posts in response:', data);
+        throw new Error('Invalid response format');
+      }
 
       set({
-        posts: response.data.posts,
+        posts: data.posts,
         pagination: {
-          page: currentPage,
-          pageSize: currentPageSize,
-          totalPosts: response.data.totalPosts,
-          totalPages: response.data.totalPages,
+          page: data.page,
+          pageSize: data.pageSize,
+          totalPages: data.totalPages,
+          totalPosts: data.totalPosts,
         },
       });
     } catch (error) {
-      set({
-        error: axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : "An unknown error occurred",
-      });
+      console.error('Error fetching posts:', error);
+      set({ error: error instanceof Error ? error.message : 'An error occurred' });
     } finally {
       set({ loading: false });
     }
   },
 
-  fetchPostById: async (id: number) => {
-    set({ loading: true, error: null });
+  fetchPostById: async (id) => {
     try {
-      const response = await api.get(`/api/admin/blog/${id}`);
-      set({ currentPost: response.data.post });
-    } catch (error) {
-      set({
-        error: axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : "An unknown error occurred",
-      });
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  fetchPostBySlug: async (slug: string) => {
-    set({ loading: true, error: null });
-    try {
-      const response = await api.get(`/api/blog/${slug}`);
-      set({ currentPost: response.data.post });
-    } catch (error) {
-      set({
-        error: axios.isAxiosError(error)
-          ? error.response?.data?.message || error.message
-          : "An unknown error occurred",
-      });
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  createPost: async (post: BlogPost, content: string, featuredImage?: File) => {
-    set({ loading: true, error: null });
-    try {
-      // Create FormData for the multipart request
-      const formData = new FormData();
-
-      // Add post data as JSON string
-      formData.append("postData", JSON.stringify(post));
-
-      // Add content and saveToFile flag
-      formData.append("content", content);
-      formData.append("saveToFile", "true");
-
-      // Add the featured image if provided
-      if (featuredImage) {
-        formData.append("featuredImage", featuredImage);
+      set({ loading: true, error: null });
+      
+      const url = `/admin/blog/${id}`;
+      
+      const { data } = await api.get(url);
+      
+      if (!data.post) {
+        console.error('No post in response:', data);
+        throw new Error("Post not found");
       }
 
-      console.log("Sending request to create blog post...");
-      console.log("Content length:", content.length);
+      set({ currentPost: data.post });
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      set({ error: error instanceof Error ? error.message : "An error occurred" });
+    } finally {
+      set({ loading: false });
+    }
+  },
 
-      // Debug formData contents
-      for (let [key, value] of formData.entries()) {
-        if (key === "content") {
-          console.log(`${key}: [content length: ${value.toString().length}]`);
-        } else if (key === "featuredImage" && value instanceof File) {
-          console.log(
-            `${key}: [file name: ${value.name}, size: ${value.size}]`
-          );
-        } else {
-          console.log(`${key}: ${value}`);
+  fetchPostBySlug: async (slug) => {
+    try {
+      set({ loading: true, error: null });
+      const { data } = await api.get(`/blog/${slug}`);
+      
+      // Fetch content from file if path exists
+      if (data.post.path) {
+        const contentResponse = await axios.get(data.post.path);
+        if (contentResponse.status === 200) {
+          data.post.content = contentResponse.data;
         }
       }
-
-      // Make the request with a specific timeout
-      const response = await api.post("/api/admin/blog", formData);
-
-      console.log("Response received:", response.status);
-      console.log("Blog post created successfully:", response.data);
-
-      // Update the posts list
-      set((state) => ({
-        posts: [...state.posts, response.data.post],
-      }));
-
-      return true;
+      
+      set({ currentPost: data.post });
     } catch (error) {
-      console.error("Error creating blog post:", error);
-
-      // Handle Axios errors with better details
-      if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || error.message;
-        console.error("API Error details:", {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          message: errorMessage,
-        });
-
-        set({
-          error: errorMessage,
-        });
-      } else {
-        set({
-          error:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
-        });
-      }
-
-      return false;
+      set({ error: error instanceof Error ? error.message : "An error occurred" });
     } finally {
       set({ loading: false });
     }
   },
 
-  updatePost: async (
-    post: BlogPost,
-    content?: string,
-    featuredImage?: File
-  ) => {
-    set({ loading: true, error: null });
+  fetchFeaturedPost: async () => {
     try {
+      const { data } = await api.get('/admin/blog/featured');
+      set({ featuredPost: data.post });
+    } catch (error) {
+      console.error('Error fetching featured post:', error);
+      set({ featuredPost: null });
+    }
+  },
+
+  fetchCategories: async () => {
+    // No need to fetch from API, just use predefined categories
+    set({ categories: CATEGORIES });
+  },
+
+  createPost: async (post, content, featuredImage) => {
+    try {
+      set({ loading: true, error: null });
       const formData = new FormData();
       formData.append("postData", JSON.stringify(post));
-
+      formData.append("content", content);
       if (featuredImage) {
         formData.append("featuredImage", featuredImage);
       }
 
-      if (content) {
-        formData.append("content", content);
-        formData.append("saveToFile", "true");
-      }
+      const { data } = await api.post("/admin/blog", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-      const response = await api.put("/api/admin/blog", formData);
-
-      // Update the posts list and current post
       set((state) => ({
-        posts: state.posts.map((p) =>
-          p.id === post.id ? response.data.post : p
-        ),
-        currentPost: response.data.post,
+        posts: [...state.posts, data.post],
       }));
 
       return true;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        set({
-          error: error.response?.data?.message || error.message,
-        });
-      } else {
-        set({
-          error:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
-        });
-      }
-
+      set({ error: error instanceof Error ? error.message : "An error occurred" });
       return false;
     } finally {
       set({ loading: false });
     }
   },
 
-  deletePost: async (id: number) => {
-    set({ loading: true, error: null });
+  updatePost: async (post, content, featuredImage) => {
     try {
-      await api.delete(`/api/admin/blog/${id}`);
+      set({ loading: true, error: null });
+      const formData = new FormData();
+      formData.append("postData", JSON.stringify(post));
+      if (content) {
+        formData.append("content", content);
+      }
+      if (featuredImage) {
+        formData.append("featuredImage", featuredImage);
+      }
 
-      // Update pagination counts and remove the post from the list
-      set((state) => {
-        const newTotalPosts = state.pagination.totalPosts - 1;
-        const newTotalPages = Math.max(
-          1,
-          Math.ceil(newTotalPosts / state.pagination.pageSize)
-        );
-
-        return {
-          posts: state.posts.filter((p) => p.id !== id),
-          currentPost: state.currentPost?.id === id ? null : state.currentPost,
-          pagination: {
-            ...state.pagination,
-            totalPosts: newTotalPosts,
-            totalPages: newTotalPages,
-            // Adjust current page if necessary
-            page:
-              state.pagination.page > newTotalPages
-                ? newTotalPages
-                : state.pagination.page,
-          },
-        };
+      const { data } = await api.put("/admin/blog", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
+
+      set((state) => ({
+        posts: state.posts.map((p) => (p.id === post.id ? data.post : p)),
+        currentPost: data.post,
+      }));
 
       return true;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        set({
-          error: error.response?.data?.message || error.message,
-        });
-      } else {
-        set({
-          error:
-            error instanceof Error
-              ? error.message
-              : "An unknown error occurred",
-        });
-      }
-
+      set({ error: error instanceof Error ? error.message : "An error occurred" });
       return false;
     } finally {
       set({ loading: false });
     }
   },
 
-  setCurrentPost: (post: BlogPost | null) => {
+  deletePost: async (id) => {
+    try {
+      set({ loading: true, error: null });
+      await api.delete(`/admin/blog/${id}`);
+
+      set((state) => ({
+        posts: state.posts.filter((p) => p.id !== id),
+        currentPost: state.currentPost?.id === id ? null : state.currentPost,
+      }));
+
+      return true;
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : "An error occurred" });
+      return false;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  setCurrentPost: (post) => {
     set({ currentPost: post });
   },
 }));
