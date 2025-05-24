@@ -59,6 +59,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // This ensures cookies are sent with requests
 });
 
 export const useBlogStore = create<BlogState>((set, get) => ({

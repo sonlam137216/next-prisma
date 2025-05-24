@@ -1,5 +1,5 @@
-import { create } from 'zustand'
 import axios from 'axios'
+import { create } from 'zustand'
 
 export interface Collection {
   id: number
@@ -32,6 +32,7 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
       const response = await axios.get('/api/admin/collections')
       set({ collections: response.data, loading: false })
     } catch (error) {
+      console.error('Error fetching collections:', error)
       set({ error: 'Failed to fetch collections', loading: false })
     }
   },
@@ -45,6 +46,7 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
         loading: false,
       }))
     } catch (error) {
+      console.error('Error creating collection:', error)
       set({ error: 'Failed to create collection', loading: false })
     }
   },
@@ -60,6 +62,7 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
         loading: false,
       }))
     } catch (error) {
+      console.error('Error updating collection:', error)
       set({ error: 'Failed to update collection', loading: false })
     }
   },
@@ -73,6 +76,7 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
         loading: false,
       }))
     } catch (error) {
+      console.error('Error deleting collection:', error)
       set({ error: 'Failed to delete collection', loading: false })
     }
   },

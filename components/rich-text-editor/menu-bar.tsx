@@ -53,7 +53,8 @@ import {
           } else {
             alert("Image upload failed");
           }
-        } catch (err) {
+        } catch (error) {
+          console.error('Image upload error:', error)
           alert("Image upload failed");
         }
 

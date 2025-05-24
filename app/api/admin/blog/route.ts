@@ -4,17 +4,35 @@ import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
 import { promises as fsPromises } from "fs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { writeFile } from "fs/promises";
 import { v4 as uuidv4 } from "uuid";
 import { Prisma } from "@prisma/client";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/jwt";
 
 const prisma = new PrismaClient();
+
+// Helper function to check authentication
+async function checkAuth() {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("adminAuthToken")?.value;
+  
+  if (!authToken) {
+    return false;
+  }
+
+  const payload = await verifyToken(authToken);
+  return payload && payload.role === "admin";
+}
 
 // GET /api/admin/blog - List all blog posts with pagination
 export async function GET(request: Request) {
   try {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "9");
@@ -64,8 +82,8 @@ export async function GET(request: Request) {
 // POST /api/admin/blog
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -119,8 +137,8 @@ export async function POST(request: Request) {
 // PUT /api/admin/blog
 export async function PUT(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -173,8 +191,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const isAuthenticated = await checkAuth();
+    if (!isAuthenticated) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
