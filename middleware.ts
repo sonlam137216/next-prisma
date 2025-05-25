@@ -12,7 +12,6 @@ export async function middleware(request: NextRequest) {
   ) {
     // Check for authentication cookie
     const authToken = request.cookies.get("adminAuthToken")?.value;
-    console.log({ authToken });
 
     // If no token exists, redirect to login
     if (!authToken) {

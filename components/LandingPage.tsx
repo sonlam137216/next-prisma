@@ -120,7 +120,7 @@ export default function LandingPage() {
       <HeroSlider />
 
       {/* 3 Small Banners Row */}
-      <div className="w-full flex justify-center mt-8 mb-12">
+      <div className="w-full flex justify-center mt-6 mb-4">
         <div className="max-w-[1200px] w-full px-4 sm:px-5 lg:px-6">
           <div className="flex justify-around gap-2">
             {/* Banner 1 */}
@@ -155,9 +155,9 @@ export default function LandingPage() {
       </div>
 
       {/* Content Wrapper for all sections */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
+      <div className="max-w-[1200px] mx-auto px-2 sm:px-5 lg:px-6">
         {/* Featured Products Slider */}
-        <section className="py-14 sm:py-16">
+        <section className="py-8 sm:py-12">
           <div className="max-w-[1200px] mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold">Sản phẩm mới nhất</h2>
@@ -232,7 +232,7 @@ export default function LandingPage() {
         </section>
 
         {/* Collections Section */}
-        <section className="py-14 sm:py-16">
+        <section className="py-2 sm:py-4">
           <div className="max-w-[1200px] mx-auto">
             <h2 className="text-2xl sm:text-3xl font-bold mb-8">Bộ sưu tập</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -303,7 +303,7 @@ export default function LandingPage() {
       </div>
 
       {/* Category Products Section - Full Width */}
-      <section className="relative py-10">
+      <section className="relative py-4">
         {/* Background Image */}
         <div className="absolute inset-0 z-0 h-[800px]">
           <Image
@@ -393,7 +393,7 @@ export default function LandingPage() {
       {/* Content Wrapper for remaining sections */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
         {/* Blog Posts / Latest News */}
-        <section className="mt-20 py-14 sm:py-16">
+        <section className="mt-20 py-8 sm:py-12">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold">Tin tức & Blog</h2>
             <Button variant="ghost" className="flex items-center gap-1 text-sm" asChild>

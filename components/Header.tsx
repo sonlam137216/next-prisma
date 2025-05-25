@@ -83,7 +83,7 @@ export default function Header() {
           <div className="lg:hidden z-20">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:text-primary-foreground">
+                <Button variant="ghost" size="icon" className="text-white hover:text-primary">
                   <MenuIcon className="h-5 w-5" />
                   <span className="sr-only">Mở menu</span>
                 </Button>
@@ -100,7 +100,7 @@ export default function Header() {
                       <Link
                         key={category.id}
                         href={`/category/${category.id}`}
-                        className="flex w-full items-center py-2 text-sm hover:text-primary-foreground transition-colors"
+                        className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
                         {category.name}
@@ -109,14 +109,14 @@ export default function Header() {
                   <div className="h-px bg-white/30 my-3" />
                   <Link
                     href="/products"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary-foreground transition-colors"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
                     prefetch={false}
                   >
                     Trang sức
                   </Link>
                   <Link
                     href="/products"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary-foreground transition-colors"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
                     prefetch={false}
                   >
                     Sản phẩm phong thủy
@@ -129,7 +129,7 @@ export default function Header() {
                     <div className="pl-4 space-y-2">
                       <Link
                         href="/blog"
-                        className="flex w-full items-center py-2 text-sm hover:text-primary-foreground transition-colors"
+                        className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
                         Tất cả
@@ -138,7 +138,7 @@ export default function Header() {
                         <Link
                           key={category}
                           href={`/blog?category=${encodeURIComponent(category)}`}
-                          className="flex w-full items-center py-2 text-sm hover:text-primary-foreground transition-colors"
+                          className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors"
                           prefetch={false}
                         >
                           {category}
@@ -148,7 +148,7 @@ export default function Header() {
                   </div>
                   <Link
                     href="/contact"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary-foreground transition-colors"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
                     prefetch={false}
                   >
                     Liên hệ
@@ -175,11 +175,11 @@ export default function Header() {
           {/* Desktop Search Input */}
           <div className="hidden md:flex justify-center max-w-xl w-full mx-6">
             <form onSubmit={handleSearch} className="relative w-full">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/80" />
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary" />
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
-                className="pl-10 pr-4 py-3 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-white focus:border-white bg-primary text-white placeholder:text-white/90"
+                className="pl-10 pr-4 py-3 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-white focus:border-white bg-white text-primary placeholder:text-primary/90"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -193,7 +193,7 @@ export default function Header() {
               size="icon"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               aria-label="Tìm kiếm"
-              className="text-white hover:text-primary-foreground"
+              className="text-white hover:text-primary"
             >
               <SearchIcon className="h-5 w-5" />
             </Button>
@@ -205,7 +205,7 @@ export default function Header() {
               variant="ghost"
               size="sm"
               aria-label="Giỏ hàng"
-              className="relative p-1 text-white hover:text-primary-foreground"
+              className="relative p-1 text-white hover:text-primary"
               onClick={toggleCart}
             >
               <ShoppingBagIcon className="h-6 w-6" />
@@ -241,7 +241,7 @@ export default function Header() {
             <NavigationMenu className="hidden lg:flex z-20 w-full" viewport={false}>
               <NavigationMenuList className="flex items-center gap-8 w-full">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary-foreground bg-transparent hover:bg-[#B65001]/90">
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-[#B65001]/90">
                     Giới thiệu
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -273,7 +273,7 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/products"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary-foreground focus:text-primary-foreground focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
                     prefetch={false}
                   >
                     Trang sức
@@ -282,14 +282,14 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/products"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary-foreground focus:text-primary-foreground focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
                     prefetch={false}
                   >
                     Sản phẩm phong thủy
                   </Link>
                 </NavigationMenuLink>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary-foreground bg-transparent hover:bg-[#B65001]/90">
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-[#B65001]/90">
                     Tin tức
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -317,10 +317,19 @@ export default function Header() {
                 <NavigationMenuLink asChild>
                   <Link
                     href="/contact"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary-foreground focus:text-primary-foreground focus:outline-none"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary focus:outline-none"
                     prefetch={false}
                   >
                     Liên hệ
+                  </Link>
+                </NavigationMenuLink>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href="/contact"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary focus:outline-none"
+                    prefetch={false}
+                  >
+                    ƯU ĐÃI ĐỘC QUYỀN CHO KHÁCH HÀNG MỚI - xem chi tiết
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuList>

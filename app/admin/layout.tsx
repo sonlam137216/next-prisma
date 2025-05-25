@@ -14,18 +14,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
   const [isLoading, setIsLoading] = useState(true);
   const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    // If we're on the login page or authentication is confirmed, show content
-    if (isLoginPage || isAuthenticated) {
+    const initializeAuth = async () => {
+      await checkAuth();
       setIsLoading(false);
-    } else if (!isAuthenticated && !isLoginPage) {
-      // Redirect to login if not authenticated and not on login page
-      router.push('/admin/login');
+    };
+
+    initializeAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated && !isLoginPage) {
+        router.push('/admin/login');
+      }
     }
-  }, [isAuthenticated, isLoginPage, router]);
+  }, [isAuthenticated, isLoginPage, router, isLoading]);
 
   if (isLoading) {
     return (

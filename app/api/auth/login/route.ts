@@ -20,9 +20,11 @@ export async function POST(request: Request) {
         username,
         role: "admin",
       });
+      console.log("Token created successfully");
 
       // Set the token in a secure HTTP-only cookie
-      (await cookies()).set({
+      const cookieStore = await cookies();
+      cookieStore.set({
         name: "adminAuthToken",
         value: token,
         httpOnly: true,
@@ -31,6 +33,7 @@ export async function POST(request: Request) {
         maxAge: 60 * 60 * 24, // 24 hours
         sameSite: "strict",
       });
+      console.log("Cookie set successfully");
 
       return NextResponse.json({ success: true });
     }
