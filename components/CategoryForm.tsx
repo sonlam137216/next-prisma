@@ -5,11 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Category } from '@/app/store/dashboardStore';
+import { ChangeEvent } from 'react';
 
-export default function CategoryForm({ open, onClose, onSubmit, initialData }) {
+interface CategoryFormProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (data: Partial<Category>) => Promise<void>;
+  initialData?: Category | null;
+}
+
+export default function CategoryForm({ open, onClose, onSubmit, initialData }: CategoryFormProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    description: ''
+    name: initialData?.name || '',
+    description: initialData?.description || ''
   });
  
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,15 +37,15 @@ export default function CategoryForm({ open, onClose, onSubmit, initialData }) {
     }
   }, [initialData]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, name: e.target.value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, description: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
    
@@ -64,8 +73,8 @@ export default function CategoryForm({ open, onClose, onSubmit, initialData }) {
               id="name"
               name="name"
               value={formData.name}
-              onChange={handleChange}
-              placeholder="Category name"
+              onChange={handleNameChange}
+              placeholder="Enter category name"
               required
             />
           </div>
@@ -75,9 +84,9 @@ export default function CategoryForm({ open, onClose, onSubmit, initialData }) {
             <Textarea
               id="description"
               name="description"
-              value={formData.description || ''}
-              onChange={handleChange}
-              placeholder="Category description (optional)"
+              value={formData.description}
+              onChange={handleDescriptionChange}
+              placeholder="Enter category description"
               rows={3}
             />
           </div>

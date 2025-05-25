@@ -12,11 +12,11 @@ const collectionSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const collection = await prisma.collection.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
       include: {
         products: {
           select: {
@@ -33,20 +33,21 @@ export async function GET(
 
     return NextResponse.json(collection)
   } catch (error) {
+    console.error('Error fetching collection:', error)
     return NextResponse.json({ error: 'Failed to fetch collection' }, { status: 500 })
   }
 }
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json()
     const validatedData = collectionSchema.parse(body)
 
     const collection = await prisma.collection.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
       data: {
         name: validatedData.name,
         description: validatedData.description,
@@ -70,24 +71,29 @@ export async function PUT(
 
     return NextResponse.json(collection)
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
-    }
-    return NextResponse.json({ error: 'Failed to update collection' }, { status: 500 })
+    console.error('Error updating collection:', error)
+    return NextResponse.json(
+      { error: 'Failed to update collection' },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await prisma.collection.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt((await params).id) },
     })
 
     return NextResponse.json({ message: 'Collection deleted successfully' })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete collection' }, { status: 500 })
+    console.error('Error deleting collection:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete collection' },
+      { status: 500 }
+    );
   }
 }

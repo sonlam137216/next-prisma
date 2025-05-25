@@ -1,9 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import React from 'react';
+import { Product, useDashboardStore } from '@/app/store/dashboardStore';
+import MainLayout from '@/components/MainLayout';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -11,20 +17,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Card, 
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MinusIcon, PlusIcon, ArrowLeftIcon, ShoppingBagIcon } from 'lucide-react';
-import { Product, useDashboardStore } from '@/app/store/dashboardStore';
+import { ArrowLeftIcon, MinusIcon, PlusIcon, ShoppingBagIcon } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import MainLayout from '@/components/MainLayout';
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -35,7 +33,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { 
     products,
     fetchProducts, 
-    categories,
     fetchCategories, 
     addToCart, 
     toggleCart,
@@ -55,20 +52,14 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         const resolvedParams = await params;
         const productId = parseInt(resolvedParams.id);
         
-        // Fetch all products first to have them available for related products
-        await fetchProducts();
-        await fetchCategories();
-        
-        // Fetch the specific product
+        // Fetch the specific product first
         const foundProduct = await fetchProduct(productId);
         setProduct(foundProduct);
         
-        // Set related products after we have both the current product and all products
+        // Only fetch all products if we need them for related products
         if (foundProduct && foundProduct.category) {
-          const related = products
-            .filter(p => p.category?.id === foundProduct.category?.id && p.id !== foundProduct.id)
-            .slice(0, 4);
-          setRelatedProducts(related);
+          await fetchProducts();
+          await fetchCategories();
         }
       } catch (error) {
         console.error('Error loading product:', error);
@@ -78,7 +69,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     };
 
     loadData();
-  }, [params]); // Only depend on params since we want to reload when the product ID changes
+  }, [params, fetchProduct]);
   
   // Update related products when products array changes
   useEffect(() => {

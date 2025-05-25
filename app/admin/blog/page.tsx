@@ -39,6 +39,7 @@ export default function BlogAdminPage() {
         await deletePost(id);
         toast.success("Xóa bài viết thành công");
       } catch (error) {
+        console.error('Error deleting post:', error);
         toast.error("Có lỗi xảy ra khi xóa bài viết");
       }
     }

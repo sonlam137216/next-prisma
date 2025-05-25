@@ -169,6 +169,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
       return true;
     } catch (error) {
+      console.error('Failed to create order:', error);
       if (axios.isAxiosError(error)) {
         set({
           error: error.response?.data?.message || error.message,
@@ -191,7 +192,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   updateOrderStatus: async (id: number, status: OrderStatus) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.patch(`/api/admin/orders/${id}`, { status });
+      await api.patch(`/api/admin/orders/${id}`, { status });
 
       // Update the orders list and current order
       set((state) => ({

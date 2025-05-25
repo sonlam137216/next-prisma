@@ -1,7 +1,7 @@
 // app/checkout/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
@@ -133,13 +133,6 @@ export default function PaymentPage() {
       setIsSubmitting(false);
     }
   };
-
-  // If cart is empty, redirect to cart page
-  // useEffect(() => {
-  //   if (cart.length === 0) {
-  //     router.push('/cart');
-  //   }
-  // }, [cart, router]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

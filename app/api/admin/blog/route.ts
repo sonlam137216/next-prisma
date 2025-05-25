@@ -1,16 +1,21 @@
 // app/api/admin/blog/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import fs from "fs";
-import path from "path";
-import { promises as fsPromises } from "fs";
-import { writeFile } from "fs/promises";
-import { v4 as uuidv4 } from "uuid";
-import { Prisma } from "@prisma/client";
-import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
+import { prisma } from '@/lib/prisma';
+import { Prisma } from "@prisma/client";
+import { writeFile } from 'fs/promises';
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import path from 'path';
+import { v4 as uuidv4 } from "uuid";
 
-const prisma = new PrismaClient();
+// const blogPostSchema = z.object({
+//   title: z.string().min(1),
+//   description: z.string().optional(),
+//   content: z.string().optional(),
+//   featuredImage: z.string().optional(),
+//   published: z.boolean().default(false),
+//   category: z.string().optional(),
+// });
 
 // Helper function to check authentication
 async function checkAuth() {
@@ -188,7 +193,7 @@ export async function PUT(request: Request) {
 // DELETE /api/admin/blog/[id]
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const isAuthenticated = await checkAuth();
@@ -196,8 +201,8 @@ export async function DELETE(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
-    await prisma.blogPost.delete({ where: { id } });
+    const { id } = await params;
+    await prisma.blogPost.delete({ where: { id: parseInt(id) } });
 
     return NextResponse.json({ message: "Blog post deleted successfully" });
   } catch (error) {
@@ -210,93 +215,93 @@ export async function DELETE(
 }
 
 // Helper function to wrap content with HTML template
-function wrapContentWithHtml(content: string, title: string) {
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <meta name="description" content="${extractDescription(content, 160)}">
-  <style>
-    body {
-      font-family: 'Montserrat', "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-      line-height: 1.6;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      color: #333;
-    }
-    h1, h2, h3 {
-      margin-top: 1.5em;
-      margin-bottom: 0.5em;
-    }
-    img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 2em auto;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    p {
-      margin-bottom: 1.5em;
-    }
-    .content {
-      margin-top: 2em;
-    }
-    .image-container {
-      text-align: center;
-      margin: 2em 0;
-    }
-    .text-center {
-      text-align: center;
-    }
-    ul, ol {
-      margin-bottom: 1.5em;
-      padding-left: 2em;
-    }
-    code {
-      background: #f4f4f4;
-      padding: 0.2em 0.4em;
-      border-radius: 3px;
-      font-family: 'Courier New', Courier, monospace;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 1em;
-      border-radius: 5px;
-      overflow-x: auto;
-    }
-    blockquote {
-      border-left: 4px solid #ddd;
-      padding: 0 1em;
-      margin-left: 0;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <article class="content">
-    ${content}
-  </article>
-</body>
-</html>
-  `;
-}
+// function wrapContentWithHtml(content: string, title: string) {
+//   return `
+// <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//   <meta charset="UTF-8">
+//   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//   <title>${title}</title>
+//   <meta name="description" content="${extractDescription(content, 160)}">
+//   <style>
+//     body {
+//       font-family: 'Montserrat', "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+//       line-height: 1.6;
+//       max-width: 800px;
+//       margin: 0 auto;
+//       padding: 20px;
+//       color: #333;
+//     }
+//     h1, h2, h3 {
+//       margin-top: 1.5em;
+//       margin-bottom: 0.5em;
+//     }
+//     img {
+//       max-width: 100%;
+//       height: auto;
+//       display: block;
+//       margin: 2em auto;
+//       border-radius: 8px;
+//       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+//     }
+//     p {
+//       margin-bottom: 1.5em;
+//     }
+//     .content {
+//       margin-top: 2em;
+//     }
+//     .image-container {
+//       text-align: center;
+//       margin: 2em 0;
+//     }
+//     .text-center {
+//       text-align: center;
+//     }
+//     ul, ol {
+//       margin-bottom: 1.5em;
+//       padding-left: 2em;
+//     }
+//     code {
+//       background: #f4f4f4;
+//       padding: 0.2em 0.4em;
+//       border-radius: 3px;
+//       font-family: 'Courier New', Courier, monospace;
+//     }
+//     pre {
+//       background: #f4f4f4;
+//       padding: 1em;
+//       border-radius: 5px;
+//       overflow-x: auto;
+//     }
+//     blockquote {
+//       border-left: 4px solid #ddd;
+//       padding: 0 1em;
+//       margin-left: 0;
+//       color: #666;
+//     }
+//   </style>
+// </head>
+// <body>
+//   <article class="content">
+//     ${content}
+//   </article>
+// </body>
+// </html>
+//   `;
+// }
 
 // Helper function to extract description from content
-function extractDescription(content: string, maxLength: number = 160) {
-  // Strip HTML tags and get plain text
-  const plainText = content.replace(/<[^>]*>/g, "");
+// function extractDescription(content: string, maxLength: number = 160) {
+//   // Strip HTML tags and get plain text
+//   const plainText = content.replace(/<[^>]*>/g, "");
 
-  // Limit to maxLength characters and add ellipsis if needed
-  let description = plainText.substring(0, maxLength).trim();
-  if (plainText.length > maxLength) {
-    description += "...";
-  }
+//   // Limit to maxLength characters and add ellipsis if needed
+//   let description = plainText.substring(0, maxLength).trim();
+//   if (plainText.length > maxLength) {
+//     description += "...";
+//   }
 
-  // Escape double quotes for use in meta tag
-  return description.replace(/"/g, "&quot;");
-}
+//   // Escape double quotes for use in meta tag
+//   return description.replace(/"/g, "&quot;");
+// }

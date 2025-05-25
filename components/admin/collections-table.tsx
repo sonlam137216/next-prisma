@@ -15,6 +15,7 @@ import { EditCollectionDialog } from './edit-collection-dialog'
 import { useState } from 'react'
 import { useCollectionsStore } from '@/app/store/collections-store'
 import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
 
 interface CollectionsTableProps {
   collections: Collection[]
@@ -49,10 +50,12 @@ export function CollectionsTable({ collections }: CollectionsTableProps) {
               <TableCell className="font-medium">
                 <div className="flex items-center space-x-2">
                   {collection.imageUrl && (
-                    <img
+                    <Image
                       src={collection.imageUrl}
                       alt={collection.name}
-                      className="w-10 h-10 object-cover rounded"
+                      width={40}
+                      height={40}
+                      className="object-cover rounded"
                     />
                   )}
                   <span>{collection.name}</span>

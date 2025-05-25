@@ -17,7 +17,6 @@ import {
   TrashIcon, 
   ShoppingCartIcon,
   ShoppingBagIcon,
-  XIcon,
   ArrowRightIcon
 } from 'lucide-react';
 import { useDashboardStore, CartItem } from '@/app/store/dashboardStore';

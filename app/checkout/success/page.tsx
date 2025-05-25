@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { CheckCircleIcon, PackageIcon, HomeIcon, ClockIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
+import { CheckCircleIcon, ClockIcon, HomeIcon, PackageIcon } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function CheckoutSuccessPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const [orderNumber] = useState(`ORD-${Math.floor(100000 + Math.random() * 900000)}`);
   const [progress, setProgress] = useState(0);
   

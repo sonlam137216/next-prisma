@@ -1,17 +1,7 @@
 // app/admin/dashboard/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/app/store/authStore";
-import {
-  Users,
-  Package,
-  ShoppingCart,
-  TrendingUp,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,8 +9,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ArrowDown,
+  ArrowUp,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 // Mock data store using Zustand
 import { create } from "zustand";
@@ -55,7 +54,6 @@ const useDashboardStore = create<DashboardState>((set) => ({
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { username } = useAuthStore();
   const { users, products, orders, loading, fetchDashboardData } =
     useDashboardStore();
 
@@ -127,7 +125,7 @@ export default function AdminDashboardPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {username || "Admin"}. Here is a summary of your store.
+          Welcome back, {"Admin"}. Here is a summary of your store.
         </p>
       </div>
 

@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     
@@ -29,10 +29,10 @@ export async function GET(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id } = await params;
     
     // Validate ID
-    if (isNaN(id)) {
+    if (isNaN(parseInt(id))) {
       return NextResponse.json(
         { message: "Invalid ID format" },
         { status: 400 }
@@ -40,7 +40,7 @@ export async function GET(
     }
 
     const post = await prisma.blogPost.findUnique({
-      where: { id },
+      where: { id: parseInt(id) },
     });
 
     if (!post) {
@@ -110,12 +110,12 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await params;
 
-    if (isNaN(id)) {
+    if (isNaN(parseInt(id))) {
       return NextResponse.json(
         { message: "Invalid ID format" },
         { status: 400 }
@@ -124,7 +124,7 @@ export async function DELETE(
 
     // Get the post to check if there are files to delete
     const post = await prisma.blogPost.findUnique({
-      where: { id },
+      where: { id: parseInt(id) },
     });
 
     if (!post) {
@@ -167,7 +167,7 @@ export async function DELETE(
 
     // Delete the post from the database
     await prisma.blogPost.delete({
-      where: { id },
+      where: { id: parseInt(id) },
     });
 
     return NextResponse.json({

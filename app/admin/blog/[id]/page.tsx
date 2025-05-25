@@ -1,7 +1,7 @@
 // app/admin/blog/[id]/page.tsx
 'use client';
 
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { useBlogStore, BlogPost } from "@/app/store/blogStore";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 
 // Dynamically import the editor to avoid SSR issues
 const Editor = dynamic(() => import("@/components/editor"), {
@@ -37,11 +38,12 @@ const categories = [
   "Tin tức",
 ];
 
-export default function BlogPostEditor({ params }: { params: { id: string } }) {
+export default function BlogPostEditor({ params }: { params: Promise<{ id: string }> }) {
   console.log('BlogPostEditor rendered with params:', params);
   
   const router = useRouter();
-  const isNewPost = params.id === "new";
+  const { id } = use(params);
+  const isNewPost = id === "new";
   const { currentPost, loading, error, fetchPostById, createPost, updatePost } =
     useBlogStore();
 
@@ -59,11 +61,11 @@ export default function BlogPostEditor({ params }: { params: { id: string } }) {
   useEffect(() => {
     console.log('Component mounted, isNewPost:', isNewPost);
     if (!isNewPost) {
-      const postId = parseInt(params.id);
+      const postId = parseInt(id);
       console.log('Fetching post with ID:', postId);
       fetchPostById(postId);
     }
-  }, [isNewPost, params.id, fetchPostById]);
+  }, [isNewPost, id, fetchPostById]);
 
   // Update form data when currentPost changes
   useEffect(() => {
@@ -109,6 +111,7 @@ export default function BlogPostEditor({ params }: { params: { id: string } }) {
       }
       router.push("/admin/blog");
     } catch (error) {
+      console.error('Error submitting blog post:', error)
       toast.error("Có lỗi xảy ra");
     }
   };
@@ -200,9 +203,11 @@ export default function BlogPostEditor({ params }: { params: { id: string } }) {
               <Label htmlFor="featuredImage">Ảnh bìa</Label>
               {formData.existingFeaturedImage && (
                 <div className="mt-2 mb-4">
-                  <img 
+                  <Image 
                     src={formData.existingFeaturedImage} 
                     alt="Current featured image" 
+                    width={128}
+                    height={128}
                     className="w-32 h-32 object-cover rounded-md"
                   />
                 </div>

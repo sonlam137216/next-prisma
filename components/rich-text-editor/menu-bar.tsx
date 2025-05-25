@@ -20,6 +20,7 @@ import {
   import { Label } from "../ui/label";
   import { Input } from "../ui/input";
   import { Button } from "../ui/button";
+  import Image from "next/image";
    
   export default function MenuBar({ editor }: { editor: Editor | null }) {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -175,9 +176,11 @@ import {
               </div>
               {imageUrl && (
                 <div className="mt-2">
-                  <img 
+                  <Image 
                     src={imageUrl} 
                     alt={imageAlt} 
+                    width={500}
+                    height={300}
                     className="max-w-full max-h-64 mx-auto object-contain"
                   />
                 </div>

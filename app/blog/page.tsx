@@ -5,7 +5,7 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, Clock, ArrowRight } from "lucide-react";
 import { useBlogStore } from "@/app/store/blogStore";
@@ -151,9 +151,6 @@ export default function BlogPage() {
               <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
                 <Link href={`/blog/${post.slug}`}>{post.title}</Link>
               </CardTitle>
-              <CardDescription className="line-clamp-2">
-                {post.description}
-              </CardDescription>
             </CardHeader>
             <CardFooter>
               <Button

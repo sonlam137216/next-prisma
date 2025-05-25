@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 interface Product {
   id: number
@@ -90,6 +91,7 @@ export function EditCollectionDialog({
       }
       toast.success('Collection updated successfully')
     } catch (error) {
+      console.error('Error updating collection:', error)
       toast.error('Failed to update collection')
     }
   }
@@ -100,7 +102,7 @@ export function EditCollectionDialog({
       fetch('/api/admin/products')
         .then((res) => res.json())
         .then((data) => setProducts(data))
-        .catch((error) => toast.error('Failed to fetch products'))
+        .catch(() => toast.error('Failed to fetch products'))
     }
   }, [open])
 
@@ -133,10 +135,12 @@ export function EditCollectionDialog({
             <Label htmlFor="image">Thumbnail Image</Label>
             {collection.imageUrl && (
               <div className="mb-2">
-                <img
+                <Image
                   src={collection.imageUrl}
                   alt={collection.name}
-                  className="w-20 h-20 object-cover rounded"
+                  width={80}
+                  height={80}
+                  className="object-cover rounded"
                 />
               </div>
             )}

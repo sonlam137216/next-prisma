@@ -8,10 +8,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = parseInt(params.id);
+    const productId = parseInt((await params).id);
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -38,10 +38,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = parseInt(params.id);
+    const productId = parseInt((await params).id);
     const formData = await request.formData();
 
     // Get the product first to check if it exists
@@ -139,10 +139,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const productId = parseInt(params.id);
+    const productId = parseInt((await params).id);
 
     // Find the product first to get all the images
     const product = await prisma.product.findUnique({

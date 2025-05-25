@@ -9,10 +9,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const slug = params.slug;
+    const { slug } = await params;
     console.log({ slug });
 
     // Fetch the post by slug
@@ -29,7 +29,7 @@ export async function GET(
 
     // Read the MDX content
     let content = "";
-    const mdxPath = path.join(process.cwd(), post.path);
+    const mdxPath = path.join(process.cwd(), post.path || "");
     if (existsSync(mdxPath)) {
       content = await readFile(mdxPath, "utf-8");
     }

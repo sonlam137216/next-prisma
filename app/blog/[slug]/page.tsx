@@ -1,16 +1,15 @@
 // app/blog/[slug]/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import { useBlogStore } from '../../store/blogStore';
-import { format } from 'date-fns';
-import { Clock, Calendar, BookOpen, ChevronLeft, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ArrowUpRight, BookOpen, Calendar, ChevronLeft, Clock } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useBlogStore } from '../../store/blogStore';
 
 interface Heading {
   id: string;
@@ -116,7 +115,9 @@ export default function BlogDetailPage() {
         <div className="text-center">
           <BookOpen size={48} className="mx-auto text-gray-400 mb-4" />
           <h1 className="text-2xl font-bold mb-2">Post Not Found</h1>
-          <p className="text-gray-600 mb-4">The blog post you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-6">
+            Let&apos;s explore the world of sustainable fashion and how it&apos;s shaping the future of retail.
+          </p>
           <Link href="/blog">
             <Button variant="outline">
               <ChevronLeft size={16} className="mr-2" />

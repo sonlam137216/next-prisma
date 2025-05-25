@@ -111,7 +111,11 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
       const blogPost: BlogPost = {
         ...data,
         path,
-        id: post?.id,
+        id: post?.id ?? 1,
+        category: '',
+        readingTime: 0,
+        createdAt: '',
+        updatedAt: ''
       };
       
       let success = false;

@@ -1,9 +1,9 @@
 // pages/about.tsx
-import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { GemIcon, AwardIcon, HeartIcon, ShieldIcon } from "lucide-react";
+import { AwardIcon, GemIcon, HeartIcon, ShieldIcon } from "lucide-react";
+import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -33,7 +33,13 @@ export default function AboutPage() {
         </div>
         <div className="md:w-1/2 bg-muted rounded-lg overflow-hidden">
           <div className="bg-slate-200 h-64 flex items-center justify-center">
-            <img src="/api/placeholder/600/400" alt="Cửa hàng đá phong thủy" className="rounded-lg" />
+            <Image 
+              src="/api/placeholder/600/400" 
+              alt="Cửa hàng đá phong thủy" 
+              width={600}
+              height={400}
+              className="rounded-lg"
+            />
           </div>
         </div>
       </div>
@@ -103,7 +109,13 @@ export default function AboutPage() {
           ].map((member, index) => (
             <Card key={index} className="overflow-hidden">
               <div className="h-48 bg-muted flex items-center justify-center">
-                <img src={member.image} alt={member.name} className="h-full w-full object-cover" />
+                <Image 
+                  src={member.image} 
+                  alt={member.name} 
+                  width={300}
+                  height={300}
+                  className="h-full w-full object-cover" 
+                />
               </div>
               <CardHeader>
                 <CardTitle>{member.name}</CardTitle>
@@ -164,7 +176,7 @@ export default function AboutPage() {
                 <CardTitle>{testimonial.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground italic">"{testimonial.review}"</p>
+                <p className="text-muted-foreground italic">&ldquo;{testimonial.review}&rdquo;</p>
               </CardContent>
             </Card>
           ))}

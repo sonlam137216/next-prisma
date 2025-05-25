@@ -1,7 +1,7 @@
 // app/admin/collections/components/CollectionForm.tsx
 "use client";
 
-import { useCollectionStore } from "@/app/store/collectionStore";
+import { useCollectionStore, Collection } from "@/app/store/collectionStore";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,7 +42,7 @@ export default function CollectionForm({
   // Load existing collection data when editing
   useEffect(() => {
     if (collectionId !== null) {
-      const collection = collections.find((c) => c.id === collectionId);
+      const collection = collections.find((c: Collection) => c.id === collectionId);
       if (collection) {
         setName(collection.name);
         setDescription(collection.description || "");

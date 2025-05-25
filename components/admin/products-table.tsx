@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 import { Product } from "@/app/store/dashboardStore";
+import Image from "next/image";
 
 interface ProductsTableProps {
   products: Product[];
@@ -61,10 +62,12 @@ export function ProductsTable({ products, onEdit, onDelete }: ProductsTableProps
                   <TableCell>
                     {mainImage ? (
                       <div className="relative group cursor-pointer" onClick={() => handleViewImages(product)}>
-                        <img
+                        <Image
                           src={mainImage.url}
                           alt={product.name}
-                          className="h-10 w-10 object-cover rounded-md"
+                          width={40}
+                          height={40}
+                          className="object-cover rounded-md"
                         />
                         {product.images.length > 1 && (
                           <div className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -137,9 +140,11 @@ export function ProductsTable({ products, onEdit, onDelete }: ProductsTableProps
               <div className="grid grid-cols-2 gap-4">
                 {selectedProduct.images.map((image) => (
                   <div key={image.id} className="relative">
-                    <img
+                    <Image
                       src={image.url}
                       alt={selectedProduct.name}
+                      width={400}
+                      height={160}
                       className="rounded-md object-cover w-full h-40"
                     />
                     {image.isMain && (

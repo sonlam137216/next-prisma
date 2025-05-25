@@ -1,13 +1,35 @@
 // app/api/orders/route.ts
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+const orderSchema = z.object({
+  total: z.number(),
+  paymentMethod: z.enum(['CARD', 'COD']),
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  phone: z.string(),
+  address: z.string(),
+  city: z.string(),
+  country: z.string(),
+  postalCode: z.string().optional(),
+  orderItems: z.array(z.object({
+    productId: z.number(),
+    name: z.string(),
+    quantity: z.number(),
+    price: z.number(),
+    imageUrl: z.string().optional(),
+  })),
+});
+
+type OrderItem = z.infer<typeof orderSchema>['orderItems'][number];
 
 // Create a new order
 export async function POST(request: NextRequest) {
   try {
-    const orderData = await request.json();
+    const body = await request.json();
+    const validatedData = orderSchema.parse(body);
 
     // Generate a unique order number (format: ORD-YYYYMMDD-XXXX)
     const date = new Date();
@@ -15,10 +37,10 @@ export async function POST(request: NextRequest) {
     const orderNumber = `ORD-${dateStr}`;
 
     // Extract order items to create separately
-    const { orderItems, ...orderDetails } = orderData;
+    const { orderItems, ...orderDetails } = validatedData;
 
     console.log(orderDetails, orderNumber, {
-      create: orderItems.map((item: any) => ({
+      create: orderItems.map((item: OrderItem) => ({
         productId: Number(item.productId), // Ensure integer conversion
         name: item.name,
         quantity: item.quantity,
@@ -32,7 +54,7 @@ export async function POST(request: NextRequest) {
         ...orderDetails,
         orderNumber,
         orderItems: {
-          create: orderItems.map((item: any) => ({
+          create: orderItems.map((item: OrderItem) => ({
             productId: Number(item.productId), // Ensure integer conversion
             name: item.name,
             quantity: item.quantity,
@@ -72,7 +94,10 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
     console.error("Error creating order:", error);
     return NextResponse.json(
       { message: "Failed to create order", error: String(error) },

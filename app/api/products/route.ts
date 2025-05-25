@@ -1,6 +1,21 @@
 // app/api/products/route.ts
-import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { z } from 'zod';
+
+// const productSchema = z.object({
+//   name: z.string(),
+//   description: z.string().optional(),
+//   price: z.number(),
+//   quantity: z.number(),
+//   inStock: z.boolean(),
+//   categoryId: z.number(),
+//   images: z.array(z.object({
+//     url: z.string(),
+//     isMain: z.boolean(),
+//   })),
+// });
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +23,7 @@ export async function GET(request: NextRequest) {
     
     // Pagination parameters
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    const pageSize = parseInt(searchParams.get('pageSize') || '10');
     const skip = (page - 1) * pageSize;
 
     // Filter parameters
@@ -20,7 +35,7 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'newest';
 
     // Build where clause
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
@@ -44,7 +59,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Build orderBy clause
-    let orderBy: any = {};
+    let orderBy: Prisma.ProductOrderByWithRelationInput = {};
     switch (sortBy) {
       case 'newest':
         orderBy = { createdAt: 'desc' };
@@ -86,7 +101,10 @@ export async function GET(request: NextRequest) {
       totalProducts,
       pageSize
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
     console.error('Error fetching products:', error);
     return NextResponse.json(
       { error: 'Failed to fetch products' },

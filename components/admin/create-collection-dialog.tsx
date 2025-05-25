@@ -83,6 +83,7 @@ export function CreateCollectionDialog({
       setImageFile(null)
       toast.success('Collection created successfully')
     } catch (error) {
+      console.error('Error creating collection:', error)
       toast.error('Failed to create collection')
     }
   }
@@ -93,7 +94,7 @@ export function CreateCollectionDialog({
       fetch('/api/admin/products')
         .then((res) => res.json())
         .then((data) => setProducts(data))
-        .catch((error) => toast.error('Failed to fetch products'))
+        .catch(() => toast.error('Failed to fetch products'))
     }
   }, [open])
 

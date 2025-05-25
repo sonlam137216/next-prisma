@@ -1,16 +1,15 @@
 // app/api/admin/upload/route.ts
+import { writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
-import { existsSync } from "fs";
-import { v4 as uuidv4 } from 'uuid'
+import { v4 as uuidv4 } from 'uuid';
 
 // Helper function to create directory if it doesn't exist
-async function ensureDirectory(dirPath: string) {
-  if (!existsSync(dirPath)) {
-    await mkdir(dirPath, { recursive: true });
-  }
-}
+// async function ensureDirectory(dirPath: string) {
+//   if (!existsSync(dirPath)) {
+//     await mkdir(dirPath, { recursive: true });
+//   }
+// }
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { NextRequest } from 'next/server'
+import path from "path";
+import fs from "fs/promises";
 
 export async function GET() {
   try {
@@ -13,7 +16,83 @@ export async function GET() {
       },
     })
     return NextResponse.json(products)
+  } catch {
+    return NextResponse.json(
+      { error: 'Failed to fetch products' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const price = parseFloat(formData.get("price") as string);
+    const categoryId = parseInt(formData.get("categoryId") as string);
+    const inStock = formData.get("inStock") === "true";
+    const quantity = parseInt(formData.get("quantity") as string);
+    const imageFiles = formData.getAll("images") as File[];
+    const imageIsMain = formData.getAll("imageIsMain_0") as string[];
+
+    if (!name || !description || !price || !categoryId || !quantity) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Create product
+    const product = await prisma.product.create({
+      data: {
+        name,
+        description,
+        price,
+        categoryId,
+        inStock,
+        quantity,
+      },
+    });
+
+    // Handle image uploads
+    if (imageFiles.length > 0) {
+      // Upload new images
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        if (file.size > 0) {
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const fileName = `${Date.now()}-${file.name}`;
+          const filePath = path.join(process.cwd(), "public", "uploads", fileName);
+          await fs.writeFile(filePath, buffer);
+
+          await prisma.productImage.create({
+            data: {
+              url: `/uploads/${fileName}`,
+              isMain: imageIsMain[i] === "true",
+              productId: product.id,
+            },
+          });
+        }
+      }
+    }
+
+    // Fetch the complete product with images and category
+    const completeProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: {
+        images: true,
+        category: true,
+      },
+    });
+
+    return NextResponse.json(completeProduct);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+    console.error("Error creating product:", error);
+    return NextResponse.json(
+      { error: "Failed to create product" },
+      { status: 500 }
+    );
   }
 } 

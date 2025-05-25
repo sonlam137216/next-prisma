@@ -27,6 +27,7 @@ export async function GET() {
     })
     return NextResponse.json(collections)
   } catch (error) {
+    console.error('Error fetching collections:', error)
     return NextResponse.json({ error: 'Failed to fetch collections' }, { status: 500 })
   }
 }
@@ -57,10 +58,10 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(collection)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
-    }
-    return NextResponse.json({ error: 'Failed to create collection' }, { status: 500 })
+  } catch {
+    return NextResponse.json(
+      { error: 'Failed to create collection' },
+      { status: 500 }
+    );
   }
 } 

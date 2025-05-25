@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
-import { Edit, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Category } from '@/app/store/dashboardStore';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -9,28 +10,24 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { useState } from 'react';
 
-export default function CategoryList({ categories, onEdit, onDelete }) {
-  const [deletingId, setDeletingId] = useState(null);
+interface CategoryListProps {
+  categories: Category[];
+  onEdit: (category: Category) => void;
+  onDelete: (id: number) => Promise<void>;
+}
 
-  const handleDelete = async (id) => {
+export default function CategoryList({ categories, onEdit, onDelete }: CategoryListProps) {
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
-   
+    setDeletingId(id);
     try {
-      setDeletingId(id);
       await onDelete(id);
-      
     } catch (error) {
       console.error('Error deleting category:', error);
-
     } finally {
       setDeletingId(null);
     }
@@ -59,32 +56,25 @@ export default function CategoryList({ categories, onEdit, onDelete }) {
               <TableRow key={category.id}>
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>{category.description || '-'}</TableCell>
-                <TableCell>{category._count?.products || 0}</TableCell>
+                <TableCell>{category.products?.length || 0}</TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        {deletingId === category.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <MoreHorizontal className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEdit(category)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDelete(category.id)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(category)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(category.id)}
+                      disabled={deletingId === category.id}
+                    >
+                      {deletingId === category.id ? 'Deleting...' : 'Delete'}
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

@@ -1,19 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useDashboardStore } from '@/app/store/dashboardStore';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Category, useDashboardStore } from '@/app/store/dashboardStore';
 import { CategoriesTable } from '@/components/admin/categories-table';
 import CategoryForm from '@/components/CategoryForm';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-interface Category {
-  id: number;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  products?: any[];
-}
 
 export default function CategoriesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -30,7 +22,7 @@ export default function CategoriesPage() {
   // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
-  }, []); // Empty dependency array since we only want to fetch on mount
+  }, [fetchCategories]); // Added fetchCategories to dependency array
 
   const handleAddNew = () => {
     setEditingCategory(null);

@@ -9,16 +9,16 @@ interface User {
   updatedAt: string;
 }
 
-interface ProductImage {
-  id: number;
-  url: string;
-  isMain: boolean;
-  productId: number;
-  createdAt: string;
-  updatedAt: string;
-}
+// interface ProductImage {
+//   id: number;
+//   url: string;
+//   isMain: boolean;
+//   productId: number;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
-interface Category {
+export interface Category {
   id: number;
   name: string;
   description: string | null;
@@ -37,15 +37,20 @@ export interface Collection {
 export interface Product {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
   price: number;
   quantity: number;
-  images: ProductImage[];
+  inStock: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  categoryId: number;
+  images: Array<{
+    id: number;
+    url: string;
+    isMain: boolean;
+  }>;
   category?: Category;
   collection?: Collection;
-  inStock: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface CartItem {
@@ -82,6 +87,8 @@ interface DashboardStore {
   totalProducts: number;
   pageSize: number;
   isLoading: boolean;
+  loading: boolean;
+  error: string | null;
 
   // Cart operations
   addToCart: (product: Product, quantity: number) => void;
@@ -91,18 +98,14 @@ interface DashboardStore {
   clearCart: () => void;
 
   // Product operations
-  fetchProducts: (
-    page?: number, 
-    pageSize?: number,
-    filters?: {
-      search?: string;
-      categoryId?: number;
-      collectionId?: number;
-      minPrice?: number;
-      maxPrice?: number;
-      sortBy?: string;
-    }
-  ) => Promise<void>;
+  fetchProducts: (page?: number, pageSize?: number, filters?: {
+    search?: string;
+    categoryId?: number;
+    collectionId?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
+  }) => Promise<void>;
   fetchProduct: (id: number) => Promise<Product | null>;
   addProduct: (formData: FormData) => Promise<void>;
   updateProduct: (id: number, formData: FormData) => Promise<void>;
@@ -135,6 +138,8 @@ export const useDashboardStore = create<DashboardStore>()(
       totalProducts: 0,
       pageSize: 20,
       isLoading: false,
+      loading: false,
+      error: null,
 
       // Cart operations
       addToCart: (product, quantity) => {
@@ -208,24 +213,21 @@ export const useDashboardStore = create<DashboardStore>()(
 
       // Product operations
       fetchProducts: async (page = 1, pageSize = 20, filters = {}) => {
+        set({ loading: true, error: null });
         try {
-          set({ isLoading: true });
+          const params = new URLSearchParams();
+          params.append('page', page.toString());
+          params.append('pageSize', pageSize.toString());
           
-          // Build query parameters
-          const params = new URLSearchParams({
-            page: page.toString(),
-            pageSize: pageSize.toString(),
-            ...(filters.search && { search: filters.search }),
-            ...(filters.categoryId && { categoryId: filters.categoryId.toString() }),
-            ...(filters.collectionId && { collectionId: filters.collectionId.toString() }),
-            ...(filters.minPrice && { minPrice: filters.minPrice.toString() }),
-            ...(filters.maxPrice && { maxPrice: filters.maxPrice.toString() }),
-            ...(filters.sortBy && { sortBy: filters.sortBy }),
-          });
+          if (filters.search) params.append('search', filters.search);
+          if (filters.categoryId) params.append('categoryId', filters.categoryId.toString());
+          if (filters.collectionId) params.append('collectionId', filters.collectionId.toString());
+          if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
+          if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+          if (filters.sortBy) params.append('sortBy', filters.sortBy);
 
-          const response = await fetch(`/api/products?${params.toString()}`);
+          const response = await fetch(`/api/products?${params}`);
           if (!response.ok) throw new Error('Failed to fetch products');
-          
           const data = await response.json();
           set({
             products: data.products,
@@ -233,11 +235,10 @@ export const useDashboardStore = create<DashboardStore>()(
             totalPages: data.totalPages,
             totalProducts: data.totalProducts,
             pageSize: data.pageSize,
-            isLoading: false
+            loading: false
           });
         } catch (error) {
-          console.error('Error fetching products:', error);
-          set({ isLoading: false });
+          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
         }
       },
 
@@ -256,55 +257,59 @@ export const useDashboardStore = create<DashboardStore>()(
         }
       },
 
-      addProduct: async (formData) => {
+      updateProduct: async (id, formData) => {
+        set({ loading: true, error: null });
         try {
-          const response = await fetch("/api/products", {
-            method: "POST",
+          const response = await fetch(`/api/admin/products/${id}`, {
+            method: 'PUT',
             body: formData,
           });
-          if (!response.ok) throw new Error("Failed to add product");
-          const newProduct = await response.json();
+          if (!response.ok) throw new Error('Failed to update product');
+          const updatedProduct = await response.json();
+          
+          // Update the store with the complete product data including images
           set((state) => ({
-            products: [...state.products, newProduct],
+            products: state.products.map((p) => 
+              p.id === id ? { ...updatedProduct, images: updatedProduct.images || [] } : p
+            ),
+            loading: false,
           }));
-          return newProduct;
         } catch (error) {
-          console.error("Error adding product:", error);
-          throw error;
+          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
         }
       },
 
-      updateProduct: async (id, formData) => {
+      addProduct: async (formData) => {
+        set({ loading: true, error: null });
         try {
-          const response = await fetch(`/api/products/${id}`, {
-            method: "PUT",
+          const response = await fetch('/api/admin/products', {
+            method: 'POST',
             body: formData,
           });
-          if (!response.ok) throw new Error("Failed to update product");
-          const updatedProduct = await response.json();
+          if (!response.ok) throw new Error('Failed to add product');
+          const newProduct = await response.json();
           set((state) => ({
-            products: state.products.map((product) =>
-              product.id === id ? updatedProduct : product
-            ),
+            products: [...state.products, newProduct],
+            loading: false,
           }));
-          return updatedProduct;
         } catch (error) {
-          console.error("Error updating product:", error);
-          throw error;
+          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
         }
       },
 
       deleteProduct: async (id) => {
+        set({ loading: true, error: null });
         try {
-          const response = await fetch(`/api/products/${id}`, {
-            method: "DELETE",
+          const response = await fetch(`/api/admin/products/${id}`, {
+            method: 'DELETE',
           });
-          if (!response.ok) throw new Error("Failed to delete product");
+          if (!response.ok) throw new Error('Failed to delete product');
           set((state) => ({
-            products: state.products.filter((product) => product.id !== id),
+            products: state.products.filter((p) => p.id !== id),
+            loading: false,
           }));
         } catch (error) {
-          console.error("Error deleting product:", error);
+          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
         }
       },
 

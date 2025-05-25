@@ -4,26 +4,28 @@ import { useBlogStore } from "@/app/store/blogStore";
 import { Product, useDashboardStore } from "@/app/store/dashboardStore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Heart, Mail, Search, ShoppingCart, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { ChevronRight, Heart, Search } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
-import HeroSlider from "./HeroSection";
-import { useRouter } from 'next/navigation';
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from "react";
+import HeroSlider from "./HeroSection";
 
 export default function LandingPage() {
   const router = useRouter();
-  const { products, fetchProducts, fetchCategories, currentPage, totalPages, categories, addToCart, toggleCart } = useDashboardStore();
+  const { 
+    products, 
+    fetchProducts, 
+    fetchCategories, 
+    categories, 
+    loading,
+    error 
+  } = useDashboardStore();
   const { posts, fetchPosts } = useBlogStore();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [trending, setTrending] = useState<Product[]>([]);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [email, setEmail] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [_, setCurrentImageIndex] = useState(0);
   const imageSliderRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState(1);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -36,16 +38,26 @@ export default function LandingPage() {
     "/images/products/16459445-0ffe-4404-bd17-b43dc94e9c2d.jpeg", 
   ];
 
+  // Fetch initial data
   useEffect(() => {
-    fetchProducts(1, 8); // Fetch first page with 8 items
-    fetchPosts(1);
-    fetchCategories();
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          fetchProducts(1, 8),
+          fetchPosts(1),
+          fetchCategories()
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    loadData();
   }, [fetchProducts, fetchCategories, fetchPosts]);
 
+  // Update featured products when products change
   useEffect(() => {
-    if (products.length > 0) {
+    if (products && products.length > 0) {
       setFeaturedProducts(products);
-      setTrending(products.sort((a, b) => b.price - a.price).slice(0, 3));
     }
   }, [products]);
 
@@ -60,31 +72,19 @@ export default function LandingPage() {
         clearInterval(imageSliderRef.current);
       }
     };
-  }, []);
+  }, [collectionImages.length]);
 
-  const handleSubscribe = (e: any) => {
-    e.preventDefault();
-    if (email.trim() !== "") {
-      setIsSubscribed(true);
-      setEmail("");
+  const handleProductClick = (productId: number) => {
+    router.push(`/products/${productId}`);
+  };
+
+  // Update filtered products when products or category changes
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const filtered = products.filter(p => p.category?.id === selectedCategoryId);
+      setFilteredProducts(filtered);
     }
-  };
-
-  const nextProduct = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentIndex((prev) => (prev + 1) % (featuredProducts.length - 3));
-    setTimeout(() => setIsAnimating(false), 1000);
-  };
-
-  const prevProduct = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrentIndex((prev) => (prev - 1 + (featuredProducts.length - 3)) % (featuredProducts.length - 3));
-    setTimeout(() => setIsAnimating(false), 1000);
-  };
-
-  const visibleProducts = featuredProducts.slice(currentIndex, currentIndex + 4);
+  }, [products, selectedCategoryId]);
 
   // Add this new function to group products
   const getProductGroups = (products: Product[], groupSize: number) => {
@@ -95,15 +95,24 @@ export default function LandingPage() {
     return groups;
   };
 
-  const handleProductClick = (productId: number) => {
-    router.push(`/products/${productId}`);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (products.length > 0) {
-      setFilteredProducts(products.filter(p => p.category?.id === selectedCategoryId));
-    }
-  }, [products, selectedCategoryId]);
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">

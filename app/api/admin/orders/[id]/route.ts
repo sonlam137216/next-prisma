@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 // GET a single order by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -34,10 +34,10 @@ export async function GET(
 // PATCH to update order status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     const { status } = await request.json();
 
     // Validate status enum
@@ -76,10 +76,10 @@ export async function PATCH(
 // DELETE an order
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
 
     // Check if order exists
     const order = await prisma.order.findUnique({

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -93,31 +94,23 @@ export default function OrdersPage() {
     setDeleteDialogOpen(true);
   };
 
-  // Confirm and delete order
-  const confirmDelete = async () => {
-    if (selectedOrderId) {
-      await deleteOrder(selectedOrderId);
-      setDeleteDialogOpen(false);
-    }
-  };
-
-  // Status badge variant
-  const getStatusBadge = (status: OrderStatus) => {
-    switch (status) {
-      case "PENDING":
-        return "warning";
-      case "PROCESSING":
-        return "default";
-      case "SHIPPED":
-        return "info";
-      case "DELIVERED":
-        return "success";
-      case "CANCELLED":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
+  // // Status badge variant
+  // const getStatusBadge = (status: OrderStatus) => {
+  //   switch (status) {
+  //     case "PENDING":
+  //       return "warning";
+  //     case "PROCESSING":
+  //       return "default";
+  //     case "SHIPPED":
+  //       return "info";
+  //     case "DELIVERED":
+  //       return "success";
+  //     case "CANCELLED":
+  //       return "destructive";
+  //     default:
+  //       return "secondary";
+  //   }
+  // };
 
   return (
     <div className="space-y-6">
@@ -315,7 +308,13 @@ export default function OrdersPage() {
                           <TableCell className="flex items-center gap-2">
                             {item.imageUrl && (
                               <div className="h-10 w-10 rounded bg-gray-100 overflow-hidden relative">
-                                <img src={item.imageUrl} alt={item.name} className="object-cover h-full w-full" />
+                                <Image 
+                                  src={item.imageUrl} 
+                                  alt={item.name} 
+                                  width={40}
+                                  height={40}
+                                  className="object-cover h-full w-full" 
+                                />
                               </div>
                             )}
                             <span>{item.name}</span>
@@ -357,7 +356,12 @@ export default function OrdersPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={confirmDelete}
+              onClick={() => {
+                if (selectedOrderId) {
+                  deleteOrder(selectedOrderId);
+                  setDeleteDialogOpen(false);
+                }
+              }}
               className="bg-red-600 hover:bg-red-700"
             >
               Delete

@@ -1,7 +1,7 @@
 // components/BlogEditor.tsx
 'use client';
 
-import { useBlogStore } from '@/app/store/blogStore';
+import { useBlogStore, BlogPost } from '@/app/store/blogStore';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,16 +32,7 @@ import RichTextEditor from './rich-text-editor';
 export default function BlogEditor({
   post = null
 }: {
-  post?: {
-    id?: number;
-    title: string;
-    slug: string;
-    description: string;
-    published: boolean;
-    path?: string;
-    featuredImage?: string;
-    content?: string;
-  } | null;
+  post?: Partial<BlogPost> | null;
 }) {
   const router = useRouter();
   const { createPost, updatePost, loading } = useBlogStore();
@@ -123,13 +114,19 @@ export default function BlogEditor({
       return;
     }
     
-    const postData = {
-      id: post?.id,
+    const postData: BlogPost = {
+      id: post?.id || 0,
       title,
       slug,
-      description,
+      description: description || '',
       published,
       path: post?.path || '',
+      category: post?.category || 'Kiến thức', // Default category
+      readingTime: post?.readingTime || 5, // Default reading time
+      createdAt: post?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      featuredImage: post?.featuredImage,
+      content: post?.content
     };
 
     console.log(postData)

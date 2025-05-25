@@ -1,3 +1,5 @@
+import { Category } from "@/app/store/dashboardStore";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -6,15 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-
-interface Category {
-  id: number;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  products?: any[];
-}
 
 interface CategoriesTableProps {
   categories: Category[];

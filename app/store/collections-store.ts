@@ -49,7 +49,8 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
     try {
       const response = await axios.get('/api/admin/collections')
       set({ collections: response.data, loading: false })
-    } catch (error) {
+    } catch {
+      console.error('Failed to fetch collections')
       set({ error: 'Failed to fetch collections', loading: false })
     }
   },
@@ -62,7 +63,8 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
         collections: [...state.collections, response.data],
         loading: false,
       }))
-    } catch (error) {
+    } catch {
+      console.error('Failed to create collection')
       set({ error: 'Failed to create collection', loading: false })
     }
   },
@@ -77,7 +79,8 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
         ),
         loading: false,
       }))
-    } catch (error) {
+    } catch {
+      console.error('Failed to update collection')
       set({ error: 'Failed to update collection', loading: false })
     }
   },
@@ -90,7 +93,8 @@ export const useCollectionsStore = create<CollectionsState>((set) => ({
         collections: state.collections.filter((collection) => collection.id !== id),
         loading: false,
       }))
-    } catch (error) {
+    } catch {
+      console.error('Failed to delete collection')
       set({ error: 'Failed to delete collection', loading: false })
     }
   },

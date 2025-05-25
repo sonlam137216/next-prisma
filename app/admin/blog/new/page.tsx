@@ -2,7 +2,7 @@
 'use client';
 
 import BlogEditor from "@/components/BlogEditor";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function NewBlogPostPage() {
   return (
