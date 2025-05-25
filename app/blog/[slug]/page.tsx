@@ -1,220 +1,143 @@
 // app/blog/[slug]/page.tsx
-"use client";
-
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ArrowUpRight, BookOpen, Calendar, ChevronLeft, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useBlogStore } from '../../store/blogStore';
+import { Metadata } from 'next';
+import { BlogDetailClient } from './BlogDetailClient';
+import axios from 'axios';
 
-interface Heading {
-  id: string;
-  text: string;
-  level: number;
+interface Props {
+  params: {
+    slug: string;
+  };
 }
 
-export default function BlogDetailPage() {
-  const { slug } = useParams();
-  const { loading, error, fetchPostBySlug, currentPost } = useBlogStore();
-  const [headings, setHeadings] = useState<Heading[]>([]);
-  const [activeHeading, setActiveHeading] = useState<string | null>(null);
-  const [updatedHtml, setUpdatedHtml] = useState<string>("");
+// Helper function to fetch data with error handling
+async function fetchData(path: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const url = new URL(path, baseUrl);
+    
+    const response = await axios.get(url.toString(), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'max-age=60',
+      },
+    });
 
-  useEffect(() => {
-    if (slug) {
-      fetchPostBySlug(slug as string);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(`Error fetching data from ${path}:`, error.message);
+    } else {
+      console.error(`Error fetching data from ${path}:`, error);
     }
-  }, [slug, fetchPostBySlug]);
+    return null;
+  }
+}
 
-  useEffect(() => {
-    if (currentPost?.content) {
-      // Parse HTML content to extract headings and inject IDs
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(currentPost.content, 'text/html');
-      const headingElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      
-      const extractedHeadings = Array.from(headingElements).map((heading) => {
-        const id = heading.textContent?.toLowerCase().replace(/\s+/g, '-') || '';
-        heading.id = id;
-        return {
-          id,
-          text: heading.textContent || '',
-          level: parseInt(heading.tagName[1])
-        };
-      });
+// Generate metadata for SEO
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const data = await fetchData(`/api/blog/${params.slug}`);
 
-      // Serialize HTML back to string with IDs injected
-      const updatedContent = doc.body.innerHTML;
-
-      setHeadings(extractedHeadings);
-      setUpdatedHtml(updatedContent);
-    }
-  }, [currentPost?.content]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      let currentHeading = null;
-
-      headingElements.forEach((heading) => {
-        const rect = heading.getBoundingClientRect();
-        if (rect.top <= 100) {
-          currentHeading = heading.id;
-        }
-      });
-
-      setActiveHeading(currentHeading);
+  if (!data?.post) {
+    return {
+      title: 'Blog Post Not Found | Gem Store',
+      description: 'The requested blog post could not be found.',
     };
+  }
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToHeading = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100; // Adjust for fixed header
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+  return {
+    title: `${data.post.title} | Gem Store Blog`,
+    description: data.post.description,
+    openGraph: {
+      title: data.post.title,
+      description: data.post.description,
+      type: 'article',
+      publishedTime: data.post.createdAt,
+      modifiedTime: data.post.updatedAt,
+      authors: ['Gem Store'],
+      images: [
+        {
+          url: data.post.featuredImage || '/images/blog-placeholder.jpg',
+          width: 1200,
+          height: 630,
+          alt: data.post.title,
+        },
+      ],
+    },
   };
+}
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+export default async function BlogDetailPage({ params }: Props) {
+  const data = await fetchData(`/api/blog/${params.slug}`);
 
-  if (error) {
+  if (!data?.post) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-destructive text-xl mb-4">{error}</p>
-        <Button onClick={() => {
-          if (slug) {
-            fetchPostBySlug(slug as string);
-          }
-        }}>Try Again</Button>
-      </div>
-    );
-  }
-
-  if (!currentPost) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
         <div className="text-center">
-          <BookOpen size={48} className="mx-auto text-gray-400 mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Post Not Found</h1>
-          <p className="text-gray-600 mb-6">
-            Let&apos;s explore the world of sustainable fashion and how it&apos;s shaping the future of retail.
+          <h1 className="text-4xl font-bold mb-4">Blog Post Not Found</h1>
+          <p className="text-muted-foreground mb-8">
+            The blog post you are looking for does not exist or has been removed.
           </p>
-          <Link href="/blog">
-            <Button variant="outline">
-              <ChevronLeft size={16} className="mr-2" />
+          <Button asChild>
+            <Link href="/blog">
+              <ChevronLeft className="mr-2 h-4 w-4" />
               Back to Blog
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-primary to-primary/80 text-white">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="container mx-auto px-4 py-32 relative">
-          <div className="max-w-7xl mx-auto">
-            <Link href="/blog">
-              <Button variant="ghost" className="text-white hover:text-white/90 mb-8 group">
-                <ChevronLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-                Back to Blog
-              </Button>
-            </Link>
-            <h1 className="text-5xl md:text-6xl font-bold mb-8 leading-tight">{currentPost.title}</h1>
-            <div className="flex flex-wrap items-center gap-6 text-sm text-white/90">
-              <div className="flex items-center">
-                <Calendar size={16} className="mr-2" />
-                {currentPost.createdAt && format(new Date(currentPost.createdAt), 'MMM dd, yyyy')}
-              </div>
-              <div className="flex items-center">
-                <Clock size={16} className="mr-2" />
-                5 min read
-              </div>
-            </div>
+    <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+      {/* Back Button */}
+      <div className="mb-8">
+        <Button variant="ghost" asChild>
+          <Link href="/blog">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to Blog
+          </Link>
+        </Button>
+      </div>
+
+      {/* Featured Image */}
+      <div className="relative w-full h-[400px] mb-8 rounded-lg overflow-hidden">
+        <Image
+          src={data.post.featuredImage || '/images/blog-placeholder.jpg'}
+          alt={data.post.title}
+          fill
+          className="object-cover"
+          priority
+        />
+      </div>
+
+      {/* Post Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-4">{data.post.title}</h1>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            <span>{format(new Date(data.post.createdAt), 'dd/MM/yyyy')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>{data.post.readingTime} phút đọc</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            <span>{data.post.category}</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 py-16">
-        <div>
-          {/* Featured Image */}
-          {currentPost.featuredImage && (
-            <div className="relative w-full h-[600px] mb-16 rounded-2xl overflow-hidden">
-              <Image
-                src={currentPost.featuredImage}
-                alt={currentPost.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-
-          {/* Table of Contents */}
-          {headings.length > 0 && (
-            <div className="mb-16">
-              <h2 className="text-2xl font-semibold mb-6">Table of Contents</h2>
-              <div className="flex flex-wrap gap-4">
-                {headings.map((heading) => (
-                  <button
-                    key={heading.id}
-                    onClick={() => scrollToHeading(heading.id)}
-                    className={cn(
-                      "inline-flex items-center px-4 py-2 rounded-lg transition-all hover:bg-gray-50",
-                      activeHeading === heading.id
-                        ? "bg-primary/5 text-primary font-medium"
-                        : "text-gray-600"
-                    )}
-                  >
-                    {heading.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Blog Content */}
-          <article className="prose prose-lg max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: updatedHtml || currentPost.content || '' }} />
-          </article>
-
-          {/* Back to Top Button */}
-          <div className="mt-16 text-center">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="group"
-            >
-              Back to Top
-              <ArrowUpRight size={16} className="ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Client Component for Interactive Features */}
+      <BlogDetailClient post={data.post} />
     </div>
   );
 }

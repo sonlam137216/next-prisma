@@ -1,59 +1,64 @@
 // app/blog/page.tsx
-"use client";
-
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CalendarDays, Clock, ArrowRight } from "lucide-react";
-import { useBlogStore } from "@/app/store/blogStore";
 import { format } from "date-fns";
+import { Metadata } from "next";
+import { BlogClient } from "./BlogClient";
+import axios from "axios";
 
-export default function BlogPage() {
-  const {
-    posts,
-    featuredPost,
-    categories,
-    selectedCategory,
-    loading,
-    error,
-    pagination,
-    setSelectedCategory,
-    fetchPosts,
-    fetchFeaturedPost,
-    fetchCategories,
-  } = useBlogStore();
+// Generate metadata for SEO
+export const metadata: Metadata = {
+  title: "Blog & Tin Tức | Gem Store",
+  description: "Khám phá những bài viết mới nhất về phong thủy, đá quý và những câu chuyện thú vị từ chúng tôi",
+  openGraph: {
+    title: "Blog & Tin Tức | Gem Store",
+    description: "Khám phá những bài viết mới nhất về phong thủy, đá quý và những câu chuyện thú vị từ chúng tôi",
+    type: "website",
+  },
+};
 
-  useEffect(() => {
-    fetchPosts(1);
-    fetchFeaturedPost();
-    fetchCategories();
-  }, [fetchPosts, fetchFeaturedPost, fetchCategories]);
+// Helper function to fetch data with error handling
+async function fetchData(path: string) {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const url = new URL(path, baseUrl);
+    
+    const response = await axios.get(url.toString(), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'max-age=60',
+      },
+    });
 
-  const handlePageChange = (page: number) => {
-    fetchPosts(page, selectedCategory === "Tất cả" ? undefined : selectedCategory);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(`Error fetching data from ${path}:`, error.message);
+    } else {
+      console.error(`Error fetching data from ${path}:`, error);
+    }
+    return null;
   }
+}
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    );
-  }
+// Server Component
+export default async function BlogPage() {
+  // Fetch data on the server
+  const [postsData, featuredPostData, categoriesData] = await Promise.all([
+    fetchData('/api/blog?page=1&pageSize=9'),
+    fetchData('/api/blog/featured'),
+    fetchData('/api/blog/categories'),
+  ]);
+
+  // Handle cases where data fetching failed
+  const posts = postsData?.posts || [];
+  const featuredPost = featuredPostData?.post || null;
+  const categories = categoriesData?.categories || [];
 
   return (
     <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
@@ -111,98 +116,12 @@ export default function BlogPage() {
         </div>
       )}
 
-      {/* Categories */}
-      <div className="mb-12">
-        <div className="flex flex-wrap gap-4 justify-center">
-          {["Tất cả", ...categories].map((category) => (
-            <Button
-              key={category}
-              variant={category === selectedCategory ? "default" : "outline"}
-              className="rounded-full"
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Blog Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {posts.map((post) => (
-          <Card key={post.id} className="border-none shadow-lg overflow-hidden group">
-            <div className="relative h-48">
-              <Image
-                src={post.featuredImage || `/api/placeholder/400/300?${post.id}`}
-                alt={post.title}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
-            <CardHeader>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4" />
-                  <span>
-                    {format(new Date(post.createdAt), "dd/MM/yyyy")}
-                  </span>
-                </div>
-              </div>
-              <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
-                <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-              </CardTitle>
-            </CardHeader>
-            <CardFooter>
-              <Button
-                variant="ghost"
-                className="p-0 h-auto hover:bg-transparent group-hover:text-primary"
-              >
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="flex items-center gap-2"
-                >
-                  Đọc thêm
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="mt-12 flex justify-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          disabled={pagination.page === 1}
-          onClick={() => handlePageChange(pagination.page - 1)}
-        >
-          <span className="sr-only">Previous page</span>
-          <ArrowRight className="h-4 w-4 rotate-180" />
-        </Button>
-        {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
-          (page) => (
-            <Button
-              key={page}
-              variant={page === pagination.page ? "default" : "outline"}
-              size="icon"
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </Button>
-          )
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          disabled={pagination.page === pagination.totalPages}
-          onClick={() => handlePageChange(pagination.page + 1)}
-        >
-          <span className="sr-only">Next page</span>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Client Component for Interactive Features */}
+      <BlogClient 
+        initialPosts={posts} 
+        initialCategories={categories}
+        initialPagination={postsData?.pagination || { page: 1, pageSize: 9, totalPages: 1, totalPosts: 0 }}
+      />
     </div>
   );
 }

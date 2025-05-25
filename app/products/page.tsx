@@ -5,7 +5,7 @@ import ProductsContent from './ProductsContent';
 import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: 'Products | Your Store Name',
+  title: 'Products | GEM Store',
   description: 'Browse our collection of high-quality products. Find the best deals on various categories including electronics, fashion, and more.',
   keywords: 'products, online store, shopping, deals, categories',
   openGraph: {
