@@ -121,24 +121,35 @@ export default function LandingPage() {
 
       {/* 3 Small Banners Row */}
       <div className="w-full flex justify-center mt-8 mb-12">
-        <div className="flex gap-6">
-          {/* Banner 1 */}
-          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px] transition-all duration-300 hover:scale-105">
-            <span className="text-white text-2xl font-bold mb-2">🚚</span>
-            <span className="text-white font-semibold text-lg">Miễn phí giao hàng</span>
-            <span className="text-white/80 text-sm mt-1">Cho đơn từ 500K</span>
-          </div>
-          {/* Banner 2 */}
-          <div className="bg-gradient-to-br from-pink-500 to-pink-400 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px] transition-all duration-300 hover:scale-105">
-            <span className="text-white text-2xl font-bold mb-2">🎁</span>
-            <span className="text-white font-semibold text-lg">Quà tặng hấp dẫn</span>
-            <span className="text-white/80 text-sm mt-1">Khi mua combo</span>
-          </div>
-          {/* Banner 3 */}
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-300 rounded-xl shadow-lg flex flex-col items-center justify-center px-8 py-6 min-w-[220px] transition-all duration-300 hover:scale-105">
-            <span className="text-white text-2xl font-bold mb-2">⭐</span>
-            <span className="text-white font-semibold text-lg">Đổi trả dễ dàng</span>
-            <span className="text-white/80 text-sm mt-1">Trong 7 ngày</span>
+        <div className="max-w-[1200px] w-full px-4 sm:px-5 lg:px-6">
+          <div className="flex justify-around gap-2">
+            {/* Banner 1 */}
+            <div className="relative rounded-xl shadow-lg overflow-hidden min-w-[350px] h-[130px] transition-all duration-300 hover:scale-105">
+              <Image
+                src="/uploads/banner_next_slide_1.webp"
+                alt="Free Shipping Banner"
+                fill
+                className="object-cover"
+              />
+            </div>
+            {/* Banner 2 */}
+            <div className="relative rounded-xl shadow-lg overflow-hidden min-w-[350px] h-[130px] transition-all duration-300 hover:scale-105">
+              <Image
+                src="/uploads/banner_next_slide_2.webp"
+                alt="Gift Banner"
+                fill
+                className="object-cover"
+              />
+            </div>
+            {/* Banner 3 */}
+            <div className="relative rounded-xl shadow-lg overflow-hidden min-w-[350px] h-[130px] transition-all duration-300 hover:scale-105">
+              <Image
+                src="/uploads/banner_next_slide_3.webp"
+                alt="Easy Return Banner"
+                fill
+                className="object-cover"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -150,6 +161,11 @@ export default function LandingPage() {
           <div className="max-w-[1200px] mx-auto">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold">Sản phẩm mới nhất</h2>
+              <Button variant="ghost" className="flex items-center gap-1 text-sm" asChild>
+                <Link href="/products">
+                  Xem tất cả <ChevronRight size={14} />
+                </Link>
+              </Button>
             </div>
             
             <Carousel className="w-full">

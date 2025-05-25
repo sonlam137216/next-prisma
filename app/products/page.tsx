@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useDashboardStore } from '@/app/store/dashboardStore';
+import { Product, useDashboardStore } from '@/app/store/dashboardStore';
 import { useCollectionStore } from '@/app/store/collectionStore';
 import { Suspense, useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,18 +14,32 @@ import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { SlidersHorizontal } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
-  const { products, fetchProducts, categories, fetchCategories, isLoading, currentPage, totalPages } = useDashboardStore();
+  const { 
+    products, 
+    fetchProducts, 
+    categories, 
+    fetchCategories, 
+    isLoading, 
+    currentPage, 
+    totalPages,
+    addToCart,
+    toggleCart
+  } = useDashboardStore();
   const { collections, fetchCollections } = useCollectionStore();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCollection, setSelectedCollection] = useState('all');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [maxPrice] = useState(1000);
   const [sortBy, setSortBy] = useState('newest');
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 12;
+  const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -39,18 +53,49 @@ function ProductsContent() {
       collectionId: selectedCollection !== 'all' ? parseInt(selectedCollection) : undefined,
       minPrice: priceRange[0],
       maxPrice: priceRange[1],
-      sortBy
+      sortBy,
+      page,
+      limit: itemsPerPage
     };
-    fetchProducts(currentPage, 20, filters);
-  }, [searchQuery, selectedCategory, selectedCollection, priceRange, sortBy, currentPage, fetchProducts]);
+    fetchProducts(page, itemsPerPage, filters);
+  }, [searchQuery, selectedCategory, selectedCollection, priceRange, sortBy, page, fetchProducts]);
 
   // Handle navigation to product detail
   const handleProductClick = (productId: number) => {
     router.push(`/products/${productId}`);
   };
 
+  // Add to cart handler
+  const handleAddToCart = (product: Product) => {
+    if (!product || !product.inStock) return;
+    
+    setIsAddingToCart(product.id);
+    
+    // Add to cart with quantity 1
+    addToCart(product, 1);
+    
+    // Show toast notification
+    toast('Thêm vào giỏ hàng thành công', {
+      description: `Đã thêm ${product.name} vào giỏ hàng.`,
+      duration: 3000
+    });
+    
+    setIsAddingToCart(null);
+  };
+
+  // Buy now handler
+  const handleBuyNow = (product: Product) => {
+    handleAddToCart(product);
+    setTimeout(() => toggleCart(), 300); // Open cart after a short delay
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1">
           <div className="space-y-6">
@@ -139,7 +184,7 @@ function ProductsContent() {
           {/* Product Count and Sort */}
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-gray-500">
-              Showing {products.length} products
+              Showing {products.length} of {totalPages * itemsPerPage} products
             </p>
             
             <div className="flex items-center gap-2">
@@ -160,7 +205,7 @@ function ProductsContent() {
 
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
+              {[...Array(itemsPerPage)].map((_, i) => (
                 <div key={i} className="space-y-3">
                   <Skeleton className="h-48 w-full" />
                   <Skeleton className="h-4 w-3/4" />
@@ -210,45 +255,67 @@ function ProductsContent() {
                       >
                         View Details
                       </Button>
-                      <Button 
-                        size="sm"
-                        disabled={!product.inStock}
-                      >
-                        Add to Cart
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          disabled={!product.inStock || isAddingToCart === product.id}
+                          onClick={() => handleBuyNow(product)}
+                        >
+                          Buy Now
+                        </Button>
+                      </div>
                     </CardFooter>
                   </Card>
                 ))}
               </div>
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-8">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => fetchProducts(currentPage - 1, 20)}
-                    disabled={currentPage === 1}
-                  >
-                    <span className="sr-only">Previous page</span>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </Button>
-                  <span className="text-sm">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => fetchProducts(currentPage + 1, 20)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <span className="sr-only">Next page</span>
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Button>
+              
+              {/* Pagination Controls */}
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-2">
+                  {[...Array(totalPages)].map((_, index) => {
+                    const pageNumber = index + 1;
+                    // Show first page, last page, current page, and pages around current page
+                    if (
+                      pageNumber === 1 ||
+                      pageNumber === totalPages ||
+                      (pageNumber >= page - 1 && pageNumber <= page + 1)
+                    ) {
+                      return (
+                        <Button
+                          key={pageNumber}
+                          variant={pageNumber === page ? "default" : "outline"}
+                          onClick={() => handlePageChange(pageNumber)}
+                          className="w-10 h-10"
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    } else if (
+                      pageNumber === page - 2 ||
+                      pageNumber === page + 2
+                    ) {
+                      return <span key={pageNumber}>...</span>;
+                    }
+                    return null;
+                  })}
                 </div>
-              )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -260,7 +327,7 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (
     <Suspense fallback={
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <Skeleton className="h-[400px] w-full" />

@@ -162,7 +162,7 @@ export default function Header() {
           <div className="flex items-center">
             <Link href="/" prefetch={false}>
               <Image
-                src="/logo/LOGO-4.png"
+                src="/logo/qLbMRkWw.jpg"
                 width={300}
                 height={120}
                 alt="Logo"
@@ -179,7 +179,7 @@ export default function Header() {
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
-                className="pl-10 pr-4 py-2 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-primary-foreground focus:border-primary-foreground bg-primary text-white placeholder:text-white/70"
+                className="pl-10 pr-4 py-3 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-white focus:border-white bg-primary text-white placeholder:text-white/90"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
