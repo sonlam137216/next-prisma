@@ -19,12 +19,17 @@ interface CollectionStore {
   updateCollection: (id: number, formData: FormData) => Promise<void>;
   deleteCollection: (id: number) => Promise<void>;
   toggleActiveStatus: (id: number) => Promise<void>;
+  setInitialCollections: (collections: Collection[]) => void;
 }
 
 export const useCollectionStore = create<CollectionStore>((set) => ({
   collections: [],
   loading: false,
   error: null,
+
+  setInitialCollections: (collections: Collection[]) => {
+    set({ collections });
+  },
 
   fetchCollections: async () => {
     try {

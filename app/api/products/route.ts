@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     
     // Pagination parameters
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+    const pageSize = parseInt(searchParams.get('limit') || '12');
     const skip = (page - 1) * pageSize;
 
     // Filter parameters
@@ -42,20 +42,18 @@ export async function GET(request: NextRequest) {
           { description: { contains: search, mode: 'insensitive' } }
         ]
       }),
-      ...(categoryId && { categoryId: parseInt(categoryId) }),
-      ...(collectionId && {
+      ...(categoryId && !isNaN(Number(categoryId)) && { categoryId: Number(categoryId) }),
+      ...(collectionId && !isNaN(Number(collectionId)) && {
         collections: {
           some: {
-            id: parseInt(collectionId)
+            id: Number(collectionId)
           }
         }
       }),
-      ...(minPrice && maxPrice && {
-        price: {
-          gte: parseFloat(minPrice),
-          lte: parseFloat(maxPrice)
-        }
-      })
+      price: {
+        gte: Number(minPrice || 0),
+        lte: Number(maxPrice || 1000)
+      }
     };
 
     // Build orderBy clause

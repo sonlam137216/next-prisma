@@ -41,8 +41,8 @@ export interface Product {
   price: number;
   quantity: number;
   inStock: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt?: string;
   categoryId: number;
   images: Array<{
     id: number;
@@ -74,7 +74,7 @@ interface BlogPost {
   author?: User;
 }
 
-interface DashboardStore {
+interface DashboardState {
   users: User[];
   products: Product[];
   categories: Category[];
@@ -98,14 +98,7 @@ interface DashboardStore {
   clearCart: () => void;
 
   // Product operations
-  fetchProducts: (page?: number, pageSize?: number, filters?: {
-    search?: string;
-    categoryId?: number;
-    collectionId?: number;
-    minPrice?: number;
-    maxPrice?: number;
-    sortBy?: string;
-  }) => Promise<void>;
+  fetchProducts: (page: number, limit: number, filters?: any) => Promise<void>;
   fetchProduct: (id: number) => Promise<Product | null>;
   addProduct: (formData: FormData) => Promise<void>;
   updateProduct: (id: number, formData: FormData) => Promise<void>;
@@ -121,9 +114,11 @@ interface DashboardStore {
 
   // Blog operations
   fetchBlogPosts: () => Promise<void>;
+
+  setInitialData: (products: Product[]) => void;
 }
 
-export const useDashboardStore = create<DashboardStore>()(
+export const useDashboardStore = create<DashboardState>()(
   persist(
     (set, get) => ({
       users: [],
@@ -212,33 +207,29 @@ export const useDashboardStore = create<DashboardStore>()(
       },
 
       // Product operations
-      fetchProducts: async (page = 1, pageSize = 20, filters = {}) => {
-        set({ loading: true, error: null });
+      fetchProducts: async (page, limit, filters = {}) => {
+        set({ isLoading: true });
         try {
-          const params = new URLSearchParams();
-          params.append('page', page.toString());
-          params.append('pageSize', pageSize.toString());
-          
-          if (filters.search) params.append('search', filters.search);
-          if (filters.categoryId) params.append('categoryId', filters.categoryId.toString());
-          if (filters.collectionId) params.append('collectionId', filters.collectionId.toString());
-          if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
-          if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
-          if (filters.sortBy) params.append('sortBy', filters.sortBy);
+          const queryParams = new URLSearchParams({
+            page: page.toString(),
+            limit: limit.toString(),
+            ...filters,
+          });
 
-          const response = await fetch(`/api/products?${params}`);
-          if (!response.ok) throw new Error('Failed to fetch products');
+          const response = await fetch(`/api/products?${queryParams}`);
           const data = await response.json();
+
           set({
             products: data.products,
             currentPage: data.currentPage,
             totalPages: data.totalPages,
             totalProducts: data.totalProducts,
             pageSize: data.pageSize,
-            loading: false
+            isLoading: false,
           });
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
+          console.error('Error fetching products:', error);
+          set({ isLoading: false });
         }
       },
 
@@ -405,6 +396,10 @@ export const useDashboardStore = create<DashboardStore>()(
         } catch (error) {
           console.error("Error fetching blog posts:", error);
         }
+      },
+
+      setInitialData: (products: Product[]) => {
+        set({ products });
       },
     }),
     {
