@@ -25,7 +25,7 @@ export default function LandingPage() {
   } = useDashboardStore();
   const { posts, fetchPosts } = useBlogStore();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [_, setCurrentImageIndex] = useState(0);
+  const [, setCurrentImageIndex] = useState(0);
   const imageSliderRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState(1);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);

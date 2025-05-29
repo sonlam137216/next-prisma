@@ -74,6 +74,17 @@ interface BlogPost {
   author?: User;
 }
 
+interface ProductFilters {
+  search?: string;
+  categoryId?: number;
+  collectionId?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  page?: number;
+  limit?: number;
+}
+
 interface DashboardState {
   users: User[];
   products: Product[];
@@ -98,7 +109,7 @@ interface DashboardState {
   clearCart: () => void;
 
   // Product operations
-  fetchProducts: (page: number, limit: number, filters?: any) => Promise<void>;
+  fetchProducts: (page: number, limit: number, filters?: ProductFilters) => Promise<void>;
   fetchProduct: (id: number) => Promise<Product | null>;
   addProduct: (formData: FormData) => Promise<void>;
   updateProduct: (id: number, formData: FormData) => Promise<void>;
@@ -213,7 +224,12 @@ export const useDashboardStore = create<DashboardState>()(
           const queryParams = new URLSearchParams({
             page: page.toString(),
             limit: limit.toString(),
-            ...filters,
+            ...Object.entries(filters).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = value.toString();
+              }
+              return acc;
+            }, {} as Record<string, string>)
           });
 
           const response = await fetch(`/api/products?${queryParams}`);

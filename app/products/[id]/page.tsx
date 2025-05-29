@@ -58,7 +58,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         
         // Only fetch all products if we need them for related products
         if (foundProduct && foundProduct.category) {
-          await fetchProducts();
+          await fetchProducts(1, 20);
           await fetchCategories();
         }
       } catch (error) {
@@ -69,7 +69,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     };
 
     loadData();
-  }, [params, fetchProduct]);
+  }, [params, fetchProduct, fetchProducts, fetchCategories]);
   
   // Update related products when products array changes
   useEffect(() => {

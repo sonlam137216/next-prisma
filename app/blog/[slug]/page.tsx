@@ -1,18 +1,15 @@
 // app/blog/[slug]/page.tsx
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import axios from 'axios';
 import { format } from 'date-fns';
-import { ArrowUpRight, BookOpen, Calendar, ChevronLeft, Clock } from 'lucide-react';
+import { BookOpen, Calendar, ChevronLeft, Clock } from 'lucide-react';
+import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Metadata } from 'next';
 import { BlogDetailClient } from './BlogDetailClient';
-import axios from 'axios';
 
 interface Props {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 }
 
 // Helper function to fetch data with error handling
@@ -41,7 +38,7 @@ async function fetchData(path: string) {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const data = await fetchData(`/api/blog/${params.slug}`);
+  const data = await fetchData(`/api/blog/${(await params).slug}`);
 
   if (!data?.post) {
     return {
@@ -73,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogDetailPage({ params }: Props) {
-  const data = await fetchData(`/api/blog/${params.slug}`);
+  const data = await fetchData(`/api/blog/${(await params).slug}`);
 
   if (!data?.post) {
     return (

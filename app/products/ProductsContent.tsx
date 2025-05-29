@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Product, useDashboardStore } from '@/app/store/dashboardStore';
-import { useCollectionStore } from '@/app/store/collectionStore';
+import { Product, Category, useDashboardStore } from '@/app/store/dashboardStore';
+import { Collection, useCollectionStore } from '@/app/store/collectionStore';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,8 @@ import { toast } from 'sonner';
 
 interface InitialData {
   products: Product[];
-  categories: any[];
-  collections: any[];
+  categories: Category[];
+  collections: Collection[];
 }
 
 interface ProductsContentProps {
@@ -35,7 +35,6 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     categories, 
     fetchCategories, 
     isLoading, 
-    currentPage, 
     totalPages,
     addToCart,
     toggleCart,

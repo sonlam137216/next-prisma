@@ -24,26 +24,26 @@ export default function ProductsPage() {
   } = useDashboardStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [imagesDialogOpen, setImagesDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(1, 20);
   }, [fetchProducts]);
   
-  const handleViewImages = (product: Product) => {
-    setSelectedProduct(product);
-    setImagesDialogOpen(true);
-  };
+  // const handleViewImages = (product: Product) => {
+  //   setSelectedProduct(product);
+  //   setImagesDialogOpen(true);
+  // };
   
-  const getMainImage = (product: Product) => {
-    if (!product.images || product.images.length === 0) {
-      return null;
-    }
+  // const getMainImage = (product: Product) => {
+  //   if (!product.images || product.images.length === 0) {
+  //     return null;
+  //   }
     
-    const mainImage = product.images.find((img: any) => img.isMain);
-    return mainImage || product.images[0];
-  };
+  //   const mainImage = product.images.find((img: any) => img.isMain);
+  //   return mainImage || product.images[0];
+  // };
 
   const handleAddNew = () => {
     setEditingProduct(null);
@@ -55,10 +55,10 @@ export default function ProductsPage() {
     setIsFormOpen(true);
   };
 
-  const handleFormClose = () => {
-    setIsFormOpen(false);
-    setEditingProduct(null);
-  };
+  // const handleFormClose = () => {
+  //   setIsFormOpen(false);
+  //   setEditingProduct(null);
+  // };
 
   const handleFormSubmit = async (formData: FormData) => {
     try {
@@ -68,10 +68,10 @@ export default function ProductsPage() {
         
         await updateProduct(productId, formData);
         
-        await fetchProducts();
+        await fetchProducts(1, 20);
       } else {
         await addProduct(formData);
-        await fetchProducts();
+        await fetchProducts(1, 20);
       }
       
       setEditingProduct(null);
@@ -86,7 +86,7 @@ export default function ProductsPage() {
       const productId = Number(id);
       await deleteProduct(productId);
       // Refresh the products list after deletion
-      await fetchProducts();
+      await fetchProducts(1, 20);
     } catch (error) {
       console.error('Error deleting product:', error);
     }

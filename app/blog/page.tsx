@@ -1,15 +1,14 @@
 // app/blog/page.tsx
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Clock, ArrowRight } from "lucide-react";
-import { format } from "date-fns";
-import { Metadata } from "next";
-import { BlogClient } from "./BlogClient";
 import axios from "axios";
+import { format } from "date-fns";
+import { ArrowRight, CalendarDays, Clock } from "lucide-react";
+import { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { BlogClient } from "./BlogClient";
 
 // Generate metadata for SEO
 export const metadata: Metadata = {

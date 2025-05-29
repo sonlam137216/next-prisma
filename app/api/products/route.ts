@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       }),
       price: {
         gte: Number(minPrice || 0),
-        lte: Number(maxPrice || 1000)
+        lte: Number(maxPrice || 1000000)
       }
     };
 
