@@ -29,9 +29,10 @@ export async function POST(request: Request) {
         value: token,
         httpOnly: true,
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: false,
+        domain: "14.225.212.72",
         maxAge: 60 * 60 * 24, // 24 hours
-        sameSite: "strict",
+        sameSite: "lax",
       });
       console.log("Cookie set successfully");
 
