@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   images: {
-    domains: ['localhost', 'theme.hstatic.net'],
+    domains: ['localhost', 'theme.hstatic.net', '14.225.212.72'],
   },
 }
 
