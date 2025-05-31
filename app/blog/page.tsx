@@ -29,6 +29,9 @@ async function fetchData(path: string) {
       ? path 
       : `http://localhost:3000${path}`;
     
+    console.log('Debug - Fetching data from:', url);
+    console.log('Debug - NODE_ENV:', process.env.NODE_ENV);
+    
     const response = await axios.get(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -36,10 +39,23 @@ async function fetchData(path: string) {
       },
     });
 
+    console.log('Debug - Response status:', response.status);
+    console.log('Debug - Response data:', JSON.stringify(response.data, null, 2));
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error(`Error fetching data from ${path}:`, error.message);
+      console.error('Debug - Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+        }
+      });
     } else {
       console.error(`Error fetching data from ${path}:`, error);
     }
@@ -49,6 +65,8 @@ async function fetchData(path: string) {
 
 // Server Component
 export default async function BlogPage() {
+  console.log('Debug - Starting BlogPage server component');
+  
   // Fetch data on the server
   const [postsData, featuredPostData, categoriesData] = await Promise.all([
     fetchData('/api/blog?page=1&pageSize=9'),
@@ -56,10 +74,22 @@ export default async function BlogPage() {
     fetchData('/api/blog/categories'),
   ]);
 
+  console.log('Debug - Fetched data:', {
+    postsData: postsData ? 'Has data' : 'No data',
+    featuredPostData: featuredPostData ? 'Has data' : 'No data',
+    categoriesData: categoriesData ? 'Has data' : 'No data'
+  });
+
   // Handle cases where data fetching failed
   const posts = postsData?.posts || [];
   const featuredPost = featuredPostData?.post || null;
   const categories = categoriesData?.categories || [];
+
+  console.log('Debug - Processed data:', {
+    postsCount: posts.length,
+    hasFeaturedPost: !!featuredPost,
+    categoriesCount: categories.length
+  });
 
   return (
     <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
