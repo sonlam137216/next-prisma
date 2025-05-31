@@ -15,10 +15,12 @@ interface Props {
 // Helper function to fetch data with error handling
 async function fetchData(path: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const url = new URL(path, baseUrl);
+    // Use relative URL in production, absolute URL in development
+    const url = process.env.NODE_ENV === 'production' 
+      ? path 
+      : `http://localhost:3000${path}`;
     
-    const response = await axios.get(url.toString(), {
+    const response = await axios.get(url, {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'max-age=60',

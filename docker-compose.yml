@@ -33,6 +33,7 @@ services:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       - NEXTAUTH_URL=http://14.225.212.72
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXT_PUBLIC_API_URL=http://14.225.212.72
     volumes:
       - ./public/uploads:/app/public/uploads
     networks:
