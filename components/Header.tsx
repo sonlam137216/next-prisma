@@ -28,11 +28,11 @@ import { useBlogStore } from "@/app/store/blogStore";
 import { ChevronDown } from "lucide-react";
 
 export default function Header() {
-  const { cart, toggleCart, categories, fetchCategories } = useDashboardStore();
+  const { cart, toggleCart, fetchCategories } = useDashboardStore();
   const { categories: blogCategories } = useBlogStore();
   const router = useRouter();
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
