@@ -26,8 +26,6 @@ async function fetchData(path: string) {
   try {
     // Always use relative URLs in both development and production
     const url = path;
-    console.log('Debug - Fetching data from:', url);
-    console.log('Debug - NODE_ENV:', process.env.NODE_ENV);
     
     const response = await axios.get(url, {
       headers: {
@@ -35,9 +33,6 @@ async function fetchData(path: string) {
         'Cache-Control': 'max-age=60',
       },
     });
-
-    console.log('Debug - Response status:', response.status);
-    console.log('Debug - Response data:', JSON.stringify(response.data, null, 2));
 
     return response.data;
   } catch (error) {
@@ -62,7 +57,6 @@ async function fetchData(path: string) {
 
 // Server Component
 export default async function BlogPage() {
-  console.log('Debug - Starting BlogPage server component');
   
   let postsData = null;
   let featuredPostData = null;
@@ -79,22 +73,10 @@ export default async function BlogPage() {
     console.error('Debug - Error fetching data:', error);
   }
 
-  console.log('Debug - Fetched data:', {
-    postsData: postsData ? 'Has data' : 'No data',
-    featuredPostData: featuredPostData ? 'Has data' : 'No data',
-    categoriesData: categoriesData ? 'Has data' : 'No data'
-  });
-
   // Handle cases where data fetching failed
   const posts = postsData?.posts || [];
   const featuredPost = featuredPostData?.post || null;
   const categories = categoriesData?.categories || [];
-
-  console.log('Debug - Processed data:', {
-    postsCount: posts.length,
-    hasFeaturedPost: !!featuredPost,
-    categoriesCount: categories.length
-  });
 
   return (
     <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
