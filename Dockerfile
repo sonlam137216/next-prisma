@@ -25,7 +25,9 @@ RUN npx prisma generate
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN yarn build
+# Add verbose logging for build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN yarn build --verbose
 
 # Stage 3: Runner
 FROM node:18-alpine AS runner
