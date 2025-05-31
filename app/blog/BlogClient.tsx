@@ -8,7 +8,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface BlogPost {
   id: number;
@@ -35,11 +35,20 @@ interface BlogClientProps {
 
 export function BlogClient({ initialPosts, initialCategories, initialPagination }: BlogClientProps) {
   const router = useRouter();
-  const [posts, setPosts] = useState(initialPosts);
-  const [categories] = useState(initialCategories);
-  const [selectedCategory, setSelectedCategory] = useState("Tất cả");
-  const [pagination, setPagination] = useState(initialPagination);
+  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [categories, ] = useState<string[]>(initialCategories);
+  const [selectedCategory, setSelectedCategory] = useState<string>("Tất cả");
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState<Pagination>(initialPagination);
+  console.log({posts});
+
+  useEffect(() => {
+    console.log('Debug - BlogClient mounted with initial data:', {
+      postsCount: initialPosts.length,
+      categories: initialCategories,
+      pagination: initialPagination
+    });
+  }, []);
 
   const handlePageChange = async (page: number) => {
     setLoading(true);
@@ -59,17 +68,25 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
   };
 
   const handleCategoryChange = async (category: string) => {
+    console.log('Debug - Changing category to:', category);
     setSelectedCategory(category);
     setLoading(true);
+
     try {
-      const response = await axios.get(
-        `/api/blog?page=1&pageSize=9${category !== "Tất cả" ? `&category=${category}` : ""}`
-      );
+      const params = new URLSearchParams({
+        page: "1",
+        pageSize: "9",
+        ...(category !== "Tất cả" && { category }),
+      });
+
+      console.log('Debug - Fetching posts with params:', params.toString());
+      const response = await axios.get(`/api/blog?${params.toString()}`);
+      console.log('Debug - Received response:', response.data);
+
       setPosts(response.data.posts);
       setPagination(response.data.pagination);
-      router.push(`/blog?page=1${category !== "Tất cả" ? `&category=${category}` : ""}`, { scroll: false });
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error('Debug - Error fetching posts:', error);
     } finally {
       setLoading(false);
     }
@@ -176,6 +193,13 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
       {loading && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+      )}
+
+      {/* No Posts State */}
+      {!loading && posts.length === 0 && (
+        <div className="text-center py-8">
+          <p>No posts found.</p>
         </div>
       )}
     </>

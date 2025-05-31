@@ -23,37 +23,45 @@ export async function GET(request: Request) {
 
     console.log('Debug - Blog API: Query where clause:', where);
 
-    const [posts, totalPosts] = await Promise.all([
-      prisma.blogPost.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: pageSize,
-      }),
-      prisma.blogPost.count({ where }),
-    ]);
+    try {
+      const [posts, totalPosts] = await Promise.all([
+        prisma.blogPost.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: pageSize,
+        }),
+        prisma.blogPost.count({ where }),
+      ]);
 
-    console.log('Debug - Blog API: Found posts:', posts.length);
-    console.log('Debug - Blog API: Total posts:', totalPosts);
+      console.log('Debug - Blog API: Found posts:', posts.length);
+      console.log('Debug - Blog API: Total posts:', totalPosts);
 
-    const totalPages = Math.ceil(totalPosts / pageSize);
+      const totalPages = Math.ceil(totalPosts / pageSize);
 
-    const response = {
-      posts,
-      pagination: {
-        page,
-        pageSize,
-        totalPages,
-        totalPosts,
-      },
-    };
+      const response = {
+        posts,
+        pagination: {
+          page,
+          pageSize,
+          totalPages,
+          totalPosts,
+        },
+      };
 
-    console.log('Debug - Blog API: Sending response');
-    return NextResponse.json(response);
+      console.log('Debug - Blog API: Sending response');
+      return NextResponse.json(response);
+    } catch (dbError) {
+      console.error("Debug - Blog API: Database error:", dbError);
+      return NextResponse.json(
+        { message: "Database error", error: dbError instanceof Error ? dbError.message : "Unknown error" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error("Debug - Blog API: Error fetching blog posts:", error);
+    console.error("Debug - Blog API: Error processing request:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { message: "Internal server error", error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }
