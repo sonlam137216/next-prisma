@@ -7,8 +7,7 @@ import { format } from "date-fns";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface BlogPost {
   id: number;
@@ -34,12 +33,11 @@ interface BlogClientProps {
 }
 
 export function BlogClient({ initialPosts, initialCategories, initialPagination }: BlogClientProps) {
-  const router = useRouter();
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
   const [categories] = useState<string[]>(initialCategories);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tất cả");
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<Pagination>(initialPagination);
+  const [, setPagination] = useState<Pagination>(initialPagination);
 
   // Fetch data on client side if initial data is empty
   useEffect(() => {
