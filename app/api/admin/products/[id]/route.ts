@@ -1,14 +1,14 @@
+import { cloudinary } from '@/lib/cloudinary';
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
-import fs from "fs/promises";
 
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
   ) {
     try {
-      const productId = parseInt((await params).id);
+      const { id } = await params;
+      const productId = parseInt(id);
       const formData = await request.formData();
   
       // Get the product first to check if it exists
@@ -26,7 +26,7 @@ export async function PUT(
       const description = formData.get("description") as string;
       const price = parseFloat(formData.get("price") as string);
       const quantity = parseInt(formData.get("quantity") as string);
-      const categoryId = formData.get("categoryId") ? parseInt(formData.get("categoryId") as string) : null;
+      const categoryId = parseInt(formData.get("categoryId") as string);
       const collectionId = formData.get("collectionId") ? parseInt(formData.get("collectionId") as string) : null;
       const inStock = formData.get("inStock") === "true";
   
@@ -38,7 +38,7 @@ export async function PUT(
           description,
           price,
           quantity,
-          categoryId: categoryId || existingProduct.categoryId,
+          categoryId,
           inStock,
           collections: collectionId ? {
             set: [{ id: collectionId }]
@@ -54,7 +54,7 @@ export async function PUT(
       // Handle image updates
       const imageFiles = formData.getAll("images") as File[];
       const imageIsMain = formData.getAll("imageIsMain_0") as string[];
-      const imageIds = formData.getAll("imageId_0") as string[];
+      const imageIds = formData.getAll("imageIds") as string[];
 
       // Delete old images if requested
       const deleteImages = formData.get("deleteImages") as string;
@@ -64,10 +64,11 @@ export async function PUT(
           const image = existingProduct.images.find(img => img.id === imageId);
           if (image) {
             try {
-              const imagePath = path.join(process.cwd(), "public", image.url);
-              await fs.unlink(imagePath);
+              // Extract public_id from Cloudinary URL
+              const publicId = image.url.split('/').slice(-1)[0].split('.')[0];
+              await cloudinary.uploader.destroy(publicId);
             } catch (error) {
-              console.error("Error deleting image file:", error);
+              console.error("Error deleting image from Cloudinary:", error);
             }
           }
         }
@@ -92,13 +93,20 @@ export async function PUT(
         if (file.size > 0) {
           const bytes = await file.arrayBuffer();
           const buffer = Buffer.from(bytes);
-          const fileName = `${Date.now()}-${file.name}`;
-          const filePath = path.join(process.cwd(), "public", "uploads", fileName);
-          await fs.writeFile(filePath, buffer);
-  
+          
+          // Convert buffer to base64
+          const base64String = buffer.toString('base64');
+          const dataURI = `data:${file.type};base64,${base64String}`;
+          
+          // Upload to Cloudinary
+          const result = await cloudinary.uploader.upload(dataURI, {
+            folder: 'products',
+            resource_type: 'auto'
+          });
+
           await prisma.productImage.create({
             data: {
-              url: `/uploads/${fileName}`,
+              url: result.secure_url,
               isMain: imageIsMain[i] === "true",
               productId,
             },
@@ -120,7 +128,7 @@ export async function PUT(
     } catch (error) {
       console.error("Error updating product:", error);
       return NextResponse.json(
-        { error: "Error updating product" },
+        { error: "Failed to update product" },
         { status: 500 }
       );
     }
@@ -128,19 +136,19 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-    { params }: { params: Promise<{ id: number }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-
+    const productId = parseInt(id);
     // Delete product images first
     await prisma.productImage.deleteMany({
-      where: { productId: id },
+      where: { productId: productId }, 
     });
 
     // Delete the product
     await prisma.product.delete({
-      where: { id },
+      where: { id: productId },
     });
 
     return NextResponse.json({ success: true });

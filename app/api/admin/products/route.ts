@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { NextRequest } from 'next/server'
-import path from "path";
-import fs from "fs/promises";
+import { cloudinary } from '@/lib/cloudinary'
 
 export async function GET() {
   try {
@@ -57,19 +56,26 @@ export async function POST(request: NextRequest) {
 
     // Handle image uploads
     if (imageFiles.length > 0) {
-      // Upload new images
+      // Upload new images to Cloudinary
       for (let i = 0; i < imageFiles.length; i++) {
         const file = imageFiles[i];
         if (file.size > 0) {
           const bytes = await file.arrayBuffer();
           const buffer = Buffer.from(bytes);
-          const fileName = `${Date.now()}-${file.name}`;
-          const filePath = path.join(process.cwd(), "public", "uploads", fileName);
-          await fs.writeFile(filePath, buffer);
+          
+          // Convert buffer to base64
+          const base64String = buffer.toString('base64');
+          const dataURI = `data:${file.type};base64,${base64String}`;
+          
+          // Upload to Cloudinary
+          const result = await cloudinary.uploader.upload(dataURI, {
+            folder: 'products',
+            resource_type: 'auto'
+          });
 
           await prisma.productImage.create({
             data: {
-              url: `/uploads/${fileName}`,
+              url: result.secure_url,
               isMain: imageIsMain[i] === "true",
               productId: product.id,
             },

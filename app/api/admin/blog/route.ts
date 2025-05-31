@@ -1,12 +1,26 @@
 // app/api/admin/blog/route.ts
+import { cloudinary } from '@/lib/cloudinary';
 import { verifyToken } from "@/lib/jwt";
-import { prisma } from '@/lib/prisma';
-import { Prisma } from "@prisma/client";
-import { writeFile } from 'fs/promises';
+import { Prisma, PrismaClient } from "@prisma/client";
+import axios from "axios";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import path from 'path';
-import { v4 as uuidv4 } from "uuid";
+import { NextRequest, NextResponse } from "next/server";
+
+const prismaClient = new PrismaClient();
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+interface CloudinaryUploadResult {
+  secure_url: string;
+  public_id: string;
+  format: string;
+  resource_type: string;
+}
 
 // const blogPostSchema = z.object({
 //   title: z.string().min(1),
@@ -43,7 +57,6 @@ export async function GET(request: Request) {
     const pageSize = parseInt(searchParams.get("pageSize") || "9");
     const category = searchParams.get("category");
 
-
     const skip = (page - 1) * pageSize;
 
     const where: Prisma.BlogPostWhereInput = {
@@ -51,28 +64,44 @@ export async function GET(request: Request) {
       ...(category && category !== 'Tất cả' ? { category } : {}),
     };
 
-
     const [posts, totalPosts] = await Promise.all([
-      prisma.blogPost.findMany({
+      prismaClient.blogPost.findMany({
         where,
         orderBy: { createdAt: "desc" },
         skip,
         take: pageSize,
       }),
-      prisma.blogPost.count({ where }),
+      prismaClient.blogPost.count({ where }),
     ]);
 
+    // Fetch content for each post
+    const postsWithContent = await Promise.all(
+      posts.map(async (post) => {
+        let content = "";
+        if (post.path) {
+          try {
+            const response = await axios.get(post.path);
+            content = response.data;
+          } catch (error) {
+            console.error(`Error fetching content for post ${post.id}:`, error);
+          }
+        }
+        return {
+          ...post,
+          content,
+        };
+      })
+    );
 
     const totalPages = Math.ceil(totalPosts / pageSize);
 
     const response = {
-      posts,
+      posts: postsWithContent,
       page,
       pageSize,
       totalPosts,
       totalPages,
     };
-
 
     return NextResponse.json(response);
   } catch (error) {
@@ -82,6 +111,36 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
+}
+
+async function uploadToCloudinary(
+  file: Buffer | string,
+  options: {
+    resource_type: "raw" | "image";
+    format?: string;
+  }
+): Promise<CloudinaryUploadResult> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: options.resource_type,
+        format: options.format,
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result as CloudinaryUploadResult);
+        }
+      }
+    );
+
+    if (typeof file === "string") {
+      uploadStream.end(Buffer.from(file));
+    } else {
+      uploadStream.end(file);
+    }
+  });
 }
 
 // POST /api/admin/blog
@@ -103,29 +162,44 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
 
-    // Save content to file
-    const contentPath = `/blog-content/${slug}.html`;
-    const fullPath = path.join(process.cwd(), "public", contentPath);
-    await writeFile(fullPath, content);
+    // Upload content to Cloudinary
+    const contentBuffer = Buffer.from(content);
+    const contentResult = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: "blog-content",
+          resource_type: "raw",
+          public_id: slug,
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result as CloudinaryUploadResult);
+          }
+        }
+      ).end(contentBuffer);
+    });
 
     // Handle featured image if provided
-    let featuredImagePath = null;
+    let featuredImageUrl = null;
     if (featuredImage) {
-      const buffer = Buffer.from(await featuredImage.arrayBuffer());
-      const fileName = `${uuidv4()}-${featuredImage.name}`;
-      const imagePath = `/blog-images/${fileName}`;
-      const fullImagePath = path.join(process.cwd(), "public", imagePath);
-      await writeFile(fullImagePath, buffer);
-      featuredImagePath = imagePath;
+      const imageBuffer = await featuredImage.arrayBuffer();
+      const imageResult = await uploadToCloudinary(Buffer.from(imageBuffer), {
+        resource_type: "image"
+      });
+      featuredImageUrl = imageResult.secure_url;
     }
 
-    // Create blog post without content
-    const post = await prisma.blogPost.create({
+    // Create blog post
+    const { id, createdAt, updatedAt, ...postDataWithoutId } = postData;
+    console.log(id, createdAt, updatedAt);
+    const post = await prismaClient.blogPost.create({
       data: {
-        ...postData,
+        ...postDataWithoutId,
         slug,
-        path: contentPath,
-        featuredImage: featuredImagePath,
+        path: contentResult.secure_url,
+        featuredImage: featuredImageUrl,
       },
     });
 
@@ -140,53 +214,106 @@ export async function POST(request: Request) {
 }
 
 // PUT /api/admin/blog
-export async function PUT(request: Request) {
+export async function PUT(req: NextRequest) {
   try {
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get("adminAuthToken")?.value;
+
+    if (!authToken) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    // Verify token
+    const payload = await verifyToken(authToken);
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const formData = await req.formData();
     const postData = JSON.parse(formData.get("postData") as string);
-    const content = formData.get("content") as string | null;
-    const featuredImage = formData.get("featuredImage") as File | null;
+    const content = formData.get("content") as string;
+    const featuredImage = formData.get("featuredImage") as File;
 
-    // Handle featured image if provided
-    let featuredImagePath = postData.featuredImage;
-    if (featuredImage) {
-      const buffer = Buffer.from(await featuredImage.arrayBuffer());
-      const fileName = `${uuidv4()}-${featuredImage.name}`;
-      const imagePath = `/blog-images/${fileName}`;
-      const fullImagePath = path.join(process.cwd(), "public", imagePath);
-      await writeFile(fullImagePath, buffer);
-      featuredImagePath = imagePath;
+    if (!postData.id || !postData.title || !postData.slug || !postData.category) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
-    // Update content file if provided
-    if (content) {
-      const contentPath = `/blog-content/${postData.slug}.html`;
-      const fullPath = path.join(process.cwd(), "public", contentPath);
-      await writeFile(fullPath, content);
-      postData.path = contentPath;
-    }
-
-    // Update blog post without content
-    const post = await prisma.blogPost.update({
-      where: { id: postData.id },
-      data: {
-        ...postData,
-        featuredImage: featuredImagePath,
-      },
+    // Get existing post to check if we need to update content
+    const existingPost = await prismaClient.blogPost.findUnique({
+      where: { id: parseInt(postData.id) },
     });
 
-    return NextResponse.json({ post });
+    if (!existingPost) {
+      return NextResponse.json(
+        { message: "Blog post not found" },
+        { status: 404 }
+      );
+    }
+
+    // Prepare update data
+    const updateData: {
+      title: string;
+      slug: string;
+      category: string;
+      published: boolean;
+      description: string;
+      readingTime: number;
+      path?: string;
+      featuredImage?: string;
+    } = {
+      title: postData.title,
+      slug: postData.slug,
+      category: postData.category,
+      published: postData.published,
+      description: postData.description,
+      readingTime: postData.readingTime,
+    };
+
+    // Only update content if new content is provided
+    if (content) {
+      const contentResult = await uploadToCloudinary(content, {
+        resource_type: "raw",
+        format: "html",
+      });
+      updateData.path = contentResult.secure_url;
+    } else if (existingPost.path) {
+      // Preserve existing content path if no new content is provided
+      // Convert null to undefined if needed
+      updateData.path = existingPost.path;
+    }
+
+    // Handle featured image if provided
+    if (featuredImage && featuredImage.size > 0) {
+      const imageBuffer = await featuredImage.arrayBuffer();
+      const imageResult = await uploadToCloudinary(Buffer.from(imageBuffer), {
+        resource_type: "image",
+      });
+      updateData.featuredImage = imageResult.secure_url;
+    } else if (existingPost.featuredImage !== null) {
+      // Only set featuredImage if it's not null
+      updateData.featuredImage = existingPost.featuredImage;
+    }
+
+    const updatedPost = await prismaClient.blogPost.update({
+      where: { id: parseInt(postData.id) },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      post: updatedPost,
+    });
   } catch (error) {
     console.error("Error updating blog post:", error);
     return NextResponse.json(
-      { message: "Internal server error" },
+      { success: false, message: "Failed to update post" },
       { status: 500 }
     );
+  } finally {
+    await prismaClient.$disconnect();
   }
 }
 
@@ -202,7 +329,34 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await prisma.blogPost.delete({ where: { id: parseInt(id) } });
+    
+    // Get the blog post to delete
+    const post = await prismaClient.blogPost.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!post) {
+      return NextResponse.json({ message: "Blog post not found" }, { status: 404 });
+    }
+
+    // Delete content from Cloudinary
+    if (post.path) {
+      const publicId = post.path.split('/').pop()?.split('.')[0];
+      if (publicId) {
+        await cloudinary.uploader.destroy(`blog-content/${publicId}`);
+      }
+    }
+
+    // Delete featured image from Cloudinary
+    if (post.featuredImage) {
+      const publicId = post.featuredImage.split('/').pop()?.split('.')[0];
+      if (publicId) {
+        await cloudinary.uploader.destroy(`blog-featured-images/${publicId}`);
+      }
+    }
+
+    // Delete from database
+    await prismaClient.blogPost.delete({ where: { id: parseInt(id) } });
 
     return NextResponse.json({ message: "Blog post deleted successfully" });
   } catch (error) {
@@ -305,3 +459,4 @@ export async function DELETE(
 //   // Escape double quotes for use in meta tag
 //   return description.replace(/"/g, "&quot;");
 // }
+

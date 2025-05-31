@@ -27,12 +27,12 @@ export async function POST(request: Request) {
       cookieStore.set({
         name: "adminAuthToken",
         value: token,
-        httpOnly: true,
-        path: "/",
-        secure: false,
-        domain: "14.225.212.72",
+        // httpOnly: true,
+        // path: "/",
+        // secure: false,
+        // domain: "14.225.212.72",
         maxAge: 60 * 60 * 24, // 24 hours
-        sameSite: "lax",
+        // sameSite: "lax",
       });
       console.log("Cookie set successfully");
 

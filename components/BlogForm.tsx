@@ -62,7 +62,15 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [content, setContent] = useState(post?.content || '');
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
-  const [featuredImagePreview, setFeaturedImagePreview] = useState<string>(post?.featuredImage || '');
+  const [featuredImagePreview, setFeaturedImagePreview] = useState<string | null>(
+    post?.featuredImage || null
+  );
+
+  useEffect(() => {
+    if (post?.content) {
+      setContent(post.content);
+    }
+  }, [post?.content]);
 
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
@@ -97,7 +105,7 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
       };
       reader.readAsDataURL(file);
     } else {
-      setFeaturedImagePreview(post?.featuredImage || '');
+      setFeaturedImagePreview(post?.featuredImage || null);
     }
   };
 
@@ -211,10 +219,12 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
               <FormItem>
                 <FormLabel>Content</FormLabel>
                 <FormControl>
-                  <RichTextEditor 
-                    content={content} 
-                    onChange={setContent} 
-                  />
+                  <div className="border rounded-md bg-white">
+                    <RichTextEditor 
+                      content={content} 
+                      onChange={setContent} 
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -255,7 +265,7 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
                 <FormControl>
                   <ImageUpload 
                     onFileChange={handleFeaturedImageChange}
-                    previewUrl={featuredImagePreview}
+                    previewUrl={featuredImagePreview || undefined}
                     className="w-full aspect-video"
                   />
                 </FormControl>

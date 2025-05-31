@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import path from "path";
-import fs from "fs";
-import { promises as fsPromises } from "fs";
+import axios from "axios";
 
 const prisma = new PrismaClient();
 
@@ -21,18 +19,14 @@ export async function GET(
       return NextResponse.json({ message: "Post not found" }, { status: 404 });
     }
 
-    // Get content if available
+    // Get content from Cloudinary if available
     let content = "";
-
     if (post.path) {
-      const filePath = path.join(
-        process.cwd(),
-        "public",
-        post.path.replace(/^\//, "")
-      );
-
-      if (fs.existsSync(filePath)) {
-        content = await fsPromises.readFile(filePath, "utf-8");
+      try {
+        const response = await axios.get(post.path);
+        content = response.data;
+      } catch (error) {
+        console.error("Error fetching content from Cloudinary:", error);
       }
     }
 
@@ -74,7 +68,7 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching blog post:", error);
     return NextResponse.json(
-      { message: "Failed to fetch blog post" },
+      { message: "Internal server error" },
       { status: 500 }
     );
   } finally {

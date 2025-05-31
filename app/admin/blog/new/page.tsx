@@ -1,7 +1,7 @@
 // app/admin/blog/new/page.tsx
 'use client';
 
-import BlogEditor from "@/components/BlogEditor";
+import BlogForm from "@/components/BlogForm";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function NewBlogPostPage() {
@@ -15,7 +15,7 @@ export default function NewBlogPostPage() {
           </CardDescription>
         </CardHeader>
       </Card>
-      <BlogEditor />
+      <BlogForm />
     </div>
   );
 }

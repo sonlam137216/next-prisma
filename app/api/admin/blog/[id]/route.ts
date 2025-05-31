@@ -1,11 +1,12 @@
 // app/api/admin/blog/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/jwt";
+import axios from "axios";
 import path from "path";
 import fs from "fs";
 import { promises as fsPromises } from "fs";
-import { cookies } from "next/headers";
-import { verifyToken } from "@/lib/jwt";
 
 const prisma = new PrismaClient();
 
@@ -14,7 +15,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    
     // Check for authentication cookie
     const cookieStore = await cookies();
     const authToken = cookieStore.get("adminAuthToken")?.value;
@@ -50,14 +50,14 @@ export async function GET(
       );
     }
 
-    // Read content from file if path exists
+    // Fetch content from Cloudinary if path exists
     let content = "";
     if (post.path) {
       try {
-        const fullPath = path.join(process.cwd(), "public", post.path);
-        content = await fsPromises.readFile(fullPath, "utf-8");
+        const response = await axios.get(post.path);
+        content = response.data;
       } catch (error) {
-        console.error("Error reading content file:", error);
+        console.error("Error fetching content from Cloudinary:", error);
       }
     }
 
