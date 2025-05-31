@@ -27,7 +27,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 # Add verbose logging for build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN yarn build --verbose
+RUN yarn build
 
 # Stage 3: Runner
 FROM node:18-alpine AS runner
