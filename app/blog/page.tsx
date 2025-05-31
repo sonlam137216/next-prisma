@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import axios from "axios";
+import { useBlogStore } from "@/app/store/blogStore";
 import { format } from "date-fns";
 import { ArrowRight, CalendarDays, Clock } from "lucide-react";
 import { Metadata } from "next";
@@ -21,62 +21,35 @@ export const metadata: Metadata = {
   },
 };
 
-// Helper function to fetch data with error handling
-async function fetchData(path: string) {
-  try {
-    // Always use relative URLs in both development and production
-    const url = path;
-    
-    const response = await axios.get(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'max-age=60',
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Debug - Error details:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-        }
-      });
-    } else {
-      console.error(`Error fetching data from ${path}:`, error);
-    }
-    return null;
-  }
-}
-
 // Server Component
 export default async function BlogPage() {
+  console.log('Debug - BlogPage: Starting to fetch data');
+  const blogStore = useBlogStore.getState();
   
-  let postsData = null;
-  let featuredPostData = null;
-  let categoriesData = null;
-
   try {
-    // Fetch data on the server
-    [postsData, featuredPostData, categoriesData] = await Promise.all([
-      fetchData('/api/blog?page=1&pageSize=9'),
-      fetchData('/api/blog/featured'),
-      fetchData('/api/blog/categories'),
+    // Fetch initial data
+    console.log('Debug - BlogPage: Fetching initial data');
+    await Promise.all([
+      blogStore.fetchPosts(1),
+      blogStore.fetchFeaturedPost(),
+      blogStore.fetchCategories(),
     ]);
+    console.log('Debug - BlogPage: Initial data fetched successfully');
   } catch (error) {
-    console.error('Debug - Error fetching data:', error);
+    console.error('Debug - BlogPage: Error fetching initial data:', error);
   }
 
-  // Handle cases where data fetching failed
-  const posts = postsData?.posts || [];
-  const featuredPost = featuredPostData?.post || null;
-  const categories = categoriesData?.categories || [];
+  const posts = blogStore.posts;
+  const featuredPost = blogStore.featuredPost;
+  const categories = blogStore.categories;
+  const pagination = blogStore.pagination;
+
+  console.log('Debug - BlogPage: State after fetching:', {
+    postsCount: posts.length,
+    hasFeaturedPost: !!featuredPost,
+    categoriesCount: categories.length,
+    pagination,
+  });
 
   return (
     <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
@@ -138,7 +111,7 @@ export default async function BlogPage() {
       <BlogClient 
         initialPosts={posts} 
         initialCategories={categories}
-        initialPagination={postsData?.pagination || { page: 1, pageSize: 9, totalPages: 1, totalPosts: 0 }}
+        initialPagination={pagination}
       />
     </div>
   );

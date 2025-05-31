@@ -2,73 +2,52 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import axios from "axios";
+import { useBlogStore, BlogPost } from "@/app/store/blogStore";
 import { format } from "date-fns";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-interface BlogPost {
-  id: number;
-  title: string;
-  slug: string;
-  description?: string;
-  featuredImage?: string;
-  createdAt: string;
-  readingTime: number;
-}
-
-interface Pagination {
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  totalPosts: number;
-}
+import { useEffect } from "react";
 
 interface BlogClientProps {
   initialPosts: BlogPost[];
   initialCategories: string[];
-  initialPagination: Pagination;
+  initialPagination: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    totalPosts: number;
+  };
 }
 
 export function BlogClient({ initialPosts, initialCategories, initialPagination }: BlogClientProps) {
-  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
-  const [categories] = useState<string[]>(initialCategories);
-  const [selectedCategory, setSelectedCategory] = useState<string>("Tất cả");
-  const [loading, setLoading] = useState(false);
-  const [, setPagination] = useState<Pagination>(initialPagination);
+  const {
+    posts,
+    categories,
+    selectedCategory,
+    loading,
+    pagination,
+    setSelectedCategory,
+    fetchPosts,
+  } = useBlogStore();
 
-  // Fetch data on client side if initial data is empty
+  // Initialize store with initial data
   useEffect(() => {
-    if (posts.length === 0) {
-      handleCategoryChange("Tất cả");
-    }
-  }, []);
+    useBlogStore.setState({
+      posts: initialPosts,
+      categories: initialCategories,
+      pagination: initialPagination,
+    });
+  }, [initialPosts, initialCategories, initialPagination]);
 
   const handleCategoryChange = async (category: string) => {
-    console.log('Debug - Changing category to:', category);
     setSelectedCategory(category);
-    setLoading(true);
+    await fetchPosts(1, category === "Tất cả" ? undefined : category);
+  };
 
-    try {
-      const params = new URLSearchParams({
-        page: "1",
-        pageSize: "9",
-        ...(category !== "Tất cả" && { category }),
-      });
-
-      console.log('Debug - Fetching posts with params:', params.toString());
-      const response = await axios.get(`/api/blog?${params.toString()}`);
-      console.log('Debug - Received response:', response.data);
-
-      setPosts(response.data.posts);
-      setPagination(response.data.pagination);
-    } catch (error) {
-      console.error('Debug - Error fetching posts:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handlePageChange = async (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return;
+    await fetchPosts(newPage, selectedCategory === "Tất cả" ? undefined : selectedCategory);
   };
 
   return (
@@ -76,6 +55,14 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
       {/* Categories */}
       <div className="mb-12">
         <div className="flex flex-wrap gap-4 justify-center">
+          <Button
+            variant={selectedCategory === "Tất cả" ? "default" : "outline"}
+            className="rounded-full"
+            onClick={() => handleCategoryChange("Tất cả")}
+            disabled={loading}
+          >
+            Tất cả
+          </Button>
           {categories.map((category) => (
             <Button
               key={category}
@@ -143,7 +130,39 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
       {/* No Posts State */}
       {!loading && posts.length === 0 && (
         <div className="text-center py-8">
-          <p>No posts found.</p>
+          <p>Không có bài viết nào trong danh mục này.</p>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && pagination.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-12">
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-2">
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <Button
+                key={pageNum}
+                variant={pageNum === pagination.page ? "default" : "outline"}
+                onClick={() => handlePageChange(pageNum)}
+                className="w-10 h-10"
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
+          >
+            Next
+          </Button>
         </div>
       )}
     </>

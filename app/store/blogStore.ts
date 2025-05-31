@@ -51,17 +51,26 @@ const CATEGORIES = [
   "Tin tức",
 ];
 
+// Get base URL for API calls
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Browser should use relative path
+    return '/api';
+  }
+  // Server should use absolute path
+  return `${process.env.NEXT_PUBLIC_API_URL}/api`;
+};
+
 // Create axios instance with default configuration
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: getBaseUrl(),
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // This ensures cookies are sent with requests
 });
 
-export const useBlogStore = create<BlogState>((set, get) => ({
+export const useBlogStore = create<BlogState>((set) => ({
   posts: [],
   currentPost: null,
   featuredPost: null,
@@ -78,7 +87,6 @@ export const useBlogStore = create<BlogState>((set, get) => ({
 
   setSelectedCategory: (category) => {
     set({ selectedCategory: category });
-    get().fetchPosts(1, category === 'Tất cả' ? undefined : category);
   },
 
   fetchPosts: async (page, category) => {
@@ -90,7 +98,9 @@ export const useBlogStore = create<BlogState>((set, get) => ({
         category: category && category !== 'Tất cả' ? category : undefined,
       };
       
-      const { data } = await api.get('/admin/blog', { params });
+      console.log('Debug - Fetching posts with params:', params);
+      const { data } = await api.get('/blog', { params });
+      console.log('Debug - Received posts data:', data);
 
       if (!data.posts) {
         console.error('No posts in response:', data);
@@ -99,15 +109,22 @@ export const useBlogStore = create<BlogState>((set, get) => ({
 
       set({
         posts: data.posts,
-        pagination: {
-          page: data.page,
-          pageSize: data.pageSize,
-          totalPages: data.totalPages,
-          totalPosts: data.totalPosts,
+        pagination: data.pagination || {
+          page: data.page || 1,
+          pageSize: data.pageSize || 9,
+          totalPages: data.totalPages || 1,
+          totalPosts: data.totalPosts || 0,
         },
       });
     } catch (error) {
       console.error('Error fetching posts:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+      }
       set({ error: error instanceof Error ? error.message : 'An error occurred' });
     } finally {
       set({ loading: false });
@@ -118,9 +135,11 @@ export const useBlogStore = create<BlogState>((set, get) => ({
     try {
       set({ loading: true, error: null });
       
-      const url = `/admin/blog/${id}`;
+      const url = `/blog/${id}`;
+      console.log('Debug - Fetching post by ID:', url);
       
       const { data } = await api.get(url);
+      console.log('Debug - Received post data:', data);
       
       if (!data.post) {
         console.error('No post in response:', data);
@@ -130,6 +149,13 @@ export const useBlogStore = create<BlogState>((set, get) => ({
       set({ currentPost: data.post });
     } catch (error) {
       console.error("Error fetching post:", error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+      }
       set({ error: error instanceof Error ? error.message : "An error occurred" });
     } finally {
       set({ loading: false });
@@ -139,7 +165,9 @@ export const useBlogStore = create<BlogState>((set, get) => ({
   fetchPostBySlug: async (slug) => {
     try {
       set({ loading: true, error: null });
+      console.log('Debug - Fetching post by slug:', slug);
       const { data } = await api.get(`/blog/${slug}`);
+      console.log('Debug - Received post data:', data);
       
       // Fetch content from file if path exists
       if (data.post.path) {
@@ -151,6 +179,14 @@ export const useBlogStore = create<BlogState>((set, get) => ({
       
       set({ currentPost: data.post });
     } catch (error) {
+      console.error("Error fetching post by slug:", error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+      }
       set({ error: error instanceof Error ? error.message : "An error occurred" });
     } finally {
       set({ loading: false });
@@ -159,10 +195,19 @@ export const useBlogStore = create<BlogState>((set, get) => ({
 
   fetchFeaturedPost: async () => {
     try {
-      const { data } = await api.get('/admin/blog/featured');
+      console.log('Debug - Fetching featured post');
+      const { data } = await api.get('/blog/featured');
+      console.log('Debug - Received featured post data:', data);
       set({ featuredPost: data.post });
     } catch (error) {
       console.error('Error fetching featured post:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+      }
       set({ featuredPost: null });
     }
   },
