@@ -68,12 +68,20 @@ async function fetchData(path: string) {
 export default async function BlogPage() {
   console.log('Debug - Starting BlogPage server component');
   
-  // Fetch data on the server
-  const [postsData, featuredPostData, categoriesData] = await Promise.all([
-    fetchData('/api/blog?page=1&pageSize=9'),
-    fetchData('/api/blog/featured'),
-    fetchData('/api/blog/categories'),
-  ]);
+  let postsData = null;
+  let featuredPostData = null;
+  let categoriesData = null;
+
+  try {
+    // Fetch data on the server
+    [postsData, featuredPostData, categoriesData] = await Promise.all([
+      fetchData('/api/blog?page=1&pageSize=9'),
+      fetchData('/api/blog/featured'),
+      fetchData('/api/blog/categories'),
+    ]);
+  } catch (error) {
+    console.error('Debug - Error fetching data:', error);
+  }
 
   console.log('Debug - Fetched data:', {
     postsData: postsData ? 'Has data' : 'No data',

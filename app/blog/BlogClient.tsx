@@ -36,36 +36,17 @@ interface BlogClientProps {
 export function BlogClient({ initialPosts, initialCategories, initialPagination }: BlogClientProps) {
   const router = useRouter();
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
-  const [categories, ] = useState<string[]>(initialCategories);
+  const [categories] = useState<string[]>(initialCategories);
   const [selectedCategory, setSelectedCategory] = useState<string>("Tất cả");
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<Pagination>(initialPagination);
-  console.log({posts});
 
+  // Fetch data on client side if initial data is empty
   useEffect(() => {
-    console.log('Debug - BlogClient mounted with initial data:', {
-      postsCount: initialPosts.length,
-      categories: initialCategories,
-      pagination: initialPagination
-    });
-  }, []);
-
-  const handlePageChange = async (page: number) => {
-    setLoading(true);
-    try {
-      const category = selectedCategory === "Tất cả" ? undefined : selectedCategory;
-      const response = await axios.get(
-        `/api/blog?page=${page}&pageSize=9${category ? `&category=${category}` : ""}`
-      );
-      setPosts(response.data.posts);
-      setPagination(response.data.pagination);
-      router.push(`/blog?page=${page}${category ? `&category=${category}` : ""}`, { scroll: false });
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-    } finally {
-      setLoading(false);
+    if (posts.length === 0) {
+      handleCategoryChange("Tất cả");
     }
-  };
+  }, []);
 
   const handleCategoryChange = async (category: string) => {
     console.log('Debug - Changing category to:', category);
@@ -154,45 +135,10 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
         ))}
       </div>
 
-      {/* Pagination */}
-      <div className="mt-12 flex justify-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          disabled={pagination.page === 1 || loading}
-          onClick={() => handlePageChange(pagination.page - 1)}
-        >
-          <span className="sr-only">Previous page</span>
-          <ArrowRight className="h-4 w-4 rotate-180" />
-        </Button>
-        {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
-          (page) => (
-            <Button
-              key={page}
-              variant={page === pagination.page ? "default" : "outline"}
-              size="icon"
-              onClick={() => handlePageChange(page)}
-              disabled={loading}
-            >
-              {page}
-            </Button>
-          )
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          disabled={pagination.page === pagination.totalPages || loading}
-          onClick={() => handlePageChange(pagination.page + 1)}
-        >
-          <span className="sr-only">Next page</span>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Loading Overlay */}
+      {/* Loading State */}
       {loading && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <div className="text-center py-8">
+          <p>Loading...</p>
         </div>
       )}
 
