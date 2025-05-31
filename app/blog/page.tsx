@@ -24,11 +24,12 @@ export const metadata: Metadata = {
 // Helper function to fetch data with error handling
 async function fetchData(path: string) {
   try {
-    // Use relative URL in production, absolute URL in development
-    const url = process.env.NODE_ENV === 'production' 
-      ? path 
-      : `http://localhost:3000${path}`;
+    // In production, we need to use the full URL
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'http://14.225.212.72'  // Your VPS domain
+      : 'http://localhost:3000';
     
+    const url = `${baseUrl}${path}`;
     console.log('Debug - Fetching data from:', url);
     console.log('Debug - NODE_ENV:', process.env.NODE_ENV);
     

@@ -15,10 +15,14 @@ interface Props {
 // Helper function to fetch data with error handling
 async function fetchData(path: string) {
   try {
-    // Use relative URL in production, absolute URL in development
-    const url = process.env.NODE_ENV === 'production' 
-      ? path 
-      : `http://localhost:3000${path}`;
+    // In production, we need to use the full URL
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? 'http://14.225.212.72'  // Your VPS domain
+      : 'http://localhost:3000';
+    
+    const url = `${baseUrl}${path}`;
+    console.log('Debug - Fetching data from:', url);
+    console.log('Debug - NODE_ENV:', process.env.NODE_ENV);
     
     const response = await axios.get(url, {
       headers: {
@@ -27,10 +31,23 @@ async function fetchData(path: string) {
       },
     });
 
+    console.log('Debug - Response status:', response.status);
+    console.log('Debug - Response data:', JSON.stringify(response.data, null, 2));
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error(`Error fetching data from ${path}:`, error.message);
+      console.error('Debug - Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+        }
+      });
     } else {
       console.error(`Error fetching data from ${path}:`, error);
     }
