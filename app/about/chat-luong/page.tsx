@@ -2,7 +2,6 @@
 
 import { Container } from "@/components/ui/container";
 import { motion } from "framer-motion";
-import Image from "next/image";
 
 export default function QualityPage() {
   return (
