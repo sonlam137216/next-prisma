@@ -49,8 +49,11 @@ import {
           });
           const data = await res.json();
           if (data.url) {
-            setImageUrl(data.url);
-            setImageDialog(true);
+            // Insert the image directly into the editor with the Cloudinary URL
+            editor.chain().focus().setImage({ 
+              src: data.url,
+              alt: file.name.split('.')[0] || ''
+            }).run();
           } else {
             alert("Image upload failed");
           }

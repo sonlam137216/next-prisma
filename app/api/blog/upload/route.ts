@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { join } from "path";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
+import { cloudinary } from '@/lib/cloudinary';
+
+interface CloudinaryUploadResult {
+  secure_url: string;
+  public_id: string;
+  format: string;
+  resource_type: string;
+}
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -11,23 +16,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const uploadDir = join(process.cwd(), "public", "blog-content");
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    // Upload to Cloudinary
+    const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: "blog-content",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result as CloudinaryUploadResult);
+          }
+        }
+      ).end(buffer);
+    });
 
-  // Ensure the directory exists
-  if (!existsSync(uploadDir)) {
-    await mkdir(uploadDir, { recursive: true });
+    // Return the Cloudinary URL
+    return NextResponse.json({ url: result.secure_url });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return NextResponse.json(
+      { error: "Failed to upload image" },
+      { status: 500 }
+    );
   }
-
-  // Create a unique filename
-  const ext = file.name.split(".").pop();
-  const base = file.name.replace(/\.[^/.]+$/, "");
-  const filename = `${base}-${Date.now()}.${ext}`;
-  const filePath = join(uploadDir, filename);
-
-  await writeFile(filePath, buffer);
-
-  // Return the public URL
-  const url = `/blog-content/${filename}`;
-  return NextResponse.json({ url });
 } 
