@@ -122,9 +122,9 @@ export default function LandingPage() {
       {/* 3 Small Banners Row */}
       <div className="w-full flex justify-center mt-6 mb-4">
         <div className="max-w-[1200px] w-full px-4 sm:px-5 lg:px-6">
-          <div className="flex justify-around gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Banner 1 */}
-            <div className="relative rounded-xl shadow-lg overflow-hidden min-w-[350px] h-[130px] transition-all duration-300 hover:scale-105">
+            <div className="relative rounded-xl shadow-lg overflow-hidden h-[130px] transition-all duration-300 hover:scale-105">
               <Image
                 src="/uploads/banner_next_slide_1.webp"
                 alt="Free Shipping Banner"
@@ -133,7 +133,7 @@ export default function LandingPage() {
               />
             </div>
             {/* Banner 2 */}
-            <div className="relative rounded-xl shadow-lg overflow-hidden min-w-[350px] h-[130px] transition-all duration-300 hover:scale-105">
+            <div className="relative rounded-xl shadow-lg overflow-hidden h-[130px] transition-all duration-300 hover:scale-105">
               <Image
                 src="/uploads/banner_next_slide_2.webp"
                 alt="Gift Banner"
@@ -142,7 +142,7 @@ export default function LandingPage() {
               />
             </div>
             {/* Banner 3 */}
-            <div className="relative rounded-xl shadow-lg overflow-hidden min-w-[350px] h-[130px] transition-all duration-300 hover:scale-105">
+            <div className="relative rounded-xl shadow-lg overflow-hidden h-[130px] transition-all duration-300 hover:scale-105">
               <Image
                 src="/uploads/banner_next_slide_3.webp"
                 alt="Easy Return Banner"

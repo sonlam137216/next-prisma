@@ -88,35 +88,23 @@ export default function Header() {
                   <span className="sr-only">Mở menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 bg-[#B65001] text-white">
+              <SheetContent side="left" className="w-72 bg-primary text-white">
                 <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
+                  <SheetTitle className="text-white">GEM Store</SheetTitle>
                 </SheetHeader>
 
-                <div className="grid gap-2 py-4 mt-8">
-                  <h3 className="text-sm font-medium">Danh mục</h3>
-                  {!isLoading &&
-                    categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/category/${category.id}`}
-                        className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors"
-                        prefetch={false}
-                      >
-                        {category.name}
-                      </Link>
-                    ))}
+                <div className="grid gap-2 pl-8 py-4 mt-8">
                   <div className="h-px bg-white/30 my-3" />
                   <Link
                     href="/products"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors hover:bg-white/30"
                     prefetch={false}
                   >
                     Trang sức
                   </Link>
                   <Link
                     href="/products"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors hover:bg-white/30"
                     prefetch={false}
                   >
                     Sản phẩm phong thủy
@@ -129,7 +117,7 @@ export default function Header() {
                     <div className="pl-4 space-y-2">
                       <Link
                         href="/blog"
-                        className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors"
+                        className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors hover:bg-white/30"
                         prefetch={false}
                       >
                         Tất cả
@@ -138,7 +126,7 @@ export default function Header() {
                         <Link
                           key={category}
                           href={`/blog?category=${encodeURIComponent(category)}`}
-                          className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors"
+                          className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors hover:bg-white/30"
                           prefetch={false}
                         >
                           {category}
@@ -148,7 +136,7 @@ export default function Header() {
                   </div>
                   <Link
                     href="/contact"
-                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors"
+                    className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors hover:bg-white/30"
                     prefetch={false}
                   >
                     Liên hệ
@@ -210,7 +198,7 @@ export default function Header() {
             >
               <ShoppingBagIcon className="h-6 w-6" />
               {cartItemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-white text-[#B65001]">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-white text-primary">
                   {cartItemCount > 99 ? "99+" : cartItemCount}
                 </Badge>
               )}
@@ -220,13 +208,13 @@ export default function Header() {
 
         {/* Mobile Search - Expandable */}
         {isSearchOpen && (
-          <div className="md:hidden py-3 px-2 border-t border-white/20 animate-fadeIn bg-[#B65001]">
+          <div className="md:hidden mt-2 py-3 px-2 border-t border-white/20 animate-fadeIn bg-primary">
             <form onSubmit={handleSearch} className="relative w-full">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/80" />
               <Input
                 type="search"
                 placeholder="Tìm kiếm sản phẩm..."
-                className="pl-10 pr-4 py-2 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-primary-foreground focus:border-primary-foreground bg-[#B65001] text-white placeholder:text-white/70"
+                className="pl-10 pr-4 py-2 w-full border border-white/30 rounded-full focus:ring-2 focus:ring-primary-foreground focus:border-primary-foreground bg-primary text-white placeholder:text-white/70"
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -241,7 +229,7 @@ export default function Header() {
             <NavigationMenu className="hidden lg:flex z-20 w-full" viewport={false}>
               <NavigationMenuList className="flex items-center gap-8 w-full">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-[#B65001]/90">
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
                     Giới thiệu
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -289,7 +277,7 @@ export default function Header() {
                   </Link>
                 </NavigationMenuLink>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-[#B65001]/90">
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
                     Tin tức
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>

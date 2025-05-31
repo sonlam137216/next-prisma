@@ -49,7 +49,7 @@ const HeroSlider = () => {
   };
 
   return (
-    <section className="relative h-[calc(100vh-180px)] overflow-hidden bg-white mt-4">
+    <section className="relative h-[50vh] sm:h-[60vh] md:h-[70vh] overflow-hidden bg-white mt-4">
       <div className="relative h-full w-full">
         <Carousel
           opts={{
@@ -62,9 +62,9 @@ const HeroSlider = () => {
           <CarouselContent className="h-full">
             {slides.map((slide, index) => (
               <CarouselItem key={index} className="h-full">
-                <div className="relative h-full w-full flex items-center justify-center gap-4">
-                  {/* Previous slide preview */}
-                  <div className="w-[10%] h-[95%] transition-all duration-700 ease-in-out transform hover:scale-105">
+                <div className="relative h-full w-full flex items-center justify-center gap-2 sm:gap-4">
+                  {/* Previous slide preview - Hide on mobile */}
+                  <div className="hidden sm:block w-[10%] h-[95%] transition-all duration-700 ease-in-out transform hover:scale-105">
                     <div className="relative h-full w-full rounded-lg overflow-hidden opacity-20 transition-all duration-700 ease-in-out">
                       <Image
                         src={slides[getSlideIndex(index - 1)].image}
@@ -75,8 +75,8 @@ const HeroSlider = () => {
                     </div>
                   </div>
 
-                  {/* Current slide */}
-                  <div className="relative w-[80%] h-[95%] transition-all duration-700 ease-in-out z-10">
+                  {/* Current slide - Full width on mobile */}
+                  <div className="relative w-full sm:w-[80%] h-[95%] transition-all duration-700 ease-in-out z-10">
                     <div className="relative h-full w-full rounded-xl overflow-hidden shadow-2xl">
                       <Image
                         src={slide.image}
@@ -88,8 +88,8 @@ const HeroSlider = () => {
                     </div>
                   </div>
 
-                  {/* Next slide preview */}
-                  <div className="w-[10%] h-[95%] transition-all duration-700 ease-in-out transform hover:scale-105">
+                  {/* Next slide preview - Hide on mobile */}
+                  <div className="hidden sm:block w-[10%] h-[95%] transition-all duration-700 ease-in-out transform hover:scale-105">
                     <div className="relative h-full w-full rounded-lg overflow-hidden opacity-20 transition-all duration-700 ease-in-out">
                       <Image
                         src={slides[getSlideIndex(index + 1)].image}
@@ -104,36 +104,36 @@ const HeroSlider = () => {
             ))}
           </CarouselContent>
           
-          {/* Custom Navigation Buttons */}
-          <div className="absolute z-20 flex justify-between w-full top-1/2 transform -translate-y-1/2 px-8">
+          {/* Custom Navigation Buttons - Smaller on mobile */}
+          <div className="absolute z-20 flex justify-between w-full top-1/2 transform -translate-y-1/2 px-4 sm:px-8">
             <Button
               onClick={() => api?.scrollPrev()}
               variant="secondary"
               size="icon"
-              className="h-12 w-12 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm text-black border-0 transition-all duration-300 hover:scale-110"
+              className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm text-black border-0 transition-all duration-300 hover:scale-110"
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={10} className="sm:size-10" />
             </Button>
             <Button
               onClick={() => api?.scrollNext()}
               variant="secondary"
               size="icon"
-              className="h-12 w-12 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm text-black border-0 transition-all duration-300 hover:scale-110"
+              className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-black/10 hover:bg-black/20 backdrop-blur-sm text-black border-0 transition-all duration-300 hover:scale-110"
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={10} className="sm:size-10" />
             </Button>
           </div>
 
-          {/* Dot indicators */}
-          <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-3">
+          {/* Dot indicators - Smaller on mobile */}
+          <div className="absolute bottom-4 sm:bottom-8 left-0 right-0 z-20 flex justify-center gap-2 sm:gap-3">
             {slides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => api?.scrollTo(index)}
-                className={`h-3 rounded-full transition-all duration-500 ease-in-out ${
+                className={`h-2 sm:h-3 rounded-full transition-all duration-500 ease-in-out ${
                   currentSlide === index
-                    ? "w-8 bg-black"
-                    : "w-3 bg-black/40 hover:bg-black/60"
+                    ? "w-6 sm:w-8 bg-black"
+                    : "w-2 sm:w-3 bg-black/40 hover:bg-black/60"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
