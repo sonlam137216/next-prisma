@@ -1,79 +1,51 @@
+'use client';
+
 // app/blog/page.tsx
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { ArrowRight, CalendarDays, Clock } from "lucide-react";
-import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { BlogClient } from "./BlogClient";
+import { useEffect, useState } from "react";
+import { useBlogStore } from "@/app/store/blogStore";
 
-// Generate metadata for SEO
-export const metadata: Metadata = {
-  title: "Blog & Tin Tức | Gem Store",
-  description: "Khám phá những bài viết mới nhất về phong thủy, đá quý và những câu chuyện thú vị từ chúng tôi",
-  openGraph: {
-    title: "Blog & Tin Tức | Gem Store",
-    description: "Khám phá những bài viết mới nhất về phong thủy, đá quý và những câu chuyện thú vị từ chúng tôi",
-    type: "website",
-  },
-};
+export default function BlogPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const blogStore = useBlogStore();
 
-async function fetchBlogData() {
-  try {
-    console.log('Debug - Starting to fetch blog data');
-    
-    // Get the base URL for API requests
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    
-    const [postsResponse, featuredResponse, categoriesResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/blog?page=1&pageSize=9`),
-      fetch(`${baseUrl}/api/blog/featured`),
-      fetch(`${baseUrl}/api/blog/categories`)
-    ]);
-
-    if (!postsResponse.ok || !featuredResponse.ok || !categoriesResponse.ok) {
-      console.error('Debug - API responses not ok:', {
-        posts: postsResponse.status,
-        featured: featuredResponse.status,
-        categories: categoriesResponse.status
-      });
-      throw new Error('One or more API responses failed');
-    }
-
-    const [postsData, featuredData, categoriesData] = await Promise.all([
-      postsResponse.json(),
-      featuredResponse.json(),
-      categoriesResponse.json()
-    ]);
-
-    console.log('Debug - Fetched data:', {
-      postsCount: postsData.posts?.length || 0,
-      hasFeaturedPost: !!featuredData.post,
-      categoriesCount: categoriesData.categories?.length || 0
-    });
-
-    return {
-      posts: postsData.posts || [],
-      pagination: postsData.pagination || { page: 1, pageSize: 9, totalPages: 1, totalPosts: 0 },
-      featuredPost: featuredData.post || null,
-      categories: categoriesData.categories || []
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        await Promise.all([
+          blogStore.fetchPosts(1),
+          blogStore.fetchCategories(),
+          blogStore.fetchFeaturedPost(),
+        ]);
+      } catch (error) {
+        console.error('Error fetching blog data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-  } catch (error) {
-    console.error('Error fetching blog data:', error);
-    return {
-      posts: [],
-      pagination: { page: 1, pageSize: 9, totalPages: 1, totalPosts: 0 },
-      featuredPost: null,
-      categories: []
-    };
+
+    fetchData();
+  }, []);
+
+  const { posts, categories, pagination, featuredPost } = blogStore;
+
+  if (isLoading) {
+    return (
+      <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
   }
-}
-
-// Server Component
-export default async function BlogPage() {
-  const { posts, pagination, featuredPost, categories } = await fetchBlogData();
 
   return (
     <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
