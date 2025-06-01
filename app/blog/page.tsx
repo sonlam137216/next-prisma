@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useBlogStore } from "@/app/store/blogStore";
 import { format } from "date-fns";
 import { ArrowRight, CalendarDays, Clock } from "lucide-react";
 import { Metadata } from "next";
@@ -21,35 +20,40 @@ export const metadata: Metadata = {
   },
 };
 
+async function fetchBlogData() {
+  try {
+    const [postsResponse, featuredResponse, categoriesResponse] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog?page=1&pageSize=9`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/featured`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/categories`)
+    ]);
+
+    const [postsData, featuredData, categoriesData] = await Promise.all([
+      postsResponse.json(),
+      featuredResponse.json(),
+      categoriesResponse.json()
+    ]);
+
+    return {
+      posts: postsData.posts || [],
+      pagination: postsData.pagination || { page: 1, pageSize: 9, totalPages: 1, totalPosts: 0 },
+      featuredPost: featuredData.post || null,
+      categories: categoriesData.categories || []
+    };
+  } catch (error) {
+    console.error('Error fetching blog data:', error);
+    return {
+      posts: [],
+      pagination: { page: 1, pageSize: 9, totalPages: 1, totalPosts: 0 },
+      featuredPost: null,
+      categories: []
+    };
+  }
+}
+
 // Server Component
 export default async function BlogPage() {
-  console.log('Debug - BlogPage: Starting to fetch data');
-  const blogStore = useBlogStore.getState();
-  
-  try {
-    // Fetch initial data
-    console.log('Debug - BlogPage: Fetching initial data');
-    await Promise.all([
-      blogStore.fetchPosts(1),
-      blogStore.fetchFeaturedPost(),
-      blogStore.fetchCategories(),
-    ]);
-    console.log('Debug - BlogPage: Initial data fetched successfully');
-  } catch (error) {
-    console.error('Debug - BlogPage: Error fetching initial data:', error);
-  }
-
-  const posts = blogStore.posts;
-  const featuredPost = blogStore.featuredPost;
-  const categories = blogStore.categories;
-  const pagination = blogStore.pagination;
-
-  console.log('Debug - BlogPage: State after fetching:', {
-    postsCount: posts.length,
-    hasFeaturedPost: !!featuredPost,
-    categoriesCount: categories.length,
-    pagination,
-  });
+  const { posts, pagination, featuredPost, categories } = await fetchBlogData();
 
   return (
     <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">

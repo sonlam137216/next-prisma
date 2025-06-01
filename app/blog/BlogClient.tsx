@@ -33,15 +33,23 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
 
   // Initialize store with initial data
   useEffect(() => {
+    console.log('Debug - BlogClient: Initializing with data:', {
+      postsCount: initialPosts.length,
+      categoriesCount: initialCategories.length,
+      pagination: initialPagination
+    });
+    
     useBlogStore.setState({
       posts: initialPosts,
       categories: initialCategories,
       pagination: initialPagination,
       selectedCategory: "Tất cả",
+      loading: false
     });
   }, [initialPosts, initialCategories, initialPagination]);
 
   const handleCategoryChange = async (category: string) => {
+    console.log('Debug - BlogClient: Changing category to:', category);
     setSelectedCategory(category);
     await fetchPosts(1, category === "Tất cả" ? undefined : category);
   };
@@ -64,7 +72,7 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
           >
             Tất cả
           </Button>
-          {categories.map((category) => (
+          {categories.filter(category => category !== "Tất cả").map((category) => (
             <Button
               key={category}
               variant={category === selectedCategory ? "default" : "outline"}
