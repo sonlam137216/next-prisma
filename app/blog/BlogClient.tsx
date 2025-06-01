@@ -37,6 +37,7 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
       posts: initialPosts,
       categories: initialCategories,
       pagination: initialPagination,
+      selectedCategory: "Tất cả",
     });
   }, [initialPosts, initialCategories, initialPagination]);
 
