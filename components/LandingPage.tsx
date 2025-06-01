@@ -155,157 +155,159 @@ export default function LandingPage() {
       </div>
 
       {/* Content Wrapper for all sections */}
-      <div className="max-w-[1200px] mx-auto px-2 sm:px-5 lg:px-6">
-        {/* Featured Products Slider */}
-        <section className="py-8 sm:py-12">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold">Sản phẩm mới nhất</h2>
-              <Button variant="ghost" className="flex items-center gap-1 text-sm" asChild>
-                <Link href="/products">
-                  Xem tất cả <ChevronRight size={14} />
-                </Link>
-              </Button>
-            </div>
-            
-            <Carousel className="w-full">
-              <CarouselContent>
-                {featuredProducts.map((product) => (
-                  <CarouselItem key={product.id} className="md:basis-1/4">
-                    <Card 
-                      className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] cursor-pointer"
-                      onClick={() => handleProductClick(product.id)}
-                    >
-                      <div className="relative h-40 sm:h-48">
-                        <div className="absolute top-2 right-2 z-10 flex gap-1">
-                          <Button 
-                            size="icon" 
-                            variant="secondary" 
-                            className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
-                          >
-                            <Heart size={14} />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant="secondary" 
-                            className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
-                          >
-                            <Search size={14} />
-                          </Button>
-                        </div>
-                        
-                        <Image 
-                          src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
-                          alt={product.name}
-                          fill
-                          className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-                        />
-                      </div>
-                      
-                      <CardHeader className="py-2 px-3">
-                        <div className="flex justify-between items-center mb-1">
-                          <Badge variant="outline" className="font-normal text-xs transition-all duration-300 group-hover:bg-primary/10">
-                            {product.category?.name || "Category"}
-                          </Badge>
-                          <Badge variant="secondary" className="font-medium text-sm transition-all duration-300 group-hover:bg-primary">
-                            ${product.price}
-                          </Badge>
-                        </div>
-                        <CardTitle className="text-sm transition-all duration-300 group-hover:text-primary">
-                          {product.name}
-                        </CardTitle>
-                      </CardHeader>
-                      
-                      <CardContent className="py-0 px-3">
-                        <CardDescription className="line-clamp-1 text-gray-600 text-xs transition-all duration-300 group-hover:text-gray-800">
-                          {product.description || "No description available"}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="text-black hover:text-primary border-black hover:border-primary" />
-              <CarouselNext className="text-black hover:text-primary border-black hover:border-primary" />
-            </Carousel>
-          </div>
-        </section>
-
-        {/* Collections Section */}
-        <section className="py-2 sm:py-4">
-          <div className="max-w-[1200px] mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-8">Bộ sưu tập</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              {/* Left side - Image Slider */}
-              <div className="relative h-[500px] overflow-hidden rounded-lg">
-                <Carousel className="w-full h-full">
-                  <CarouselContent>
-                    {collectionImages.map((image, index) => (
-                      <CarouselItem key={index} className="h-full">
-                        <div className="relative h-full w-full">
-                          <Image
-                            src={image}
-                            alt={`Collection ${index + 1}`}
+      <div className="w-full overflow-x-hidden">
+        <div className="max-w-[1200px] mx-auto px-4">
+          {/* Featured Products Slider */}
+          <section className="py-8 sm:py-12">
+            <div className="w-full">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold">Sản phẩm mới nhất</h2>
+                <Button variant="ghost" className="flex items-center gap-1 text-sm" asChild>
+                  <Link href="/products">
+                    Xem tất cả <ChevronRight size={14} />
+                  </Link>
+                </Button>
+              </div>
+              
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {featuredProducts.map((product) => (
+                    <CarouselItem key={product.id} className="md:basis-1/4">
+                      <Card 
+                        className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] cursor-pointer"
+                        onClick={() => handleProductClick(product.id)}
+                      >
+                        <div className="relative h-40 sm:h-48">
+                          <div className="absolute top-2 right-2 z-10 flex gap-1">
+                            <Button 
+                              size="icon" 
+                              variant="secondary" 
+                              className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
+                            >
+                              <Heart size={14} />
+                            </Button>
+                            <Button 
+                              size="icon" 
+                              variant="secondary" 
+                              className="rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white"
+                            >
+                              <Search size={14} />
+                            </Button>
+                          </div>
+                          
+                          <Image 
+                            src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
+                            alt={product.name}
                             fill
-                            className="object-cover transition-transform duration-700 ease-in-out"
+                            className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
                           />
                         </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="text-white hover:text-primary border-white hover:border-primary" />
-                  <CarouselNext className="text-white hover:text-primary border-white hover:border-primary" />
-                </Carousel>
-              </div>
+                        
+                        <CardHeader className="py-2 px-3">
+                          <div className="flex justify-between items-center mb-1">
+                            <Badge variant="outline" className="font-normal text-xs transition-all duration-300 group-hover:bg-primary/10">
+                              {product.category?.name || "Category"}
+                            </Badge>
+                            <Badge variant="secondary" className="font-medium text-sm transition-all duration-300 group-hover:bg-primary">
+                              ${product.price}
+                            </Badge>
+                          </div>
+                          <CardTitle className="text-sm transition-all duration-300 group-hover:text-primary">
+                            {product.name}
+                          </CardTitle>
+                        </CardHeader>
+                        
+                        <CardContent className="py-0 px-3">
+                          <CardDescription className="line-clamp-1 text-gray-600 text-xs transition-all duration-300 group-hover:text-gray-800">
+                            {product.description || "No description available"}
+                          </CardDescription>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="text-black hover:text-primary border-black hover:border-primary" />
+                <CarouselNext className="text-black hover:text-primary border-black hover:border-primary" />
+              </Carousel>
+            </div>
+          </section>
 
-              {/* Right side - Product Grid */}
-              <div className="relative h-[500px]">
-                <Carousel className="w-full h-full">
-                  <CarouselContent>
-                    {getProductGroups(featuredProducts, 4).map((productGroup, groupIndex) => (
-                      <CarouselItem key={groupIndex} className="md:basis-1/1">
-                        <div className="grid grid-cols-2 gap-4 h-full">
-                          {productGroup.map((product) => (
-                            <Card 
-                              key={product.id}
-                              className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] h-full cursor-pointer"
-                              onClick={() => handleProductClick(product.id)}
-                            >
-                              <div className="relative h-[200px] -mt-1">
-                                <Image 
-                                  src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
-                                  alt={product.name}
-                                  fill
-                                  className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-                                />
-                              </div>
-                              <CardHeader className="py-2 px-3">
-                                <CardTitle className="text-sm transition-all duration-300 group-hover:text-primary">
-                                  {product.name}
-                                </CardTitle>
-                                <Badge variant="secondary" className="font-medium text-sm transition-all duration-300 group-hover:bg-primary">
-                                  ${product.price}
-                                </Badge>
-                              </CardHeader>
-                            </Card>
-                          ))}
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="text-black hover:text-primary border-black hover:border-primary" />
-                  <CarouselNext className="text-black hover:text-primary border-black hover:border-primary" />
-                </Carousel>
+          {/* Collections Section */}
+          <section className="py-2 sm:py-4">
+            <div className="w-full">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-8">Bộ sưu tập</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-12">
+                {/* Left side - Image Slider */}
+                <div className="relative h-[300px] sm:h-[500px] overflow-hidden rounded-lg">
+                  <Carousel className="w-full h-full">
+                    <CarouselContent>
+                      {collectionImages.map((image, index) => (
+                        <CarouselItem key={index} className="h-full">
+                          <div className="relative h-full w-full">
+                            <Image
+                              src={image}
+                              alt={`Collection ${index + 1}`}
+                              fill
+                              className="object-cover transition-transform duration-700 ease-in-out"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="text-white hover:text-primary border-white hover:border-primary" />
+                    <CarouselNext className="text-white hover:text-primary border-white hover:border-primary" />
+                  </Carousel>
+                </div>
+
+                {/* Right side - Product Grid */}
+                <div className="relative h-[400px] sm:h-[500px]">
+                  <Carousel className="w-full h-full">
+                    <CarouselContent>
+                      {getProductGroups(featuredProducts, 4).map((productGroup, groupIndex) => (
+                        <CarouselItem key={groupIndex} className="md:basis-1/1">
+                          <div className="grid grid-cols-2 gap-2 sm:gap-4 h-full">
+                            {productGroup.map((product) => (
+                              <Card 
+                                key={product.id}
+                                className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] h-full cursor-pointer"
+                                onClick={() => handleProductClick(product.id)}
+                              >
+                                <div className="relative h-[250px] sm:h-[300px] -mt-1">
+                                  <Image 
+                                    src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
+                                    alt={product.name}
+                                    fill
+                                    className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
+                                  />
+                                </div>
+                                <CardHeader className="py-2 px-2 sm:px-3">
+                                  <CardTitle className="text-xs sm:text-sm transition-all duration-300 group-hover:text-primary">
+                                    {product.name}
+                                  </CardTitle>
+                                  <Badge variant="secondary" className="font-medium text-xs sm:text-sm transition-all duration-300 group-hover:bg-primary">
+                                    ${product.price}
+                                  </Badge>
+                                </CardHeader>
+                              </Card>
+                            ))}
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="text-black hover:text-primary border-black hover:border-primary" />
+                    <CarouselNext className="text-black hover:text-primary border-black hover:border-primary" />
+                  </Carousel>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
 
       {/* Category Products Section - Full Width */}
-      <section className="relative py-4">
+      <section className="relative py-4 w-full overflow-x-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 z-0 h-[800px]">
+        <div className="absolute inset-0 z-0 h-[600px] sm:h-[800px]">
           <Image
             src="https://theme.hstatic.net/200000689681/1001138369/14/bg_home_collection_5_1.jpg?v=9971"
             alt="Background"
@@ -317,26 +319,26 @@ export default function LandingPage() {
         </div>
 
         <div className="relative z-10">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
+          <div className="max-w-[1200px] mx-auto px-4">
             <div className="flex justify-end">
               <div className="w-full max-w-[1000px]">
                 {/* Section Title */}
-                <div className="text-right mb-12">
-                  <Badge variant="outline" className="text-white border-white mb-4">Danh mục nổi bật</Badge>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
+                <div className="text-right mb-6 sm:mb-12">
+                  <Badge variant="outline" className="text-white border-white mb-2 sm:mb-4">Danh mục nổi bật</Badge>
+                  <h2 className="text-2xl sm:text-4xl font-bold text-white mb-4 sm:mb-6">
                     Sản phẩm theo danh mục
                   </h2>
                 </div>
 
                 {/* Category Filter Buttons */}
-                <div className="flex justify-end mb-12 space-x-4">
+                <div className="flex justify-end mb-6 sm:mb-12 space-x-2 sm:space-x-4">
                   <Button
                     variant="outline"
                     className={`${
                       selectedCategoryId === 1 
                         ? 'bg-black text-white border-black hover:bg-black/90' 
                         : 'bg-gray-100 text-black border-gray-200 hover:bg-gray-200'
-                    } transition-all duration-300`}
+                    } transition-all duration-300 text-xs sm:text-sm`}
                     onClick={() => setSelectedCategoryId(1)}
                   >
                     {categories.find(c => c.id === 1)?.name || 'Category 1'}
@@ -347,7 +349,7 @@ export default function LandingPage() {
                       selectedCategoryId === 2 
                         ? 'bg-black text-white border-black hover:bg-black/90' 
                         : 'bg-gray-100 text-black border-gray-200 hover:bg-gray-200'
-                    } transition-all duration-300`}
+                    } transition-all duration-300 text-xs sm:text-sm`}
                     onClick={() => setSelectedCategoryId(2)}
                   >
                     {categories.find(c => c.id === 2)?.name || 'Category 2'}
@@ -358,9 +360,9 @@ export default function LandingPage() {
                 <Carousel className="w-full">
                   <CarouselContent>
                     {filteredProducts.map((product) => (
-                      <CarouselItem key={product.id} className="md:basis-1/3">
+                      <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/3">
                         <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-0 bg-white/90 backdrop-blur-sm">
-                          <div className="relative h-[300px]">
+                          <div className="relative h-[200px] sm:h-[300px]">
                             <Image
                               src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
                               alt={product.name}
@@ -369,11 +371,11 @@ export default function LandingPage() {
                             />
                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
                           </div>
-                          <CardHeader className="py-4 px-4">
-                            <CardTitle className="text-base transition-colors group-hover:text-primary">
+                          <CardHeader className="py-3 sm:py-4 px-3 sm:px-4">
+                            <CardTitle className="text-sm sm:text-base transition-colors group-hover:text-primary">
                               {product.name}
                             </CardTitle>
-                            <Badge variant="secondary" className="font-medium text-sm transition-colors group-hover:bg-primary mt-2">
+                            <Badge variant="secondary" className="font-medium text-xs sm:text-sm transition-colors group-hover:bg-primary mt-2">
                               ${product.price}
                             </Badge>
                           </CardHeader>
