@@ -22,17 +22,37 @@ export const metadata: Metadata = {
 
 async function fetchBlogData() {
   try {
+    console.log('Debug - Starting to fetch blog data');
+    
+    // Get the base URL for API requests
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    
     const [postsResponse, featuredResponse, categoriesResponse] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog?page=1&pageSize=9`),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/featured`),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/categories`)
+      fetch(`${baseUrl}/api/blog?page=1&pageSize=9`),
+      fetch(`${baseUrl}/api/blog/featured`),
+      fetch(`${baseUrl}/api/blog/categories`)
     ]);
+
+    if (!postsResponse.ok || !featuredResponse.ok || !categoriesResponse.ok) {
+      console.error('Debug - API responses not ok:', {
+        posts: postsResponse.status,
+        featured: featuredResponse.status,
+        categories: categoriesResponse.status
+      });
+      throw new Error('One or more API responses failed');
+    }
 
     const [postsData, featuredData, categoriesData] = await Promise.all([
       postsResponse.json(),
       featuredResponse.json(),
       categoriesResponse.json()
     ]);
+
+    console.log('Debug - Fetched data:', {
+      postsCount: postsData.posts?.length || 0,
+      hasFeaturedPost: !!featuredData.post,
+      categoriesCount: categoriesData.categories?.length || 0
+    });
 
     return {
       posts: postsData.posts || [],
