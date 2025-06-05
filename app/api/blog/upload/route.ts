@@ -15,33 +15,55 @@ export async function POST(req: NextRequest) {
   if (!file) {
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
+  console.log("file", file);
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+    console.log("buffer size:", buffer.length);
     
-    // Upload to Cloudinary
+    // Upload to Cloudinary with optimized settings
     const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
+      const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: "blog-content",
           resource_type: "image",
+          chunk_size: 6000000, // 6MB chunks
+          timeout: 120000, // 2 minutes timeout
+          eager: [
+            { width: 1000, crop: "scale" }, // Create a scaled version
+          ],
+          eager_async: true,
         },
         (error, result) => {
+          console.log("Upload callback - error:", error);
+          console.log("Upload callback - result:", result);
           if (error) {
             reject(error);
           } else {
             resolve(result as CloudinaryUploadResult);
           }
         }
-      ).end(buffer);
+      );
+
+      // Handle stream errors
+      uploadStream.on('error', (error) => {
+        console.error('Stream error:', error);
+        reject(error);
+      });
+
+      // Write the buffer to the stream
+      uploadStream.end(buffer);
     });
 
     // Return the Cloudinary URL
     return NextResponse.json({ url: result.secure_url });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading image:', error);
     return NextResponse.json(
-      { error: "Failed to upload image" },
+      { 
+        error: error.message || "Failed to upload image",
+        details: error.error || error
+      },
       { status: 500 }
     );
   }

@@ -135,7 +135,7 @@ export const useBlogStore = create<BlogState>((set) => ({
     try {
       set({ loading: true, error: null });
       
-      const url = `/blog/${id}`;
+      const url = `/admin/blog/${id}`;
       console.log('Debug - Fetching post by ID:', url);
       
       const { data } = await api.get(url);

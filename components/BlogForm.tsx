@@ -46,6 +46,9 @@ const blogFormSchema = z.object({
   }),
   published: z.boolean().default(false),
   path: z.string().optional(),
+  category: z.string().min(1, {
+    message: "Category is required.",
+  }),
 });
 
 type BlogFormValues = z.infer<typeof blogFormSchema>;
@@ -80,6 +83,7 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
       slug: post?.slug || '',
       published: post?.published || false,
       path: post?.path || '',
+      category: post?.category || 'Phong thủy',
     },
   });
 
@@ -120,10 +124,10 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
         ...data,
         path,
         id: post?.id ?? 1,
-        category: '',
-        readingTime: 0,
-        createdAt: '',
-        updatedAt: ''
+        category: data.category || 'Phong thủy',
+        readingTime: post?.readingTime || 5,
+        createdAt: post?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       
       let success = false;
@@ -210,6 +214,23 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
                     </FormControl>
                     <FormDescription>
                       This will be used in the URL: /blog/{field.value || 'post-slug'}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Post category" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      The category this post belongs to
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
