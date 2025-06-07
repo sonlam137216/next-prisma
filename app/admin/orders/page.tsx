@@ -94,24 +94,6 @@ export default function OrdersPage() {
     setDeleteDialogOpen(true);
   };
 
-  // // Status badge variant
-  // const getStatusBadge = (status: OrderStatus) => {
-  //   switch (status) {
-  //     case "PENDING":
-  //       return "warning";
-  //     case "PROCESSING":
-  //       return "default";
-  //     case "SHIPPED":
-  //       return "info";
-  //     case "DELIVERED":
-  //       return "success";
-  //     case "CANCELLED":
-  //       return "destructive";
-  //     default:
-  //       return "secondary";
-  //   }
-  // };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
