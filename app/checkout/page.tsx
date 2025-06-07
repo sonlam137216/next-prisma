@@ -33,7 +33,7 @@ export default function PaymentPage() {
   const { cart, clearCart } = useDashboardStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'qr' | 'cod'>('qr');
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -72,15 +72,6 @@ export default function PaymentPage() {
     setIsSubmitting(true);
     setFormError(null);
 
-    // Basic validation
-    if (paymentMethod === "card") {
-      if (!formData.cardNumber || !formData.cardName || !formData.expiryDate || !formData.cvv) {
-        setFormError("Please fill in all card details");
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || 
         !formData.address || !formData.city || !formData.country) {
       setFormError("Please fill in all required fields");
@@ -92,7 +83,7 @@ export default function PaymentPage() {
       // Create order object
       const orderData = {
         total,
-        paymentMethod: paymentMethod === 'card' ? 'CARD' : 'COD',
+        paymentMethod: paymentMethod === 'qr' ? 'CARD' : 'COD',
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -266,22 +257,17 @@ export default function PaymentPage() {
                 <CardContent>
                   <RadioGroup 
                     value={paymentMethod} 
-                    onValueChange={(value: 'card' | 'cod') => setPaymentMethod(value)} 
+                    onValueChange={(value: 'qr' | 'cod') => setPaymentMethod(value)} 
                     className="space-y-3"
                   >
                     <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
-                      <RadioGroupItem value="card" id="payment-card" />
-                      <Label htmlFor="payment-card" className="flex-1 cursor-pointer">
+                      <RadioGroupItem value="qr" id="payment-qr" />
+                      <Label htmlFor="payment-qr" className="flex-1 cursor-pointer">
                         <div className="flex items-center">
                           <CreditCardIcon className="mr-2" size={18} />
-                          <span>Thẻ tín dụng/ghi nợ</span>
+                          <span>Thanh toán qua QR code (TPBank VietQR)</span>
                         </div>
                       </Label>
-                      <div className="flex space-x-1">
-                        <div className="w-10 h-6 bg-blue-600 rounded"></div>
-                        <div className="w-10 h-6 bg-yellow-500 rounded"></div>
-                        <div className="w-10 h-6 bg-red-500 rounded"></div>
-                      </div>
                     </div>
                     
                     <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
@@ -295,52 +281,40 @@ export default function PaymentPage() {
                     </div>
                   </RadioGroup>
                   
-                  {paymentMethod === "card" && (
-                    <div className="mt-6 space-y-4 border-t pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cardNumber">Số thẻ <span className="text-red-500">*</span></Label>
-                        <Input 
-                          id="cardNumber" 
-                          name="cardNumber" 
-                          placeholder="1234 5678 9012 3456" 
-                          value={formData.cardNumber}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="cardName">Tên chủ thẻ <span className="text-red-500">*</span></Label>
-                        <Input 
-                          id="cardName" 
-                          name="cardName" 
-                          placeholder="NGUYEN VAN A" 
-                          value={formData.cardName}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="expiryDate">Ngày hết hạn <span className="text-red-500">*</span></Label>
-                          <Input 
-                            id="expiryDate" 
-                            name="expiryDate" 
-                            placeholder="MM/YY" 
-                            value={formData.expiryDate}
-                            onChange={handleInputChange}
-                          />
+                  {paymentMethod === "qr" && (
+                    <div className="mt-6 space-y-4 border-t pt-4 flex flex-col items-center">
+                      <Image 
+                        src="/qr-code.png" 
+                        alt="chuyen-khoan-ngan-hang" 
+                        width={300} 
+                        height={300} 
+                        className="rounded-lg border"
+                      />
+                      <div className="mt-4 w-full max-w-xs mx-auto bg-gray-50 rounded-lg p-4 border text-sm">
+                        <div className="mb-2 flex justify-between">
+                          <span className="font-medium">Tên tài khoản:</span>
+                          <span>NGUYỄN THỊ PHƯƠNG THẢO</span>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="cvv">CVV <span className="text-red-500">*</span></Label>
-                          <Input 
-                            id="cvv" 
-                            name="cvv" 
-                            type="password" 
-                            placeholder="123" 
-                            value={formData.cvv}
-                            onChange={handleInputChange}
-                          />
+                        <div className="mb-2 flex justify-between">
+                          <span className="font-medium">Ngân hàng:</span>
+                          <span>Vietcombank</span>
                         </div>
+                        <div className="mb-2 flex justify-between">
+                          <span className="font-medium">Số tài khoản:</span>
+                          <span>123456789</span>
+                        </div>
+                        <div className="mb-2 flex justify-between">
+                          <span className="font-medium">Số tiền:</span>
+                          <span>{total.toFixed(2)} VND</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium">Nội dung:</span>
+                          <span>Thanh toan don hang tiem gem</span>
+                        </div>
+                      </div>
+                      <div className="text-center text-sm text-gray-700">
+                        Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử để thanh toán {total.toFixed(2)} VND<br/>
+                        Vui lòng ghi rõ nội dung chuyển khoản nếu được yêu cầu.
                       </div>
                     </div>
                   )}

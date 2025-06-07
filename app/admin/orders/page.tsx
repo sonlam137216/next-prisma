@@ -216,130 +216,132 @@ export default function OrdersPage() {
 
       {/* View Order Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Package className="mr-2" />
-              Order Details
-              {currentOrder && (
-                <span className="ml-2 text-sm text-muted-foreground">
-                  #{currentOrder.orderNumber}
-                </span>
-              )}
-            </DialogTitle>
-            <DialogDescription>
-              {currentOrder && new Date(currentOrder.createdAt!).toLocaleString()}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="w-screen max-w-none p-0 max-h-[98vh] overflow-y-auto">
+          <div className="p-6">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Package className="mr-2" />
+                Order Details
+                {currentOrder && (
+                  <span className="ml-2 text-sm text-muted-foreground">
+                    #{currentOrder.orderNumber}
+                  </span>
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {currentOrder && new Date(currentOrder.createdAt!).toLocaleString()}
+              </DialogDescription>
+            </DialogHeader>
 
-          {currentOrder && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Customer Information */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Customer Information</h3>
-                  <div className="grid grid-cols-1 gap-1 text-sm">
-                    <div>
-                      <span className="font-medium">Name:</span> {currentOrder.firstName} {currentOrder.lastName}
+            {currentOrder && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {/* Customer Information */}
+                  <div className="space-y-4 pr-10">
+                    <h3 className="font-semibold">Customer Information</h3>
+                    <div className="grid grid-cols-1 gap-1 text-sm">
+                      <div>
+                        <span className="font-medium">Name:</span> {currentOrder.firstName} {currentOrder.lastName}
+                      </div>
+                      <div>
+                        <span className="font-medium">Email:</span> {currentOrder.email}
+                      </div>
+                      <div>
+                        <span className="font-medium">Phone:</span> {currentOrder.phone}
+                      </div>
+                      <div>
+                        <span className="font-medium">Address:</span> {currentOrder.address}, {currentOrder.city}, {currentOrder.country} {currentOrder.postalCode}
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-medium">Email:</span> {currentOrder.email}
-                    </div>
-                    <div>
-                      <span className="font-medium">Phone:</span> {currentOrder.phone}
-                    </div>
-                    <div>
-                      <span className="font-medium">Address:</span> {currentOrder.address}, {currentOrder.city}, {currentOrder.country} {currentOrder.postalCode}
+                  </div>
+
+                  {/* Order Status */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Order Status</h3>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Status:</span> 
+                        <Badge variant="default">
+                          {currentOrder.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Change Status:</span>
+                        <Select 
+                          value={currentOrder.status as string}
+                          onValueChange={(value) => handleStatusChange(currentOrder.id!, value as OrderStatus)}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PENDING">PENDING</SelectItem>
+                            <SelectItem value="PROCESSING">PROCESSING</SelectItem>
+                            <SelectItem value="SHIPPED">SHIPPED</SelectItem>
+                            <SelectItem value="DELIVERED">DELIVERED</SelectItem>
+                            <SelectItem value="CANCELLED">CANCELLED</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <span className="font-medium">Payment Method:</span> {currentOrder.paymentMethod}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Order Status */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Order Status</h3>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Status:</span> 
-                      <Badge variant="default">
-                        {currentOrder.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Change Status:</span>
-                      <Select 
-                        value={currentOrder.status as string}
-                        onValueChange={(value) => handleStatusChange(currentOrder.id!, value as OrderStatus)}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="PENDING">PENDING</SelectItem>
-                          <SelectItem value="PROCESSING">PROCESSING</SelectItem>
-                          <SelectItem value="SHIPPED">SHIPPED</SelectItem>
-                          <SelectItem value="DELIVERED">DELIVERED</SelectItem>
-                          <SelectItem value="CANCELLED">CANCELLED</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <span className="font-medium">Payment Method:</span> {currentOrder.paymentMethod}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div className="mt-6">
-                <h3 className="font-semibold mb-3">Order Items</h3>
-                <div className="border rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                        <TableHead className="text-right">Quantity</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {currentOrder.orderItems.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="flex items-center gap-2">
-                            {item.imageUrl && (
-                              <div className="h-10 w-10 rounded bg-gray-100 overflow-hidden relative">
-                                <Image 
-                                  src={item.imageUrl} 
-                                  alt={item.name} 
-                                  width={40}
-                                  height={40}
-                                  className="object-cover h-full w-full" 
-                                />
-                              </div>
-                            )}
-                            <span>{item.name}</span>
-                          </TableCell>
-                          <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">{item.quantity}</TableCell>
-                          <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                {/* Order Items */}
+                <div className="mt-6">
+                  <h3 className="font-semibold mb-3">Order Items</h3>
+                  <div className="border rounded-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product</TableHead>
+                          <TableHead className="text-right">Price</TableHead>
+                          <TableHead className="text-right">Quantity</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
                         </TableRow>
-                      ))}
-                      <TableRow>
-                        <TableCell colSpan={3} className="text-right font-medium">Total</TableCell>
-                        <TableCell className="text-right font-bold">${currentOrder.total.toFixed(2)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {currentOrder.orderItems.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell className="flex items-center gap-2">
+                              {item.imageUrl && (
+                                <div className="h-10 w-10 rounded bg-gray-100 overflow-hidden relative">
+                                  <Image 
+                                    src={item.imageUrl} 
+                                    alt={item.name} 
+                                    width={40}
+                                    height={40}
+                                    className="object-cover h-full w-full" 
+                                  />
+                                </div>
+                              )}
+                              <span>{item.name}</span>
+                            </TableCell>
+                            <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{item.quantity}</TableCell>
+                            <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-right font-medium">Total</TableCell>
+                          <TableCell className="text-right font-bold">${currentOrder.total.toFixed(2)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
+              </>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
