@@ -8,6 +8,15 @@ interface CloudinaryUploadResult {
   resource_type: string;
 }
 
+interface CloudinaryError {
+  message: string;
+  error?: {
+    message: string;
+    http_code?: number;
+    name?: string;
+  };
+}
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get("file") as File;
@@ -57,12 +66,13 @@ export async function POST(req: NextRequest) {
 
     // Return the Cloudinary URL
     return NextResponse.json({ url: result.secure_url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error uploading image:', error);
+    const cloudinaryError = error as CloudinaryError;
     return NextResponse.json(
       { 
-        error: error.message || "Failed to upload image",
-        details: error.error || error
+        error: cloudinaryError.message || "Failed to upload image",
+        details: cloudinaryError.error || error
       },
       { status: 500 }
     );
