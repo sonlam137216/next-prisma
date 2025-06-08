@@ -260,7 +260,7 @@ export default function Header() {
                 </NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/products?collectionId=3"
+                    href="/products?collectionId=1"
                     className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
                     prefetch={false}
                   >
@@ -269,7 +269,7 @@ export default function Header() {
                 </NavigationMenuLink>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/products?collectionId=4"
+                    href="/products?collectionId=2"
                     className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
                     prefetch={false}
                   >
