@@ -41,6 +41,7 @@ async function getInitialData() {
         include: {
           category: true,
           images: true,
+          collections: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -62,6 +63,11 @@ async function getInitialData() {
         ...image,
         createdAt: image.createdAt.toISOString(),
         updatedAt: image.updatedAt.toISOString(),
+      })),
+      collections: product.collections.map(collection => ({
+        ...collection,
+        createdAt: collection.createdAt.toISOString(),
+        updatedAt: collection.updatedAt.toISOString(),
       })),
     }));
 

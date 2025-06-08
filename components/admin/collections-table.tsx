@@ -36,6 +36,7 @@ export function CollectionsTable({ collections }: CollectionsTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[100px]">Image</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Products</TableHead>
@@ -47,20 +48,23 @@ export function CollectionsTable({ collections }: CollectionsTableProps) {
         <TableBody>
           {collections.map((collection) => (
             <TableRow key={collection.id}>
-              <TableCell className="font-medium">
-                <div className="flex items-center space-x-2">
-                  {collection.imageUrl && (
+              <TableCell>
+                {collection.imageUrl ? (
+                  <div className="relative h-16 w-16 rounded-md overflow-hidden">
                     <Image
                       src={collection.imageUrl}
                       alt={collection.name}
-                      width={40}
-                      height={40}
-                      className="object-cover rounded"
+                      fill
+                      className="object-cover"
                     />
-                  )}
-                  <span>{collection.name}</span>
-                </div>
+                  </div>
+                ) : (
+                  <div className="h-16 w-16 rounded-md bg-gray-100 flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">No image</span>
+                  </div>
+                )}
               </TableCell>
+              <TableCell className="font-medium">{collection.name}</TableCell>
               <TableCell>{collection.description}</TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">

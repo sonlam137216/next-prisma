@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 interface Product {
   id: number
@@ -35,11 +36,20 @@ export function CreateCollectionDialog({
   const [selectedProducts, setSelectedProducts] = useState<number[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const { createCollection } = useCollectionsStore()
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0])
+      const file = e.target.files[0]
+      setImageFile(file)
+      
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -81,6 +91,7 @@ export function CreateCollectionDialog({
       setActive(true)
       setSelectedProducts([])
       setImageFile(null)
+      setImagePreview(null)
       toast.success('Collection created successfully')
     } catch (error) {
       console.error('Error creating collection:', error)
@@ -125,6 +136,16 @@ export function CreateCollectionDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="image">Thumbnail Image</Label>
+            {imagePreview ? (
+              <div className="relative h-40 w-40 rounded-md overflow-hidden mb-2">
+                <Image
+                  src={imagePreview}
+                  alt="Collection preview"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
             <Input
               id="image"
               type="file"

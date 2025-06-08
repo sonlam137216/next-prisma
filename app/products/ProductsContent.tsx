@@ -29,6 +29,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
+  const collectionIdFromUrl = searchParams.get('collectionId');
   const { 
     products, 
     fetchProducts, 
@@ -42,7 +43,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   } = useDashboardStore();
   const { collections, fetchCollections, setInitialCollections } = useCollectionStore();
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedCollection, setSelectedCollection] = useState('all');
+  const [selectedCollection, setSelectedCollection] = useState(collectionIdFromUrl || 'all');
   const maxPrice = 1000000
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [sortBy, setSortBy] = useState('newest');
@@ -55,6 +56,15 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     setInitialData(initialData.products);
     setInitialCollections(initialData.collections);
   }, [initialData, setInitialData, setInitialCollections]);
+
+  // Update selectedCollection when URL changes
+  useEffect(() => {
+    if (collectionIdFromUrl) {
+      setSelectedCollection(collectionIdFromUrl);
+    } else {
+      setSelectedCollection('all');
+    }
+  }, [collectionIdFromUrl]);
 
   // Fetch additional data if needed
   useEffect(() => {
@@ -77,8 +87,24 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
       page,
       limit: itemsPerPage
     };
+
+    // Only use collectionId from URL if it exists and we haven't explicitly selected 'all'
+    if (collectionIdFromUrl && selectedCollection !== 'all') {
+      filters.collectionId = parseInt(collectionIdFromUrl);
+    }
+
     fetchProducts(page, itemsPerPage, filters);
-  }, [searchQuery, selectedCategory, selectedCollection, priceRange, sortBy, page, fetchProducts]);
+  }, [searchQuery, selectedCategory, selectedCollection, priceRange, sortBy, page, fetchProducts, collectionIdFromUrl]);
+
+  // Reset filters when collection changes
+  useEffect(() => {
+    if (collectionIdFromUrl) {
+      setSelectedCategory('all');
+      setPriceRange([0, maxPrice]);
+      setSortBy('newest');
+      setPage(1);
+    }
+  }, [collectionIdFromUrl, maxPrice]);
 
   // Handle navigation to product detail
   const handleProductClick = (productId: number) => {

@@ -1,15 +1,13 @@
 // app/api/admin/upload/route.ts
-import { writeFile } from "fs/promises";
 import { NextRequest, NextResponse } from "next/server";
-import { join } from "path";
-import { v4 as uuidv4 } from 'uuid';
+import { cloudinary } from '@/lib/cloudinary';
 
-// Helper function to create directory if it doesn't exist
-// async function ensureDirectory(dirPath: string) {
-//   if (!existsSync(dirPath)) {
-//     await mkdir(dirPath, { recursive: true });
-//   }
-// }
+interface CloudinaryUploadResult {
+  secure_url: string;
+  public_id: string;
+  format: string;
+  resource_type: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,19 +24,40 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Generate unique filename
-    const uniqueId = uuidv4();
-    const extension = file.name.split(".").pop();
-    const filename = `${uniqueId}.${extension}`;
+    // Upload to Cloudinary
+    const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "collections",
+          resource_type: "image",
+          chunk_size: 6000000, // 6MB chunks
+          timeout: 120000, // 2 minutes timeout
+          eager: [
+            { width: 800, crop: "scale" }, // Create a scaled version
+          ],
+          eager_async: true,
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result as CloudinaryUploadResult);
+          }
+        }
+      );
 
-    // Save file to public/collections directory
-    const filePath = join(process.cwd(), "public", "collections", filename);
-    await writeFile(filePath, buffer);
+      // Handle stream errors
+      uploadStream.on('error', (error) => {
+        console.error('Stream error:', error);
+        reject(error);
+      });
 
-    // Return the URL path
-    const url = `/collections/${filename}`;
+      // Write the buffer to the stream
+      uploadStream.end(buffer);
+    });
 
-    return NextResponse.json({ url });
+    // Return the Cloudinary URL
+    return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error("Error uploading file:", error);
     return NextResponse.json(

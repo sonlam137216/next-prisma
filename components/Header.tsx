@@ -96,14 +96,14 @@ export default function Header() {
                 <div className="grid gap-2 pl-8 py-4 mt-8">
                   <div className="h-px bg-white/30 my-3" />
                   <Link
-                    href="/products"
+                    href="/products?collectionId=3"
                     className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors hover:bg-white/30"
                     prefetch={false}
                   >
                     Trang sức
                   </Link>
                   <Link
-                    href="/products"
+                    href="/products?collectionId=4"
                     className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors hover:bg-white/30"
                     prefetch={false}
                   >
@@ -260,7 +260,7 @@ export default function Header() {
                 </NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/products"
+                    href="/products?collectionId=3"
                     className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
                     prefetch={false}
                   >
@@ -269,7 +269,7 @@ export default function Header() {
                 </NavigationMenuLink>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/products"
+                    href="/products?collectionId=4"
                     className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
                     prefetch={false}
                   >
