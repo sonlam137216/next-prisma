@@ -10,7 +10,7 @@ export default function ProductsPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
   const categoryId = searchParams.get('category');
-  const { products, fetchProducts, fetchCategories } = useDashboardStore();
+  const { products, fetchProducts, fetchCategories, categories } = useDashboardStore();
   const { collections, fetchCollections } = useCollectionStore();
 
   useEffect(() => {
@@ -47,5 +47,23 @@ export default function ProductsPageContent() {
     );
   }
 
-  return <ProductsContent initialData={{ products, categories: [], collections }} />;
+  if (!products || !categories || !collections) {
+    return (
+      <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+        <div className="text-center">
+          <p>Error loading data. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ProductsContent 
+      initialData={{ 
+        products: products || [], 
+        categories: categories || [], 
+        collections: collections || [] 
+      }} 
+    />
+  );
 } 
