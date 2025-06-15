@@ -13,8 +13,8 @@ const nextConfig = {
   experimental: {
     // Disable server components for now to avoid hydration issues
     serverComponents: false,
-    // Optimize production builds
-    optimizeCss: true,
+    // Disable CSS optimization that requires critters
+    optimizeCss: false,
     // Ensure proper static optimization
     staticPageGenerationTimeout: 120,
   }
