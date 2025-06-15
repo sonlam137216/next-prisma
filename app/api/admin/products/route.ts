@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { NextRequest } from 'next/server'
 import { cloudinary } from '@/lib/cloudinary'
+import { ProductType, ProductLine } from '@/app/types/product'
 
 export async function GET() {
   try {
@@ -32,8 +33,17 @@ export async function POST(request: NextRequest) {
     const categoryId = parseInt(formData.get("categoryId") as string);
     const inStock = formData.get("inStock") === "true";
     const quantity = parseInt(formData.get("quantity") as string);
+    const type = formData.get("type") as string;
+    const line = formData.get("line") as string;
     const imageFiles = formData.getAll("images") as File[];
     const imageIsMain = formData.getAll("imageIsMain_0") as string[];
+
+    // Get discount fields
+    const hasDiscount = formData.get("hasDiscount") === "true";
+    const discountPrice = formData.get("discountPrice") ? parseFloat(formData.get("discountPrice") as string) : null;
+    const discountPercentage = formData.get("discountPercentage") ? parseInt(formData.get("discountPercentage") as string) : null;
+    const discountStartDate = formData.get("discountStartDate") ? new Date(formData.get("discountStartDate") as string) : null;
+    const discountEndDate = formData.get("discountEndDate") ? new Date(formData.get("discountEndDate") as string) : null;
 
     if (!name || !description || !price || !categoryId || !quantity) {
       return NextResponse.json(
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create product
+    // Create product with discount fields
     const product = await prisma.product.create({
       data: {
         name,
@@ -51,6 +61,13 @@ export async function POST(request: NextRequest) {
         categoryId,
         inStock,
         quantity,
+        type: type as ProductType,
+        line: line as ProductLine,
+        hasDiscount,
+        discountPrice,
+        discountPercentage,
+        discountStartDate,
+        discountEndDate,
       },
     });
 

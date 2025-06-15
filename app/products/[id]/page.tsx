@@ -23,6 +23,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -149,22 +150,22 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
         <ol className="list-reset flex">
           <li>
-            <a href="/" className="hover:underline text-gray-700">Trang chủ</a>
+            <Link href="/" className="hover:underline text-gray-700">Trang chủ</Link>
           </li>
           <li><span className="mx-2">/</span></li>
           <li>
-            <a href="/products" className="hover:underline text-gray-700">Sản phẩm</a>
+            <Link href="/products" className="hover:underline text-gray-700">Sản phẩm</Link>
           </li>
           {product.type && (
             <>
               <li><span className="mx-2">/</span></li>
               <li>
-                <a
+                <Link
                   href={`/products?type=${product.type}`}
                   className="hover:underline text-gray-700"
                 >
                   {product.type === 'PHONG_THUY' ? 'Phong thủy' : product.type === 'THOI_TRANG' ? 'Thời trang' : product.type}
-                </a>
+                </Link>
               </li>
             </>
           )}

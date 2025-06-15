@@ -75,7 +75,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@prisma/client": "^6.7.0",
+    "@prisma/client": "^6.9.0",
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.17.22",
@@ -85,7 +85,7 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.0",
-    "prisma": "^6.4.1",
+    "prisma": "^6.9.0",
     "tailwindcss": "^4",
     "typescript": "^5.7.3"
   },

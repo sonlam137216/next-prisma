@@ -1,3 +1,4 @@
+import { Product as PrismaProduct } from "@prisma/client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -34,25 +35,34 @@ export interface Collection {
   updatedAt: string;
 }
 
-export interface Product {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  quantity: number;
-  inStock: boolean;
-  type: "PHONG_THUY" | "THOI_TRANG";
-  line: "CAO_CAP" | "TRUNG_CAP" | "PHO_THONG";
+export interface Product extends Omit<PrismaProduct, 'category' | 'collections' | 'images' | 'createdAt' | 'discountStartDate' | 'discountEndDate'> {
   createdAt: string;
   updatedAt?: string;
-  categoryId: number;
-  images: Array<{
+  discountStartDate: string | null;
+  discountEndDate: string | null;
+  category?: {
+    id: number;
+    name: string;
+    description: string | null;
+    createdAt: string;
+  };
+  images: {
     id: number;
     url: string;
     isMain: boolean;
-  }>;
-  category?: Category;
-  collection?: Collection;
+    createdAt: string;
+    updatedAt: string;
+    productId: number;
+  }[];
+  collections?: {
+    id: number;
+    name: string;
+    description: string | null;
+    imageUrl: string | null;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }[];
 }
 
 export interface CartItem {
@@ -87,6 +97,45 @@ interface ProductFilters {
   limit?: number;
   type?: string;
   line?: string;
+}
+
+// Add type for API response
+interface ProductResponse extends Omit<PrismaProduct, 'createdAt' | 'updatedAt' | 'discountStartDate' | 'discountEndDate' | 'category' | 'collections' | 'images'> {
+  createdAt: string;
+  updatedAt: string | null;
+  discountStartDate: string | null;
+  discountEndDate: string | null;
+  images: Array<{
+    id: number;
+    url: string;
+    isMain: boolean;
+    createdAt: string;
+    updatedAt: string;
+    productId: number;
+  }>;
+  category?: {
+    id: number;
+    name: string;
+    description: string | null;
+    createdAt: string;
+  };
+  collections?: Array<{
+    id: number;
+    name: string;
+    description: string | null;
+    imageUrl: string | null;
+    active: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+}
+
+interface ApiResponse {
+  products: ProductResponse[];
+  currentPage: number;
+  totalPages: number;
+  totalProducts: number;
+  pageSize: number;
 }
 
 interface DashboardState {
@@ -133,13 +182,13 @@ interface DashboardState {
   setInitialData: (products: Product[]) => void;
 }
 
-export const useDashboardStore = create<DashboardState & {
-  fetchProducts: (page: number, limit: number, filters?: ProductFilters) => Promise<void>;
-  fetchCategories: () => Promise<void>;
-  addProduct: (formData: FormData) => Promise<void>;
-  updateProduct: (id: number, formData: FormData) => Promise<void>;
-  deleteProduct: (id: number) => Promise<void>;
-}>(
+const formatDate = (date: Date | string | null | undefined): string | null => {
+  if (!date) return null;
+  if (typeof date === 'string') return date;
+  return date.toISOString();
+};
+
+export const useDashboardStore = create<DashboardState>()(
   persist(
     (set, get) => ({
       users: [],
@@ -248,8 +297,36 @@ export const useDashboardStore = create<DashboardState & {
             const error = await response.json();
             throw new Error(error.error || 'Failed to fetch products');
           }
-          const data = await response.json();
-          set({ products: data.products || [], loading: false });
+          const data = await response.json() as ApiResponse;
+          // Convert date strings to Date objects
+          const products = data.products.map((product) => ({
+            ...product,
+            createdAt: formatDate(product.createdAt) || '',
+            updatedAt: formatDate(product.updatedAt) || '',
+            discountStartDate: formatDate(product.discountStartDate),
+            discountEndDate: formatDate(product.discountEndDate),
+            category: product.category ? {
+              ...product.category,
+              createdAt: formatDate(product.category.createdAt) || ''
+            } : undefined,
+            images: product.images.map(image => ({
+              ...image,
+              createdAt: formatDate(image.createdAt) || '',
+              updatedAt: formatDate(image.updatedAt) || '',
+              productId: image.productId
+            })),
+            collections: product.collections?.map(collection => ({
+              ...collection,
+              createdAt: formatDate(collection.createdAt) || '',
+              updatedAt: formatDate(collection.updatedAt) || '',
+              id: collection.id,
+              name: collection.name,
+              description: collection.description,
+              imageUrl: collection.imageUrl,
+              active: collection.active
+            }))
+          }));
+          set({ products, loading: false });
         } catch (error) {
           console.error('Error fetching products:', error);
           set({ 
@@ -268,7 +345,14 @@ export const useDashboardStore = create<DashboardState & {
             throw new Error('Failed to fetch product');
           }
           const product = await response.json();
-          return product;
+          // Convert date strings to Date objects
+          return {
+            ...product,
+            createdAt: formatDate(product.createdAt) || '',
+            updatedAt: formatDate(product.updatedAt) || '',
+            discountStartDate: formatDate(product.discountStartDate),
+            discountEndDate: formatDate(product.discountEndDate),
+          };
         } catch (error) {
           console.error('Error fetching product:', error);
           return null;
@@ -278,7 +362,7 @@ export const useDashboardStore = create<DashboardState & {
       updateProduct: async (id, formData) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch(`/api/products/${id}`, {
+          const response = await fetch(`/api/admin/products/${id}`, {
             method: 'PUT',
             body: formData,
           });
@@ -287,9 +371,17 @@ export const useDashboardStore = create<DashboardState & {
             throw new Error(error.error || 'Failed to update product');
           }
           const updatedProduct = await response.json();
+          // Convert date strings to Date objects
+          const product = {
+            ...updatedProduct,
+            createdAt: formatDate(updatedProduct.createdAt) || '',
+            updatedAt: formatDate(updatedProduct.updatedAt) || '',
+            discountStartDate: formatDate(updatedProduct.discountStartDate),
+            discountEndDate: formatDate(updatedProduct.discountEndDate),
+          };
           set((state) => ({
             products: state.products.map((p) => 
-              p.id === id ? { ...updatedProduct, images: updatedProduct.images || [] } : p
+              p.id === id ? { ...product, images: product.images || [] } : p
             ),
             loading: false,
           }));
@@ -305,7 +397,7 @@ export const useDashboardStore = create<DashboardState & {
       addProduct: async (formData) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch('/api/products', {
+          const response = await fetch('/api/admin/products', {
             method: 'POST',
             body: formData,
           });
@@ -314,8 +406,16 @@ export const useDashboardStore = create<DashboardState & {
             throw new Error(error.error || 'Failed to add product');
           }
           const newProduct = await response.json();
+          // Convert date strings to Date objects
+          const product = {
+            ...newProduct,
+            createdAt: formatDate(newProduct.createdAt) || '',
+            updatedAt: formatDate(newProduct.updatedAt) || '',
+            discountStartDate: formatDate(newProduct.discountStartDate),
+            discountEndDate: formatDate(newProduct.discountEndDate),
+          };
           set((state) => ({
-            products: [...state.products, newProduct],
+            products: [...state.products, product],
             loading: false,
           }));
         } catch (error) {
@@ -464,7 +564,7 @@ export const useDashboardStore = create<DashboardState & {
       },
     }),
     {
-      name: 'dashboard-store',
+      name: 'dashboard-storage',
       partialize: (state) => ({
         cart: state.cart,
         isCartOpen: state.isCartOpen,
