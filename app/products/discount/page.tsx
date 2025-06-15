@@ -1,66 +1,73 @@
-import { prisma } from "@/lib/prisma";
-import { Category, Collection, Product, ProductImage } from "@prisma/client";
-import { Metadata } from "next";
+'use client';
+
+import { useCollectionStore } from '@/app/store/collectionStore';
+import { Product } from '@prisma/client';
+import axios from 'axios';
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
-import DiscountProductsContent from "./DiscountProductsContent";
+import { Suspense, useEffect, useState } from 'react';
+import DiscountProductsContent from './DiscountProductsContent';
 
-export const metadata: Metadata = {
-  title: "Sản phẩm khuyến mãi | GEM Store",
-  description: "Khám phá các sản phẩm đang được khuyến mãi tại GEM Store",
-};
-
-interface InitialData {
-  products: (Product & {
-    images: ProductImage[];
-    category: { name: string } | null;
-  })[];
-  categories: Category[];
-  collections: Collection[];
+interface DiscountProduct extends Product {
+  images: {
+    id: number;
+    url: string;
+    isMain: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    productId: number;
+  }[];
+  category: { name: string } | null;
 }
 
-async function getInitialData(): Promise<InitialData> {
-  const now = new Date();
-  const [products, categories, collections] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        hasDiscount: true,
-        inStock: true,
-        discountStartDate: { lte: now },
-        discountEndDate: { gte: now },
-      },
-      include: {
-        images: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        discountPercentage: 'desc',
-      },
-      take: 12,
-    }),
-    prisma.category.findMany(),
-    prisma.collection.findMany({
-      where: {
-        active: true,
-      },
-    }),
-  ]);
-
-  return {
-    products,
-    categories,
-    collections,
-  };
+interface FormattedCollection {
+  id: number;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export default async function DiscountProductsPage() {
-  const initialData = await getInitialData();
+export default function DiscountProductsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<DiscountProduct[]>([]);
+  const [formattedCollections, setFormattedCollections] = useState<FormattedCollection[]>([]);
+  const { collections, fetchCollections } = useCollectionStore();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const productsResponse = await axios.get('/api/products/discount?page=1&limit=12');
+        await fetchCollections();
+        
+        setProducts(productsResponse.data.products);
+        setFormattedCollections(collections.map(collection => ({
+          ...collection,
+          createdAt: new Date(collection.createdAt),
+          updatedAt: new Date(collection.updatedAt)
+        })));
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [fetchCollections, collections]);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -114,7 +121,7 @@ export default async function DiscountProductsPage() {
           </div>
         </div>
       }>
-        <DiscountProductsContent initialData={initialData} />
+        <DiscountProductsContent initialData={{ products, categories: [], collections: formattedCollections }} />
       </Suspense>
     </>
   );

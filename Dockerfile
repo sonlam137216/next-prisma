@@ -17,12 +17,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set build-time environment variables
-ARG DB_USER
-ARG DB_PASSWORD
-ARG DB_NAME
-ENV DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
-
 # Generate Prisma Client
 RUN npx prisma generate
 
