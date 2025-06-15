@@ -158,7 +158,7 @@ export default async function ProductsPage() {
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
         <div className="relative w-full h-[350px] mb-8">
           <Image
-            src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308"
+            src="/blog-content/GARNET-LUU-DO-CHARM-PHUC-1748676755615.jpg"
             alt="Banner Sản phẩm"
             fill
             className="object-cover"
