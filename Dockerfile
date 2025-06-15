@@ -17,6 +17,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Set build-time environment variables
+ARG DB_USER
+ARG DB_PASSWORD
+ARG DB_NAME
+ENV DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+
 # Generate Prisma Client
 RUN npx prisma generate
 
@@ -28,6 +34,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # Add more memory and show detailed output
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_DEBUG_BUILD=true
+
+# Build the application
 RUN yarn build
 
 # Stage 3: Runner
@@ -39,6 +47,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Install wait-for-it script
+RUN apk add --no-cache bash
 
 COPY --from=builder /app/public ./public
 
@@ -68,4 +79,5 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
+# The command will be overridden by docker-compose.yml
 CMD ["node", "server.js"] 
