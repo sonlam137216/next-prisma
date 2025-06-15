@@ -17,19 +17,18 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Set production environment
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
 # Generate Prisma Client
 RUN npx prisma generate
-
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-ENV NEXT_TELEMETRY_DISABLED 1
 
 # Add more memory and show detailed output
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_DEBUG_BUILD=true
 
-# Build the application
+# Build the application with production optimizations
 RUN yarn build
 
 # Stage 3: Runner
@@ -56,7 +55,6 @@ RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
@@ -70,8 +68,11 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT 3000
-# set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 # The command will be overridden by docker-compose.yml
 CMD ["node", "server.js"] 
