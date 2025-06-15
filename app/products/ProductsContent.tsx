@@ -27,6 +27,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const collectionIdFromUrl = searchParams.get('collectionId');
+  const categoryIdFromUrl = searchParams.get('category');
   const { 
     products, 
     fetchProducts, 
@@ -40,7 +41,8 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   } = useDashboardStore();
   const { collections, fetchCollections, setInitialCollections } = useCollectionStore();
   const [selectedCollection, setSelectedCollection] = useState(collectionIdFromUrl || 'all');
-  const maxPrice = 1000000
+  const [selectedCategory, setSelectedCategory] = useState(categoryIdFromUrl || 'all');
+  const maxPrice = 1000000;
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [sortBy, setSortBy] = useState('newest');
   const [page, setPage] = useState(1);
@@ -51,18 +53,27 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
 
   // Initialize with SSR data
   useEffect(() => {
-    setInitialData(initialData.products);
-    setInitialCollections(initialData.collections);
+    if (initialData.products.length > 0) {
+      setInitialData(initialData.products);
+    }
+    if (initialData.collections.length > 0) {
+      setInitialCollections(initialData.collections);
+    }
   }, [initialData, setInitialData, setInitialCollections]);
 
-  // Update selectedCollection when URL changes
+  // Update selectedCollection and selectedCategory when URL changes
   useEffect(() => {
     if (collectionIdFromUrl) {
       setSelectedCollection(collectionIdFromUrl);
     } else {
       setSelectedCollection('all');
     }
-  }, [collectionIdFromUrl]);
+    if (categoryIdFromUrl) {
+      setSelectedCategory(categoryIdFromUrl);
+    } else {
+      setSelectedCategory('all');
+    }
+  }, [collectionIdFromUrl, categoryIdFromUrl]);
 
   // Fetch additional data if needed
   useEffect(() => {
@@ -74,18 +85,18 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     }
   }, [categories.length, collections.length, fetchCategories, fetchCollections]);
 
-  // Debounce for priceRange
+  // Debounce for filters
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // For priceRange, debounce the API call
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const filters = {
         search: searchQuery,
         type: selectedType || undefined,
         line: selectedLine || undefined,
-        collectionId: selectedCollection ? parseInt(selectedCollection) : undefined,
+        categoryId: selectedCategory !== 'all' ? parseInt(selectedCategory) : undefined,
+        collectionId: selectedCollection !== 'all' ? parseInt(selectedCollection) : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
         sortBy,
@@ -97,16 +108,16 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [priceRange, searchQuery, selectedType, selectedLine, selectedCollection, sortBy, page, fetchProducts]);
+  }, [priceRange, searchQuery, selectedType, selectedLine, selectedCollection, selectedCategory, sortBy, page, fetchProducts]);
 
-  // Reset filters when collection changes
+  // Reset filters when collection or category changes
   useEffect(() => {
-    if (collectionIdFromUrl) {
+    if (collectionIdFromUrl || categoryIdFromUrl) {
       setPriceRange([0, maxPrice]);
       setSortBy('newest');
       setPage(1);
     }
-  }, [collectionIdFromUrl, maxPrice]);
+  }, [collectionIdFromUrl, categoryIdFromUrl, maxPrice]);
 
   // Set selectedType from URL on mount
   useEffect(() => {
@@ -228,6 +239,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
                   setSelectedType('');
                   setSelectedLine('');
                   setSelectedCollection('');
+                  setSelectedCategory('');
                   setPriceRange([0, maxPrice]);
                   setSortBy('newest');
                   setPage(1);

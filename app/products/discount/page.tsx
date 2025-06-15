@@ -35,13 +35,19 @@ export default function DiscountProductsPage() {
   const [products, setProducts] = useState<DiscountProduct[]>([]);
   const [formattedCollections, setFormattedCollections] = useState<FormattedCollection[]>([]);
   const { collections, fetchCollections } = useCollectionStore();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // Initial data load
   useEffect(() => {
     const loadData = async () => {
+      if (!isInitialLoad) return;
+      
       try {
         setIsLoading(true);
-        const productsResponse = await axios.get('/api/products/discount?page=1&limit=12');
-        await fetchCollections();
+        const [productsResponse, collectionsResponse] = await Promise.all([
+          axios.get('/api/products/discount?page=1&limit=12'),
+          fetchCollections()
+        ]);
         
         setProducts(productsResponse.data.products);
         setFormattedCollections(collections.map(collection => ({
@@ -49,6 +55,7 @@ export default function DiscountProductsPage() {
           createdAt: new Date(collection.createdAt),
           updatedAt: new Date(collection.updatedAt)
         })));
+        setIsInitialLoad(false);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -57,7 +64,18 @@ export default function DiscountProductsPage() {
     };
 
     loadData();
-  }, [fetchCollections, collections]);
+  }, [fetchCollections, isInitialLoad]);
+
+  // Update formatted collections when collections change
+  useEffect(() => {
+    if (!isInitialLoad && collections.length > 0) {
+      setFormattedCollections(collections.map(collection => ({
+        ...collection,
+        createdAt: new Date(collection.createdAt),
+        updatedAt: new Date(collection.updatedAt)
+      })));
+    }
+  }, [collections, isInitialLoad]);
 
   if (isLoading) {
     return (

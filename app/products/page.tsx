@@ -5,9 +5,12 @@ import { useEffect, useState } from 'react';
 import { useDashboardStore } from '@/app/store/dashboardStore';
 import { useCollectionStore } from '@/app/store/collectionStore';
 import ProductsContent from './ProductsContent';
+import { useSearchParams } from 'next/navigation';
 
 export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get('category');
   const { products, fetchProducts, fetchCategories } = useDashboardStore();
   const { collections, fetchCollections } = useCollectionStore();
 
@@ -15,8 +18,13 @@ export default function ProductsPage() {
     const loadData = async () => {
       try {
         setIsLoading(true);
+        const filters = {
+          categoryId: categoryId ? parseInt(categoryId) : undefined,
+          page: 1,
+          limit: 12
+        };
         await Promise.all([
-          fetchProducts(1, 12),
+          fetchProducts(1, 12, filters),
           fetchCategories(),
           fetchCollections()
         ]);
@@ -28,7 +36,7 @@ export default function ProductsPage() {
     };
 
     loadData();
-  }, [fetchProducts, fetchCategories, fetchCollections]);
+  }, [fetchProducts, fetchCategories, fetchCollections, categoryId]);
 
   if (isLoading) {
     return (
