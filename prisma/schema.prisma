@@ -40,6 +40,8 @@ model Product {
   price       Float
   quantity    Int           @default(0)
   inStock     Boolean       @default(true)
+  type        ProductType   @default(THOI_TRANG)
+  line        ProductLine   @default(PHO_THONG)
   createdAt   DateTime      @default(now())
   category    Category      @relation(fields: [categoryId], references: [id])
   categoryId  Int
@@ -108,4 +110,15 @@ enum OrderStatus {
 enum PaymentMethod {
   CARD
   COD
+}
+
+enum ProductType {
+  PHONG_THUY
+  THOI_TRANG
+}
+
+enum ProductLine {
+  CAO_CAP
+  TRUNG_CAP
+  PHO_THONG
 }

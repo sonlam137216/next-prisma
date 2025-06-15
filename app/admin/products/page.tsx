@@ -20,7 +20,9 @@ export default function ProductsPage() {
     fetchProducts,
     addProduct, 
     updateProduct, 
-    deleteProduct 
+    deleteProduct,
+    loading,
+    error 
   } = useDashboardStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [imagesDialogOpen, setImagesDialogOpen] = useState(false);
@@ -101,11 +103,18 @@ export default function ProductsPage() {
           Add Product
         </Button>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
       
       <ProductsTable
         products={products}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        loading={loading}
       />
 
       <ProductForm

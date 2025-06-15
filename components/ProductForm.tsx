@@ -42,6 +42,8 @@ const productFormSchema = z.object({
   quantity: z.coerce.number().min(0, "Quantity must be a positive number"),
   inStock: z.boolean().default(true),
   categoryId: z.string().min(1, "Category is required"),
+  type: z.enum(["PHONG_THUY", "THOI_TRANG"]).default("THOI_TRANG"),
+  line: z.enum(["CAO_CAP", "TRUNG_CAP", "PHO_THONG"]).default("PHO_THONG"),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -74,6 +76,8 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
       quantity: 0,
       inStock: true,
       categoryId: "",
+      type: "THOI_TRANG",
+      line: "PHO_THONG",
     },
   });
 
@@ -89,6 +93,8 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
           quantity: product.quantity,
           inStock: product.inStock,
           categoryId: product.category?.id.toString() || "",
+          type: product.type || "THOI_TRANG",
+          line: product.line || "PHO_THONG",
         });
         // Set existing images
         setImages(
@@ -109,6 +115,8 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
           quantity: 0,
           inStock: true,
           categoryId: "",
+          type: "THOI_TRANG",
+          line: "PHO_THONG",
         });
         setImages([]);
         setDeletedImageIds([]);
@@ -180,6 +188,8 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
     formData.append("quantity", values.quantity.toString());
     formData.append("inStock", values.inStock.toString());
     formData.append("categoryId", values.categoryId);
+    formData.append("type", values.type);
+    formData.append("line", values.line);
     
     // Add the images
     images.forEach((image, index) => {
@@ -240,6 +250,59 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select product type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="PHONG_THUY">Phong Thuy</SelectItem>
+                            <SelectItem value="THOI_TRANG">Thoi Trang</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="line"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Product Line</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select product line" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="CAO_CAP">Cao Cap</SelectItem>
+                            <SelectItem value="TRUNG_CAP">Trung Cap</SelectItem>
+                            <SelectItem value="PHO_THONG">Pho Thong</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}

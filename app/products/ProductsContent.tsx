@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Product, Category, useDashboardStore } from '@/app/store/dashboardStore';
 import { Collection, useCollectionStore } from '@/app/store/collectionStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,18 @@ interface InitialData {
 
 interface ProductsContentProps {
   initialData: InitialData;
+}
+
+// Enum definitions for filter values
+enum ProductType {
+  PHONG_THUY = 'PHONG_THUY',
+  THOI_TRANG = 'THOI_TRANG',
+}
+
+enum ProductLine {
+  CAO_CAP = 'CAO_CAP',
+  TRUNG_CAP = 'TRUNG_CAP',
+  PHO_THONG = 'PHO_THONG',
 }
 
 export default function ProductsContent({ initialData }: ProductsContentProps) {
@@ -50,6 +62,8 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
   const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
+  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedLine, setSelectedLine] = useState<string>('');
 
   // Initialize with SSR data
   useEffect(() => {
@@ -76,25 +90,30 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     }
   }, [categories.length, collections.length, fetchCategories, fetchCollections]);
 
+  // Debounce for priceRange
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    const filters = {
-      search: searchQuery,
-      categoryId: selectedCategory !== 'all' ? parseInt(selectedCategory) : undefined,
-      collectionId: selectedCollection !== 'all' ? parseInt(selectedCollection) : undefined,
-      minPrice: priceRange[0],
-      maxPrice: priceRange[1],
-      sortBy,
-      page,
-      limit: itemsPerPage
+    // For priceRange, debounce the API call
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const filters = {
+        search: searchQuery,
+        type: selectedType || undefined,
+        line: selectedLine || undefined,
+        collectionId: selectedCollection ? parseInt(selectedCollection) : undefined,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        sortBy,
+        page,
+        limit: itemsPerPage
+      };
+      fetchProducts(page, itemsPerPage, filters);
+    }, 700);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-
-    // Only use collectionId from URL if it exists and we haven't explicitly selected 'all'
-    if (collectionIdFromUrl && selectedCollection !== 'all') {
-      filters.collectionId = parseInt(collectionIdFromUrl);
-    }
-
-    fetchProducts(page, itemsPerPage, filters);
-  }, [searchQuery, selectedCategory, selectedCollection, priceRange, sortBy, page, fetchProducts, collectionIdFromUrl]);
+  }, [priceRange, searchQuery, selectedType, selectedLine, selectedCollection, sortBy, page, fetchProducts]);
 
   // Reset filters when collection changes
   useEffect(() => {
@@ -105,6 +124,14 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
       setPage(1);
     }
   }, [collectionIdFromUrl, maxPrice]);
+
+  // Set selectedType from URL on mount
+  useEffect(() => {
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl && (typeFromUrl === 'PHONG_THUY' || typeFromUrl === 'THOI_TRANG')) {
+      setSelectedType(typeFromUrl);
+    }
+  }, [searchParams]);
 
   // Handle navigation to product detail
   const handleProductClick = (productId: number) => {
@@ -146,58 +173,57 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
         <aside className="md:col-span-1">
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-medium mb-4">Filters</h2>
-              <Separator className="mb-4" />
+              <h2 className="text-base font-bold mb-2">LOẠI SẢN PHẨM</h2>
+              <div className="space-y-2 ml-2">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="type" value="PHONG_THUY" checked={selectedType === 'PHONG_THUY'} onChange={() => setSelectedType('PHONG_THUY')} />
+                  <span>Phong thủy</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="type" value="THOI_TRANG" checked={selectedType === 'THOI_TRANG'} onChange={() => setSelectedType('THOI_TRANG')} />
+                  <span>Thời trang</span>
+                </label>
+              </div>
+              <Separator className="my-4" />
             </div>
-            
-            {/* Category Filter */}
+            {/* DÒNG SẢN PHẨM */}
             <div>
-              <Label htmlFor="category-filter" className="text-sm font-medium mb-2 block">Category</Label>
-              <Select
-                value={selectedCategory}
-                onValueChange={(value) => setSelectedCategory(value)}
-              >
-                <SelectTrigger className="w-full" id="category-filter">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h2 className="text-base font-bold mb-2">DÒNG SẢN PHẨM</h2>
+              <div className="space-y-2 ml-2">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="line" value="CAO_CAP" checked={selectedLine === 'CAO_CAP'} onChange={() => setSelectedLine('CAO_CAP')} />
+                  <span>Cao cấp</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="line" value="TRUNG_CAP" checked={selectedLine === 'TRUNG_CAP'} onChange={() => setSelectedLine('TRUNG_CAP')} />
+                  <span>Trung cấp</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="line" value="PHO_THONG" checked={selectedLine === 'PHO_THONG'} onChange={() => setSelectedLine('PHO_THONG')} />
+                  <span>Phổ thông</span>
+                </label>
+              </div>
+              <Separator className="my-4" />
             </div>
-
-            {/* Collection Filter */}
+            {/* BỘ SƯU TẬP */}
             <div>
-              <Label htmlFor="collection-filter" className="text-sm font-medium mb-2 block">Collection</Label>
-              <Select
-                value={selectedCollection}
-                onValueChange={(value) => setSelectedCollection(value)}
-              >
-                <SelectTrigger className="w-full" id="collection-filter">
-                  <SelectValue placeholder="Select a collection" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Collections</SelectItem>
-                  {collections.map((collection) => (
-                    <SelectItem key={collection.id} value={collection.id.toString()}>
-                      {collection.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h2 className="text-base font-bold mb-2">BỘ SƯU TẬP</h2>
+              <div className="space-y-2 ml-2">
+                {collections.map((collection) => (
+                  <label key={collection.id} className="flex items-center gap-2">
+                    <input type="radio" name="collection" value={collection.id} checked={selectedCollection === collection.id.toString()} onChange={() => setSelectedCollection(collection.id.toString())} />
+                    <span>{collection.name}</span>
+                  </label>
+                ))}
+              </div>
+              <Separator className="my-4" />
             </div>
-            
-            {/* Price Range Filter */}
-            <div className="pt-2">
-              <Label className="text-sm font-medium mb-2 block">Price Range</Label>
+            {/* Price Filter */}
+            <div>
+              <h2 className="text-base font-bold mb-2">Khoảng giá</h2>
               <div className="mb-1 flex justify-between text-sm">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
+                <span>{priceRange[0].toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</span>
+                <span>{priceRange[1].toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</span>
               </div>
               <Slider
                 defaultValue={[0, maxPrice]}
@@ -208,45 +234,33 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
                 onValueChange={(value) => setPriceRange(value as [number, number])}
                 className="mt-2"
               />
+              <Separator className="my-4" />
             </div>
-
-            <div className="pt-4">
-              <Button 
-                variant="outline" 
+            {/* Clear Filter Button */}
+            <div className="pt-2">
+              <Button
+                variant="outline"
                 className="w-full"
                 onClick={() => {
-                  setSelectedCategory('all');
-                  setSelectedCollection('all');
+                  setSelectedType('');
+                  setSelectedLine('');
+                  setSelectedCollection('');
                   setPriceRange([0, maxPrice]);
                   setSortBy('newest');
+                  setPage(1);
                 }}
               >
-                Reset Filters
+                Xóa bộ lọc
               </Button>
             </div>
           </div>
         </aside>
         <section className="md:col-span-3">
-          {/* Product Count and Sort */}
-          <div className="flex items-center justify-between mb-6">
+          {/* Product Count */}
+          <div className="flex items-center mb-6">
             <p className="text-sm text-gray-500">
               Showing {products.length} of {totalPages * itemsPerPage} products
             </p>
-            
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal size={16} className="text-gray-500" />
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="name-asc">Name: A to Z</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           {isLoading ? (
@@ -283,7 +297,9 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
                       <CardContent className="p-4" onClick={() => handleProductClick(product.id)}>
                         <CardTitle className="text-lg mb-2 line-clamp-1">{product.name}</CardTitle>
                         <p className="text-gray-600 text-sm line-clamp-2 mb-2">{product.description}</p>
-                        <p className="font-semibold text-lg">${product.price.toFixed(2)}</p>
+                        <p className="font-semibold text-lg">
+                          {product.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                        </p>
                         <div className="flex items-center mt-2">
                           <span className={`text-sm ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
                             {product.inStock ? 'In Stock' : 'Out of Stock'}

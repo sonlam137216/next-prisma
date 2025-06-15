@@ -224,10 +224,19 @@ export default function Header() {
         )}
 
         {/* Navigation Menu - Full width, colored, and text updated for contrast */}
-        <div className="border-t border-white/20 bg-primary py-1 w-full">
+        <div className="border-t border-white/20 bg-primary py-1 w-full ml-12">
           <div className="h-12 flex items-center w-full">
             <NavigationMenu className="hidden lg:flex z-20 w-full" viewport={false}>
-              <NavigationMenuList className="flex items-center gap-8 w-full">
+              <NavigationMenuList className="flex items-center gap-12 w-full">
+                <NavigationMenuLink asChild>
+                  <Link
+                    href="/"
+                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
+                    prefetch={false}
+                  >
+                    Trang chủ
+                  </Link>
+                </NavigationMenuLink>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
                     Giới thiệu
@@ -235,47 +244,152 @@ export default function Header() {
                   <NavigationMenuContent>
                     <div className="flex flex-col p-4 w-48 rounded-md shadow-md bg-white">
                       <Link
-                        href="/about/gia-tri"
+                        href="/about/gem"
                         className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
-                        Giá trị
+                        Về GEM
                       </Link>
                       <Link
-                        href="/about/chat-luong"
+                        href="/about/wholesale"
                         className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
-                        Chất lượng
+                        Kinh doanh sỉ
                       </Link>
                       <Link
-                        href="/about/lich-su"
+                        href="/about/certification"
                         className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
-                        Lịch sử
+                        Kiểm định
+                      </Link>
+                      <Link
+                        href="/about/careers"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Tuyển dụng
                       </Link>
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/products?collectionId=1"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
-                    prefetch={false}
-                  >
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
                     Trang sức
-                  </Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/products?collectionId=2"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary-foreground focus:outline-none"
-                    prefetch={false}
-                  >
-                    Sản phẩm phong thủy
-                  </Link>
-                </NavigationMenuLink>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="flex flex-col p-4 w-48 rounded-md shadow-md bg-white">
+                      <Link
+                        href="/products?category=bracelets"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Vòng tay
+                      </Link>
+                      <Link
+                        href="/products?category=necklaces"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Mặt dây chuyền
+                      </Link>
+                      <Link
+                        href="/products?category=rings"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Nhẫn
+                      </Link>
+                      <Link
+                        href="/products?category=earrings"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Hoa Tai
+                      </Link>
+                      <Link
+                        href="/products?category=solid-bracelets"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Vòng Bảng Nguyên Khối
+                      </Link>
+                      <Link
+                        href="/products?category=tibetan-dzi"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        DZI Tây Tạng
+                      </Link>
+                      <Link
+                        href="/products?category=pearls"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Ngọc trai
+                      </Link>
+                      <Link
+                        href="/products?category=couple-bracelets"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Vòng cho Couple
+                      </Link>
+                      <Link
+                        href="/products?category=custom-design"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Thiết kế theo yêu cầu
+                      </Link>
+                      <Link
+                        href="/products?category=fashion-accessories"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Phụ kiện thời trang
+                      </Link>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
+                    Vật phẩm Phong Thủy
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="flex flex-col p-4 w-48 rounded-md shadow-md bg-white">
+                      <Link
+                        href="/products?category=agarwood"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Trầm Hương
+                      </Link>
+                      <Link
+                        href="/products?category=sculptures"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Tượng điêu khắc
+                      </Link>
+                      <Link
+                        href="/products?category=desk-items"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Vật phẩm để bàn
+                      </Link>
+                      <Link
+                        href="/products?category=crushed-stones"
+                        className="py-2 text-sm hover:text-primary transition-colors"
+                        prefetch={false}
+                      >
+                        Đá vụn
+                      </Link>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
                     Tin tức
@@ -302,18 +416,98 @@ export default function Header() {
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
+                    Hỗ trợ
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid grid-cols-2 gap-4 p-4 w-[600px] rounded-md shadow-md bg-white">
+                      {/* Dịch vụ khách hàng */}
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-sm text-primary mb-2">Dịch vụ khách hàng</h3>
+                        <div className="space-y-1">
+                          <Link
+                            href="/support/customer-service/ring-size-guide"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Hướng dẫn đo size trang sức
+                          </Link>
+                          <Link
+                            href="/support/customer-service/jewelry-care-guide"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Cẩm nang sử dụng trang sức
+                          </Link>
+                          <Link
+                            href="/support/customer-service/payment-guide"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Hướng dẫn thanh toán
+                          </Link>
+                          <Link
+                            href="/support/customer-service/faq"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Câu hỏi thường gặp
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* Chính sách GEM */}
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-sm text-primary mb-2">Chính sách GEM</h3>
+                        <div className="space-y-1">
+                          <Link
+                            href="/support/policies/return-policy"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Chính sách đổi trả
+                          </Link>
+                          <Link
+                            href="/support/policies/deposit-shipping"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Chính sách đặt cọc và giao hàng
+                          </Link>
+                          <Link
+                            href="/support/policies/warranty"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Chính sách bảo hành
+                          </Link>
+                          <Link
+                            href="/support/policies/privacy"
+                            className="block py-1.5 text-sm hover:text-primary transition-colors"
+                            prefetch={false}
+                          >
+                            Chính sách bảo mật
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* Thông tin cửa hàng */}
+                      <div className="col-span-2 pt-2 border-t border-gray-100">
+                        <Link
+                          href="/support/store-info"
+                          className="block py-1.5 text-sm hover:text-primary transition-colors"
+                          prefetch={false}
+                        >
+                          Thông tin cửa hàng
+                        </Link>
+                      </div>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <Link
-                    href="/contact"
-                    className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary focus:outline-none"
-                    prefetch={false}
-                  >
-                    Liên hệ
-                  </Link>
-                </NavigationMenuLink>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/contact"
+                    href="/products/discount"
                     className="group inline-flex h-12 items-center justify-center px-4 text-sm font-medium text-white transition-colors hover:text-primary focus:text-primary focus:outline-none"
                     prefetch={false}
                   >

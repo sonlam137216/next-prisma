@@ -43,7 +43,7 @@ export default function LandingPage() {
     const loadData = async () => {
       try {
         await Promise.all([
-          fetchProducts(1, 8),
+          fetchProducts(1, 10),
           fetchPosts(1),
           fetchCategories()
         ]);
@@ -172,9 +172,9 @@ export default function LandingPage() {
               <Carousel className="w-full">
                 <CarouselContent>
                   {featuredProducts.map((product) => (
-                    <CarouselItem key={product.id} className="md:basis-1/4">
+                    <CarouselItem key={product.id} className="md:basis-1/5">
                       <Card 
-                        className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] cursor-pointer"
+                        className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border border-gray-100 bg-white rounded-lg transform hover:scale-[1.02] cursor-pointer"
                         onClick={() => handleProductClick(product.id)}
                       >
                         <div className="relative h-40 sm:h-48">
@@ -233,12 +233,12 @@ export default function LandingPage() {
           </section>
 
           {/* Collections Section */}
-          <section className="py-2 sm:py-4">
+          <section className="py-2 sm:py-4 mb-16">
             <div className="w-full">
               <h2 className="text-2xl sm:text-3xl font-bold mb-8">Bộ sưu tập</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-12">
+              <div className="flex flex-col lg:flex-row gap-4 sm:gap-12">
                 {/* Left side - Image Slider */}
-                <div className="relative h-[300px] sm:h-[500px] overflow-hidden rounded-lg">
+                <div className="relative h-[700px] w-[550px] sm:w-[550px] sm:h-[700px] overflow-hidden rounded-lg">
                   <Carousel className="w-full h-full">
                     <CarouselContent>
                       {collectionImages.map((image, index) => (
@@ -260,19 +260,19 @@ export default function LandingPage() {
                 </div>
 
                 {/* Right side - Product Grid */}
-                <div className="relative h-[400px] sm:h-[500px]">
-                  <Carousel className="w-full h-full">
+                <div className="flex-1 ml-4">
+                  <Carousel className="w-full">
                     <CarouselContent>
                       {getProductGroups(featuredProducts, 4).map((productGroup, groupIndex) => (
                         <CarouselItem key={groupIndex} className="md:basis-1/1">
-                          <div className="grid grid-cols-2 gap-2 sm:gap-4 h-full">
+                          <div className="grid grid-cols-2 gap-8 h-full">
                             {productGroup.map((product) => (
                               <Card 
                                 key={product.id}
-                                className="group overflow-hidden hover:shadow-md transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] h-full cursor-pointer"
+                                className="group overflow-hidden hover:shadow-md p-0 transition-all duration-500 ease-in-out border-0 bg-white rounded-lg transform hover:scale-[1.02] h-[340px] cursor-pointer"
                                 onClick={() => handleProductClick(product.id)}
                               >
-                                <div className="relative h-[250px] sm:h-[300px] -mt-1">
+                                <div className="relative h-[340px]">
                                   <Image 
                                     src={product.images?.[0]?.url || `/api/placeholder/${400 + product.id}/${400 + product.id}`}
                                     alt={product.name}
@@ -280,11 +280,11 @@ export default function LandingPage() {
                                     className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
                                   />
                                 </div>
-                                <CardHeader className="py-2 px-2 sm:px-3">
-                                  <CardTitle className="text-xs sm:text-sm transition-all duration-300 group-hover:text-primary">
+                                <CardHeader className="py-2 px-3">
+                                  <CardTitle className="text-sm transition-all duration-300 group-hover:text-primary line-clamp-1">
                                     {product.name}
                                   </CardTitle>
-                                  <Badge variant="secondary" className="font-medium text-xs sm:text-sm transition-all duration-300 group-hover:bg-primary">
+                                  <Badge variant="secondary" className="font-medium text-sm transition-all duration-300 group-hover:bg-primary mt-1">
                                     ${product.price}
                                   </Badge>
                                 </CardHeader>
@@ -305,7 +305,7 @@ export default function LandingPage() {
       </div>
 
       {/* Category Products Section - Full Width */}
-      <section className="relative py-4 w-full overflow-x-hidden">
+      <section className="relative py-4 w-full">
         {/* Background Image */}
         <div className="absolute inset-0 z-0 h-[600px] sm:h-[800px]">
           <Image
@@ -335,24 +335,24 @@ export default function LandingPage() {
                   <Button
                     variant="outline"
                     className={`${
-                      selectedCategoryId === 1 
+                      selectedCategoryId === 4
                         ? 'bg-black text-white border-black hover:bg-black/90' 
                         : 'bg-gray-100 text-black border-gray-200 hover:bg-gray-200'
                     } transition-all duration-300 text-xs sm:text-sm`}
-                    onClick={() => setSelectedCategoryId(1)}
+                    onClick={() => setSelectedCategoryId(4)}
                   >
-                    {categories.find(c => c.id === 1)?.name || 'Category 1'}
+                    {categories.find(c => c.id === 4)?.name || 'Category 1'}
                   </Button>
                   <Button
                     variant="outline"
                     className={`${
-                      selectedCategoryId === 2 
+                      selectedCategoryId === 5 
                         ? 'bg-black text-white border-black hover:bg-black/90' 
                         : 'bg-gray-100 text-black border-gray-200 hover:bg-gray-200'
                     } transition-all duration-300 text-xs sm:text-sm`}
-                    onClick={() => setSelectedCategoryId(2)}
+                    onClick={() => setSelectedCategoryId(5)}
                   >
-                    {categories.find(c => c.id === 2)?.name || 'Category 2'}
+                    {categories.find(c => c.id === 5)?.name || 'Category 2'}
                   </Button>
                 </div>
 

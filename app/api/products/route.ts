@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
+import { cloudinary } from "@/lib/cloudinary";
 
 // const productSchema = z.object({
 //   name: z.string(),
@@ -33,6 +34,10 @@ export async function GET(request: NextRequest) {
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const sortBy = searchParams.get('sortBy') || 'newest';
+    const type = searchParams.get('type');
+    const line = searchParams.get('line');
+    const validTypes = ['PHONG_THUY', 'THOI_TRANG'];
+    const validLines = ['CAO_CAP', 'TRUNG_CAP', 'PHO_THONG'];
 
     // Build where clause
     const where: Prisma.ProductWhereInput = {
@@ -50,6 +55,8 @@ export async function GET(request: NextRequest) {
           }
         }
       }),
+      ...(type && validTypes.includes(type) && { type: type as any }),
+      ...(line && validLines.includes(line) && { line: line as any }),
       price: {
         gte: Number(minPrice || 0),
         lte: Number(maxPrice || 1000000)
@@ -89,7 +96,7 @@ export async function GET(request: NextRequest) {
         images: true,
         category: true,
         collections: true,
-      },
+      }
     });
 
     return NextResponse.json({
@@ -121,7 +128,10 @@ export async function POST(request: NextRequest) {
     const collectionIds = formData.getAll("collectionIds").map(id => parseInt(id as string));
     const inStock = formData.get("inStock") === "true";
     const quantity = parseInt(formData.get("quantity") as string);
+    const type = formData.get("type") as "PHONG_THUY" | "THOI_TRANG";
+    const line = formData.get("line") as "CAO_CAP" | "TRUNG_CAP" | "PHO_THONG";
     const images = formData.getAll("images") as File[];
+    const imageIsMain = formData.getAll("imageIsMain_0") as string[];
 
     if (!name || !description || !price || !categoryId || !quantity) {
       return NextResponse.json(
@@ -139,6 +149,8 @@ export async function POST(request: NextRequest) {
         categoryId,
         inStock,
         quantity,
+        type: type || "THOI_TRANG",
+        line: line || "PHO_THONG",
         collections: {
           connect: collectionIds.map(id => ({ id }))
         }
@@ -147,18 +159,44 @@ export async function POST(request: NextRequest) {
 
     // Handle image uploads
     if (images.length > 0) {
-      // TODO: Implement image upload to storage service
-      // For now, we'll just create placeholder image records
-      await prisma.productImage.createMany({
-        data: images.map((_, index) => ({
-          url: `/placeholder-${index + 1}.jpg`,
-          isMain: index === 0,
-          productId: product.id,
-        })),
-      });
+      for (let i = 0; i < images.length; i++) {
+        const file = images[i];
+        if (file.size > 0) {
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          
+          // Convert buffer to base64
+          const base64String = buffer.toString('base64');
+          const dataURI = `data:${file.type};base64,${base64String}`;
+          
+          // Upload to Cloudinary
+          const result = await cloudinary.uploader.upload(dataURI, {
+            folder: 'products',
+            resource_type: 'auto'
+          });
+
+          await prisma.productImage.create({
+            data: {
+              url: result.secure_url,
+              isMain: imageIsMain[i] === "true",
+              productId: product.id,
+            },
+          });
+        }
+      }
     }
 
-    return NextResponse.json(product);
+    // Fetch the complete product with images and category
+    const completeProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: {
+        images: true,
+        category: true,
+        collections: true,
+      },
+    });
+
+    return NextResponse.json(completeProduct);
   } catch (error) {
     console.error("Error creating product:", error);
     return NextResponse.json(

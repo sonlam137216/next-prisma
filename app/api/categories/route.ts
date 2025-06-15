@@ -39,6 +39,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if category with same name exists
+    const existingCategory = await prisma.category.findUnique({
+      where: { name },
+    });
+
+    if (existingCategory) {
+      return NextResponse.json(
+        { message: "A category with this name already exists" },
+        { status: 400 }
+      );
+    }
+
     const category = await prisma.category.create({
       data: {
         name,

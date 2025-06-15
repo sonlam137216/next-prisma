@@ -62,6 +62,8 @@ export async function PUT(
     const categoryId = formData.get("categoryId") ? parseInt(formData.get("categoryId") as string) : null;
     const collectionId = formData.get("collectionId") ? parseInt(formData.get("collectionId") as string) : null;
     const inStock = formData.get("inStock") === "true";
+    const type = formData.get("type") as "PHONG_THUY" | "THOI_TRANG";
+    const line = formData.get("line") as "CAO_CAP" | "TRUNG_CAP" | "PHO_THONG";
 
     // Update the product
     const updatedProduct = await prisma.product.update({
@@ -73,6 +75,8 @@ export async function PUT(
         quantity,
         categoryId: categoryId || existingProduct.categoryId,
         inStock,
+        type: type || existingProduct.type,
+        line: line || existingProduct.line,
         collections: collectionId ? {
           set: [{ id: collectionId }]
         } : undefined

@@ -41,6 +41,8 @@ export interface Product {
   price: number;
   quantity: number;
   inStock: boolean;
+  type: "PHONG_THUY" | "THOI_TRANG";
+  line: "CAO_CAP" | "TRUNG_CAP" | "PHO_THONG";
   createdAt: string;
   updatedAt?: string;
   categoryId: number;
@@ -83,6 +85,8 @@ interface ProductFilters {
   sortBy?: string;
   page?: number;
   limit?: number;
+  type?: string;
+  line?: string;
 }
 
 interface DashboardState {
@@ -129,7 +133,13 @@ interface DashboardState {
   setInitialData: (products: Product[]) => void;
 }
 
-export const useDashboardStore = create<DashboardState>()(
+export const useDashboardStore = create<DashboardState & {
+  fetchProducts: (page: number, limit: number, filters?: ProductFilters) => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  addProduct: (formData: FormData) => Promise<void>;
+  updateProduct: (id: number, formData: FormData) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
+}>(
   persist(
     (set, get) => ({
       users: [],
@@ -218,34 +228,35 @@ export const useDashboardStore = create<DashboardState>()(
       },
 
       // Product operations
-      fetchProducts: async (page, limit, filters = {}) => {
-        set({ isLoading: true });
+      fetchProducts: async (page = 1, limit = 20, filters: ProductFilters = {}) => {
+        set({ loading: true, error: null });
         try {
-          const queryParams = new URLSearchParams({
-            page: page.toString(),
-            limit: limit.toString(),
-            ...Object.entries(filters).reduce((acc, [key, value]) => {
-              if (value !== undefined) {
-                acc[key] = value.toString();
-              }
-              return acc;
-            }, {} as Record<string, string>)
+          const params = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
           });
-
-          const response = await fetch(`/api/products?${queryParams}`);
+          if (filters.search) params.append('search', filters.search);
+          if (filters.type) params.append('type', filters.type);
+          if (filters.line) params.append('line', filters.line);
+          if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
+          if (filters.collectionId) params.append('collectionId', String(filters.collectionId));
+          if (filters.minPrice !== undefined) params.append('minPrice', String(filters.minPrice));
+          if (filters.maxPrice !== undefined) params.append('maxPrice', String(filters.maxPrice));
+          if (filters.sortBy) params.append('sortBy', filters.sortBy);
+          const response = await fetch(`/api/products?${params.toString()}`);
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to fetch products');
+          }
           const data = await response.json();
-
-          set({
-            products: data.products,
-            currentPage: data.currentPage,
-            totalPages: data.totalPages,
-            totalProducts: data.totalProducts,
-            pageSize: data.pageSize,
-            isLoading: false,
-          });
+          set({ products: data.products || [], loading: false });
         } catch (error) {
           console.error('Error fetching products:', error);
-          set({ isLoading: false });
+          set({ 
+            error: error instanceof Error ? error.message : 'An error occurred', 
+            loading: false,
+            products: [] 
+          });
         }
       },
 
@@ -267,14 +278,15 @@ export const useDashboardStore = create<DashboardState>()(
       updateProduct: async (id, formData) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch(`/api/admin/products/${id}`, {
+          const response = await fetch(`/api/products/${id}`, {
             method: 'PUT',
             body: formData,
           });
-          if (!response.ok) throw new Error('Failed to update product');
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update product');
+          }
           const updatedProduct = await response.json();
-          
-          // Update the store with the complete product data including images
           set((state) => ({
             products: state.products.map((p) => 
               p.id === id ? { ...updatedProduct, images: updatedProduct.images || [] } : p
@@ -282,60 +294,85 @@ export const useDashboardStore = create<DashboardState>()(
             loading: false,
           }));
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
+          console.error('Error updating product:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'An error occurred', 
+            loading: false 
+          });
         }
       },
 
       addProduct: async (formData) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch('/api/admin/products', {
+          const response = await fetch('/api/products', {
             method: 'POST',
             body: formData,
           });
-          if (!response.ok) throw new Error('Failed to add product');
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to add product');
+          }
           const newProduct = await response.json();
           set((state) => ({
             products: [...state.products, newProduct],
             loading: false,
           }));
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
+          console.error('Error adding product:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'An error occurred', 
+            loading: false 
+          });
         }
       },
 
       deleteProduct: async (id) => {
         set({ loading: true, error: null });
         try {
-          const response = await fetch(`/api/admin/products/${id}`, {
+          const response = await fetch(`/api/products/${id}`, {
             method: 'DELETE',
           });
-          if (!response.ok) throw new Error('Failed to delete product');
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete product');
+          }
           set((state) => ({
             products: state.products.filter((p) => p.id !== id),
             loading: false,
           }));
         } catch (error) {
-          set({ error: error instanceof Error ? error.message : 'An error occurred', loading: false });
+          console.error('Error deleting product:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'An error occurred', 
+            loading: false 
+          });
         }
       },
 
       // Category operations
       fetchCategories: async () => {
+        set({ loading: true, error: null });
         try {
-          set({ loadingCategories: true });
-          const response = await fetch("/api/categories");
-          if (!response.ok) throw new Error("Failed to fetch categories");
+          const response = await fetch('/api/categories');
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch categories');
+          }
           const data = await response.json();
-          set({ categories: data });
+          set({ categories: data, loading: false });
         } catch (error) {
-          console.error("Error fetching categories:", error);
-        } finally {
-          set({ loadingCategories: false });
+          console.error('Error fetching categories:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'An error occurred', 
+            loading: false,
+            categories: [] 
+          });
         }
       },
 
       addCategory: async (category) => {
+        set({ loading: true, error: null });
         try {
           const response = await fetch("/api/categories", {
             method: "POST",
@@ -345,16 +382,24 @@ export const useDashboardStore = create<DashboardState>()(
             body: JSON.stringify(category),
           });
 
-          if (!response.ok) throw new Error("Failed to add category");
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to add category');
+          }
 
           const newCategory = await response.json();
           set((state) => ({
             categories: [...state.categories, newCategory],
+            loading: false
           }));
 
           return newCategory;
         } catch (error) {
           console.error("Error adding category:", error);
+          set({ 
+            error: error instanceof Error ? error.message : 'An error occurred',
+            loading: false 
+          });
           throw error;
         }
       },

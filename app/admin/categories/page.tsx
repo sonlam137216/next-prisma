@@ -12,7 +12,8 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const { 
     categories, 
-    loadingCategories: loading, 
+    loading, 
+    error,
     fetchCategories, 
     deleteCategory,
     addCategory,
@@ -22,7 +23,7 @@ export default function CategoriesPage() {
   // Fetch categories on mount
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]); // Added fetchCategories to dependency array
+  }, [fetchCategories]);
 
   const handleAddNew = () => {
     setEditingCategory(null);
@@ -72,8 +73,18 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
       {loading ? (
-        <div>Loading...</div>
+        <div className="space-y-4">
+          <div className="h-10 bg-gray-100 rounded animate-pulse"></div>
+          <div className="h-10 bg-gray-100 rounded animate-pulse"></div>
+          <div className="h-10 bg-gray-100 rounded animate-pulse"></div>
+        </div>
       ) : (
         <CategoriesTable
           categories={categories}

@@ -30,9 +30,9 @@ export async function POST(request: Request) {
         httpOnly: false,
         path: "/",
         secure: false,
-        domain: "14.225.212.72",
+        // domain: "14.225.212.72",
         maxAge: 60 * 60 * 24, // 24 hours
-        sameSite: "lax",
+        // sameSite: "lax",
       });
       console.log("Cookie set successfully");
 

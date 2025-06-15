@@ -145,6 +145,33 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   
   return (
     <MainLayout>
+      {/* Breadcrumb */}
+      <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+        <ol className="list-reset flex">
+          <li>
+            <a href="/" className="hover:underline text-gray-700">Trang chủ</a>
+          </li>
+          <li><span className="mx-2">/</span></li>
+          <li>
+            <a href="/products" className="hover:underline text-gray-700">Sản phẩm</a>
+          </li>
+          {product.type && (
+            <>
+              <li><span className="mx-2">/</span></li>
+              <li>
+                <a
+                  href={`/products?type=${product.type}`}
+                  className="hover:underline text-gray-700"
+                >
+                  {product.type === 'PHONG_THUY' ? 'Phong thủy' : product.type === 'THOI_TRANG' ? 'Thời trang' : product.type}
+                </a>
+              </li>
+            </>
+          )}
+          <li><span className="mx-2">/</span></li>
+          <li className="text-primary font-semibold">{product.name}</li>
+        </ol>
+      </nav>
       {/* Back button */}
       <Button 
         variant="ghost" 
@@ -208,7 +235,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 {product.inStock ? 'Còn hàng' : 'Hết hàng'}
               </Badge>
             </div>
-            <p className="text-3xl font-bold mb-4">${product.price.toFixed(2)}</p>
+            <p className="text-3xl font-bold mb-4">
+              {product.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+            </p>
             
             {/* Chi tiết sản phẩm */}
             <div className="bg-gray-50 rounded-md mb-6">
@@ -327,7 +356,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                     </div>
                     <CardContent className="p-3" onClick={() => router.push(`/products/${relatedProduct.id}`)}>
                       <h3 className="font-medium mb-1 line-clamp-1 text-sm">{relatedProduct.name}</h3>
-                      <p className="font-semibold text-sm">${relatedProduct.price.toFixed(2)}</p>
+                      <p className="font-semibold text-sm">
+                        {relatedProduct.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                      </p>
                     </CardContent>
                   </Card>
                 </CarouselItem>
