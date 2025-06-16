@@ -44,6 +44,11 @@ const productFormSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   type: z.enum(["PHONG_THUY", "THOI_TRANG"]).default("THOI_TRANG"),
   line: z.enum(["CAO_CAP", "TRUNG_CAP", "PHO_THONG"]).default("PHO_THONG"),
+  hasDiscount: z.boolean().default(false),
+  discountPrice: z.coerce.number().min(0, "Discount price must be a positive number").optional(),
+  discountPercentage: z.coerce.number().min(0, "Discount percentage must be between 0 and 100").max(100).optional(),
+  discountStartDate: z.string().optional(),
+  discountEndDate: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -78,6 +83,11 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
       categoryId: "",
       type: "THOI_TRANG",
       line: "PHO_THONG",
+      hasDiscount: false,
+      discountPrice: undefined,
+      discountPercentage: undefined,
+      discountStartDate: undefined,
+      discountEndDate: undefined,
     },
   });
 
@@ -95,6 +105,11 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
           categoryId: product.category?.id.toString() || "",
           type: product.type || "THOI_TRANG",
           line: product.line || "PHO_THONG",
+          hasDiscount: product.hasDiscount || false,
+          discountPrice: product.discountPrice || undefined,
+          discountPercentage: product.discountPercentage || undefined,
+          discountStartDate: product.discountStartDate ? new Date(product.discountStartDate).toISOString().split('T')[0] : undefined,
+          discountEndDate: product.discountEndDate ? new Date(product.discountEndDate).toISOString().split('T')[0] : undefined,
         });
         // Set existing images
         setImages(
@@ -117,6 +132,11 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
           categoryId: "",
           type: "THOI_TRANG",
           line: "PHO_THONG",
+          hasDiscount: false,
+          discountPrice: undefined,
+          discountPercentage: undefined,
+          discountStartDate: undefined,
+          discountEndDate: undefined,
         });
         setImages([]);
         setDeletedImageIds([]);
@@ -190,6 +210,21 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
     formData.append("categoryId", values.categoryId);
     formData.append("type", values.type);
     formData.append("line", values.line);
+    formData.append("hasDiscount", values.hasDiscount.toString());
+    if (values.hasDiscount) {
+      if (values.discountPrice) {
+        formData.append("discountPrice", values.discountPrice.toString());
+      }
+      if (values.discountPercentage) {
+        formData.append("discountPercentage", values.discountPercentage.toString());
+      }
+      if (values.discountStartDate) {
+        formData.append("discountStartDate", values.discountStartDate);
+      }
+      if (values.discountEndDate) {
+        formData.append("discountEndDate", values.discountEndDate);
+      }
+    }
     
     // Add the images
     images.forEach((image, index) => {
@@ -413,6 +448,113 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
                     </FormItem>
                   )}
                 />
+
+                <div className="space-y-4 border rounded-lg p-4">
+                  <FormField
+                    control={form.control}
+                    name="hasDiscount"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Enable Discount</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {form.watch("hasDiscount") && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="discountPrice"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Discount Price</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  {...field}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="discountPercentage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Discount Percentage</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="1"
+                                  placeholder="0"
+                                  {...field}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="discountStartDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Start Date</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="discountEndDate"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>End Date</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  value={field.value || ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Right Column - Images */}

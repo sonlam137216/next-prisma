@@ -33,7 +33,7 @@ export default function BlogPage() {
     };
 
     fetchData();
-  }, []);
+  }, [blogStore]);
 
   const { posts, categories, pagination, featuredPost } = blogStore;
 

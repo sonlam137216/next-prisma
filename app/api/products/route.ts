@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
 import { cloudinary } from "@/lib/cloudinary";
+import { ProductType, ProductLine } from '@/app/types/product';
 
 // const productSchema = z.object({
 //   name: z.string(),
@@ -55,8 +56,8 @@ export async function GET(request: NextRequest) {
           }
         }
       }),
-      ...(type && validTypes.includes(type) && { type: type as any }),
-      ...(line && validLines.includes(line) && { line: line as any }),
+      ...(type && validTypes.includes(type) && { type: type as ProductType }),
+      ...(line && validLines.includes(line) && { line: line as ProductLine }),
       price: {
         gte: Number(minPrice || 0),
         lte: Number(maxPrice || 1000000)

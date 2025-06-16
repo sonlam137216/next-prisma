@@ -11,6 +11,7 @@ import { Image as ImageIcon, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
+import { formatPrice } from "@/lib/utils";
 import { Product } from "@/app/store/dashboardStore";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,6 +41,15 @@ export function ProductsTable({ products = [], onEdit, onDelete, loading = false
     return mainImage || product.images[0];
   };
 
+  const isProductDiscounted = (product: Product) => {
+    if (!product.hasDiscount) return false;
+    const now = new Date();
+    return product.discountStartDate && 
+           product.discountEndDate && 
+           now >= new Date(product.discountStartDate) && 
+           now <= new Date(product.discountEndDate);
+  };
+
   if (loading) {
     return (
       <div className="rounded-md border">
@@ -52,6 +62,7 @@ export function ProductsTable({ products = [], onEdit, onDelete, loading = false
               <TableHead>Type</TableHead>
               <TableHead>Line</TableHead>
               <TableHead>Price</TableHead>
+              <TableHead>Discount</TableHead>
               <TableHead>Quantity</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
@@ -99,6 +110,7 @@ export function ProductsTable({ products = [], onEdit, onDelete, loading = false
               <TableHead>Type</TableHead>
               <TableHead>Line</TableHead>
               <TableHead>Price</TableHead>
+              <TableHead>Discount</TableHead>
               <TableHead>Quantity</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
@@ -108,21 +120,19 @@ export function ProductsTable({ products = [], onEdit, onDelete, loading = false
           <TableBody>
             {products.map((product) => {
               const mainImage = getMainImage(product);
+              const isDiscounted = isProductDiscounted(product);
+              
               return (
                 <TableRow key={product.id}>
                   <TableCell>
-                    {mainImage ? (
-                      <div className="relative h-10 w-10">
+                    {mainImage && (
+                      <div className="relative h-12 w-12">
                         <Image
                           src={mainImage.url}
                           alt={product.name}
                           fill
                           className="object-cover rounded-md"
                         />
-                      </div>
-                    ) : (
-                      <div className="h-10 w-10 bg-gray-100 rounded-md flex items-center justify-center">
-                        <ImageIcon className="h-5 w-5 text-gray-400" />
                       </div>
                     )}
                   </TableCell>
@@ -142,7 +152,34 @@ export function ProductsTable({ products = [], onEdit, onDelete, loading = false
                        product.line === "TRUNG_CAP" ? "Trung Cap" : "Pho Thong"}
                     </Badge>
                   </TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className={isDiscounted ? "line-through text-gray-500" : ""}>
+                        {formatPrice(product.price)}
+                      </span>
+                      {isDiscounted && product.discountPrice && (
+                        <span className="text-red-500 font-semibold">
+                          {formatPrice(product.discountPrice)}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {isDiscounted ? (
+                      <div className="flex flex-col">
+                        <Badge variant="destructive" className="w-fit">
+                          -{product.discountPercentage}%
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {new Date(product.discountEndDate!).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ) : product.hasDiscount ? (
+                      <span className="text-gray-500 text-sm">Scheduled</span>
+                    ) : (
+                      <span className="text-gray-500 text-sm">None</span>
+                    )}
+                  </TableCell>
                   <TableCell>{product.quantity}</TableCell>
                   <TableCell>
                     <Badge variant={product.inStock ? "default" : "destructive"}>

@@ -1,18 +1,15 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Product, Category, useDashboardStore } from '@/app/store/dashboardStore';
 import { Collection, useCollectionStore } from '@/app/store/collectionStore';
-import { useEffect, useState, useRef } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Category, Product, useDashboardStore } from '@/app/store/dashboardStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
-import { SlidersHorizontal } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface InitialData {
@@ -23,18 +20,6 @@ interface InitialData {
 
 interface ProductsContentProps {
   initialData: InitialData;
-}
-
-// Enum definitions for filter values
-enum ProductType {
-  PHONG_THUY = 'PHONG_THUY',
-  THOI_TRANG = 'THOI_TRANG',
-}
-
-enum ProductLine {
-  CAO_CAP = 'CAO_CAP',
-  TRUNG_CAP = 'TRUNG_CAP',
-  PHO_THONG = 'PHO_THONG',
 }
 
 export default function ProductsContent({ initialData }: ProductsContentProps) {
@@ -54,7 +39,6 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     setInitialData
   } = useDashboardStore();
   const { collections, fetchCollections, setInitialCollections } = useCollectionStore();
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCollection, setSelectedCollection] = useState(collectionIdFromUrl || 'all');
   const maxPrice = 1000000
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
@@ -118,7 +102,6 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   // Reset filters when collection changes
   useEffect(() => {
     if (collectionIdFromUrl) {
-      setSelectedCategory('all');
       setPriceRange([0, maxPrice]);
       setSortBy('newest');
       setPage(1);

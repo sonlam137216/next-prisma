@@ -1,8 +1,12 @@
 // app/products/page.tsx
+import { Category, Product } from '@/app/store/dashboardStore';
+import { Collection } from '@/app/store/collectionStore';
+import { prisma } from '@/lib/prisma';
 import { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Suspense } from 'react';
 import ProductsContent from './ProductsContent';
-import { prisma } from '@/lib/prisma';
 
 export const metadata: Metadata = {
   title: 'Products | GEM Store',
@@ -33,7 +37,13 @@ export const metadata: Metadata = {
   },
 };
 
-async function getInitialData() {
+interface InitialData {
+  products: Product[];
+  categories: Category[];
+  collections: Collection[];
+}
+
+async function getInitialData(): Promise<InitialData> {
   try {
     const [products, categories, collections] = await Promise.all([
       prisma.product.findMany({
@@ -51,37 +61,71 @@ async function getInitialData() {
       prisma.collection.findMany(),
     ]);
 
-    // Convert Date objects to strings
-    const formattedProducts = products.map(product => ({
-      ...product,
+    // Product: format dates appropriately
+    const formattedProducts: Product[] = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      discountPrice: product.discountPrice,
+      discountPercentage: product.discountPercentage,
+      discountStartDate: product.discountStartDate?.toISOString() || null,
+      discountEndDate: product.discountEndDate?.toISOString() || null,
+      hasDiscount: product.hasDiscount,
+      quantity: product.quantity,
+      inStock: product.inStock,
+      type: product.type,
+      line: product.line,
+      categoryId: product.categoryId,
       createdAt: product.createdAt.toISOString(),
       category: product.category ? {
-        ...product.category,
+        id: product.category.id,
+        name: product.category.name,
+        description: product.category.description,
         createdAt: product.category.createdAt.toISOString(),
       } : undefined,
       images: product.images.map(image => ({
-        ...image,
+        id: image.id,
+        url: image.url,
+        isMain: image.isMain,
         createdAt: image.createdAt.toISOString(),
         updatedAt: image.updatedAt.toISOString(),
+        productId: image.productId,
       })),
       collections: product.collections.map(collection => ({
-        ...collection,
+        id: collection.id,
+        name: collection.name,
+        description: collection.description,
+        imageUrl: collection.imageUrl,
+        active: collection.active,
         createdAt: collection.createdAt.toISOString(),
         updatedAt: collection.updatedAt.toISOString(),
       })),
     }));
 
+    // Category: createdAt as string
+    const formattedCategories: Category[] = categories.map(category => ({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      createdAt: category.createdAt.toISOString(),
+    }));
+
+    // Collection: createdAt/updatedAt as string
+    const formattedCollections: Collection[] = collections.map(collection => ({
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      imageUrl: collection.imageUrl,
+      active: collection.active,
+      createdAt: collection.createdAt.toISOString(),
+      updatedAt: collection.updatedAt.toISOString(),
+    }));
+
     return {
       products: formattedProducts,
-      categories: categories.map(cat => ({
-        ...cat,
-        createdAt: cat.createdAt.toISOString(),
-      })),
-      collections: collections.map(col => ({
-        ...col,
-        createdAt: col.createdAt.toISOString(),
-        updatedAt: col.updatedAt.toISOString(),
-      })),
+      categories: formattedCategories,
+      collections: formattedCollections,
     };
   } catch (error) {
     console.error('Error fetching initial data:', error);
@@ -103,7 +147,7 @@ export default async function ProductsPage() {
         <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
           <ol className="list-reset flex">
             <li>
-              <a href="/" className="hover:underline text-gray-700">Trang chủ</a>
+              <Link href="/" className="hover:underline text-gray-700">Trang chủ</Link>
             </li>
             <li><span className="mx-2">/</span></li>
             <li className="text-primary font-semibold">Sản phẩm</li>
@@ -112,11 +156,15 @@ export default async function ProductsPage() {
       </div>
       {/* Banner Image (below breadcrumb) */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
-        <img
-          src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308"
-          alt="Banner Sản phẩm"
-          className="w-full h-[350px] object-cover mb-8"
-        />
+        <div className="relative w-full h-[350px] mb-8">
+          <Image
+            src="/images/products/f92fc962-aa88-4fd8-9b9a-07ad2c49fb99.jpg"
+            alt="Banner Sản phẩm"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
       </div>
       <Suspense fallback={
         <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
