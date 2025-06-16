@@ -21,6 +21,7 @@ interface InitialData {
 }
 
 async function getInitialData(): Promise<InitialData> {
+  try {
   const now = new Date();
   const [products, categories, collections] = await Promise.all([
     prisma.product.findMany({
@@ -55,8 +56,16 @@ async function getInitialData(): Promise<InitialData> {
   return {
     products,
     categories,
-    collections,
-  };
+      collections,
+    };
+  } catch (error) {
+    console.error('Error fetching discount products:', error);
+    return {
+      products: [],
+      categories: [],
+      collections: [],
+    };
+  }
 }
 
 export default async function DiscountProductsPage() {
