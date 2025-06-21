@@ -34,6 +34,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { StoneSize } from "@/app/types/product";
 
 const productFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -71,6 +72,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
   const { categories, fetchCategories } = useDashboardStore();
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
+  const [stoneSizes, setStoneSizes] = useState<StoneSize[]>([]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -121,6 +123,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
           }))
         );
         setDeletedImageIds([]);
+        setStoneSizes(product.stoneSizes || []);
       } else {
         // Reset form for new product
         form.reset({
@@ -140,6 +143,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
         });
         setImages([]);
         setDeletedImageIds([]);
+        setStoneSizes([]);
       }
     }
   }, [open, product, fetchCategories, form]);
@@ -195,6 +199,18 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
     setImages(newImages);
   };
 
+  const handleAddStoneSize = () => {
+    setStoneSizes([...stoneSizes, { id: Date.now(), size: '', price: 0 }]);
+  };
+
+  const handleRemoveStoneSize = (id: number) => {
+    setStoneSizes(stoneSizes.filter(s => s.id !== id));
+  };
+
+  const handleStoneSizeChange = (id: number, field: 'size' | 'price', value: string | number) => {
+    setStoneSizes(stoneSizes.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
   const handleSubmit = async (values: ProductFormValues) => {
     if (images.length === 0) {
       alert("Please upload at least one image");
@@ -244,11 +260,15 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
       formData.append("deleteImages", JSON.stringify(deletedImageIds));
     }
 
+    // Thêm stoneSizes vào formData
+    formData.append("stoneSizes", JSON.stringify(stoneSizes.map(({id, ...rest}) => rest)));
+
     try {
       await onSubmit(formData);
       form.reset();
       setImages([]);
       setDeletedImageIds([]);
+      setStoneSizes([]);
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to submit product:", error);
@@ -554,6 +574,37 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
                       </div>
                     </>
                   )}
+                </div>
+
+                <div className="space-y-2 border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <FormLabel>Size Viên Đá & Giá</FormLabel>
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddStoneSize}>+ Thêm size</Button>
+                  </div>
+                  <div className="space-y-2">
+                    {stoneSizes.length === 0 && <div className="text-sm text-gray-400">Chưa có size nào</div>}
+                    {stoneSizes.map((s, idx) => (
+                      <div key={s.id} className="flex gap-2 items-center">
+                        <Input
+                          className="w-1/2"
+                          placeholder="Size (ví dụ: 10.5 Li)"
+                          value={s.size}
+                          onChange={e => handleStoneSizeChange(s.id, 'size', e.target.value)}
+                        />
+                        <Input
+                          className="w-1/3"
+                          placeholder="Giá cho size này"
+                          type="number"
+                          min={0}
+                          value={s.price}
+                          onChange={e => handleStoneSizeChange(s.id, 'price', Number(e.target.value))}
+                        />
+                        <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveStoneSize(s.id)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 

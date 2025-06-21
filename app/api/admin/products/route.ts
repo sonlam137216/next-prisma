@@ -45,6 +45,17 @@ export async function POST(request: NextRequest) {
     const discountStartDate = formData.get("discountStartDate") ? new Date(formData.get("discountStartDate") as string) : null;
     const discountEndDate = formData.get("discountEndDate") ? new Date(formData.get("discountEndDate") as string) : null;
 
+    // Xử lý stoneSizes
+    const stoneSizesRaw = formData.get("stoneSizes");
+    let stoneSizes = [];
+    if (stoneSizesRaw) {
+      try {
+        stoneSizes = JSON.parse(stoneSizesRaw as string);
+      } catch (e) {
+        return NextResponse.json({ error: "Invalid stoneSizes format" }, { status: 400 });
+      }
+    }
+
     if (!name || !description || !price || !categoryId || !quantity) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -70,6 +81,21 @@ export async function POST(request: NextRequest) {
         discountEndDate,
       },
     });
+
+    // Lưu stoneSizes vào DB
+    if (Array.isArray(stoneSizes) && stoneSizes.length > 0) {
+      for (const s of stoneSizes) {
+        if (s.size && s.price) {
+          await prisma.stoneSize.create({
+            data: {
+              size: s.size,
+              price: parseFloat(s.price),
+              productId: product.id,
+            },
+          });
+        }
+      }
+    }
 
     // Handle image uploads
     if (imageFiles.length > 0) {
@@ -101,12 +127,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch the complete product with images and category
+    // Fetch the complete product with images, category, stoneSizes
     const completeProduct = await prisma.product.findUnique({
       where: { id: product.id },
       include: {
         images: true,
         category: true,
+        stoneSizes: true,
       },
     });
 

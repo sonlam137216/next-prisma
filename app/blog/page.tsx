@@ -39,7 +39,7 @@ export default function BlogPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+      <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
         <div className="text-center">
           <p>Loading...</p>
         </div>
@@ -48,7 +48,7 @@ export default function BlogPage() {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+    <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">

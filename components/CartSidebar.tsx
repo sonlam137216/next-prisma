@@ -111,7 +111,18 @@ export default function CartSidebar() {
                           <TrashIcon size={14} className="text-gray-500" />
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-500 mb-3">${item.price.toFixed(2)}</p>
+                      <p className="text-sm text-gray-500 mb-1">${item.price.toFixed(2)}</p>
+                      {/* Hiển thị stone size và wrist size */}
+                      {(item.selectedStoneSize || item.wristSize) && (
+                        <div className="text-xs text-gray-500 mb-2 space-y-1">
+                          {item.selectedStoneSize && (
+                            <div>Size đá: {item.selectedStoneSize.size}</div>
+                          )}
+                          {item.wristSize && (
+                            <div>Cổ tay: {item.wristSize}cm</div>
+                          )}
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center border rounded-full h-8 overflow-hidden">
                           <Button 

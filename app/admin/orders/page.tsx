@@ -300,7 +300,19 @@ export default function OrdersPage() {
                                   />
                                 </div>
                               )}
-                              <span>{item.name}</span>
+                              <div>
+                                <span>{item.name}</span>
+                                {(item.stoneSize || item.wristSize) && (
+                                  <div className="text-xs text-gray-500 space-y-1">
+                                    {item.stoneSize && (
+                                      <div>Size đá: {item.stoneSize}</div>
+                                    )}
+                                    {item.wristSize && (
+                                      <div>Cổ tay: {item.wristSize}cm</div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
                             <TableCell className="text-right">{item.quantity}</TableCell>

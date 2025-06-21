@@ -53,6 +53,7 @@ model Product {
   discountStartDate DateTime?
   discountEndDate DateTime?
   discountPercentage Int?   // Store as integer (e.g., 20 for 20%)
+  stoneSizes  StoneSize[]
 }
 model ProductImage {
   id        Int       @id @default(autoincrement())
@@ -103,6 +104,8 @@ model OrderItem {
   orderId   Int
   name      String   // Store product name at time of order
   imageUrl  String?  // Store image URL at time of order
+  stoneSize String?  // Lưu size viên đá đã chọn
+  wristSize Float?   // Lưu size cổ tay (cm)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -127,4 +130,12 @@ enum ProductLine {
   CAO_CAP
   TRUNG_CAP
   PHO_THONG
+}
+
+model StoneSize {
+  id        Int      @id @default(autoincrement())
+  size      String   // Ví dụ: "10.5 Li"
+  price     Float
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
 }

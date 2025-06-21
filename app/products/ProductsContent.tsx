@@ -151,7 +151,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   };
 
   return (
-    <main className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
+    <main className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <aside className="md:col-span-1">
           <div className="space-y-6">

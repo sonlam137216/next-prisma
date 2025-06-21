@@ -19,6 +19,7 @@ export async function GET(
         images: true,
         category: true,
         collections: true,
+        stoneSizes: true,
       },
     });
 

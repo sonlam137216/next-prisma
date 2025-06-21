@@ -17,6 +17,8 @@ export interface OrderItem {
   quantity: number;
   price: number;
   imageUrl?: string;
+  stoneSize?: string;
+  wristSize?: number;
 }
 
 export interface Order {

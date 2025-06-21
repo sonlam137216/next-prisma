@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
         images: true,
         category: true,
         collections: true,
+        stoneSizes: true,
       }
     });
 
@@ -194,6 +195,7 @@ export async function POST(request: NextRequest) {
         images: true,
         category: true,
         collections: true,
+        stoneSizes: true,
       },
     });
 

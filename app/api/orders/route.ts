@@ -20,6 +20,8 @@ const orderSchema = z.object({
     quantity: z.number(),
     price: z.number(),
     imageUrl: z.string().optional(),
+    stoneSize: z.string().optional(),
+    wristSize: z.number().optional(),
   })),
 });
 
@@ -31,10 +33,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = orderSchema.parse(body);
 
-    // Generate a unique order number (format: ORD-YYYYMMDD-XXXX)
+    // Generate a unique order number (format: ORD-YYYYMMDD-<timestamp>)
     const date = new Date();
     const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
-    const orderNumber = `ORD-${dateStr}`;
+    const orderNumber = `ORD-${dateStr}-${Date.now()}`;
 
     // Extract order items to create separately
     const { orderItems, ...orderDetails } = validatedData;
@@ -46,6 +48,8 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity,
         price: item.price,
         imageUrl: item.imageUrl || null, // Handle null case
+        stoneSize: item.stoneSize || null,
+        wristSize: item.wristSize || null,
       })),
     });
     // Create the order without transaction to avoid INT4 issue
@@ -60,6 +64,8 @@ export async function POST(request: NextRequest) {
             quantity: item.quantity,
             price: item.price,
             imageUrl: item.imageUrl || null, // Handle null case
+            stoneSize: item.stoneSize || null,
+            wristSize: item.wristSize || null,
           })),
         },
       },

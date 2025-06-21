@@ -40,6 +40,17 @@ export async function PUT(
       const discountStartDate = formData.get("discountStartDate") ? new Date(formData.get("discountStartDate") as string) : null;
       const discountEndDate = formData.get("discountEndDate") ? new Date(formData.get("discountEndDate") as string) : null;
   
+      // Xử lý stoneSizes
+      const stoneSizesRaw = formData.get("stoneSizes");
+      let stoneSizes = [];
+      if (stoneSizesRaw) {
+        try {
+          stoneSizes = JSON.parse(stoneSizesRaw as string);
+        } catch (e) {
+          return NextResponse.json({ error: "Invalid stoneSizes format" }, { status: 400 });
+        }
+      }
+  
       // Update the product with discount fields
       await prisma.product.update({
         where: { id: productId },
@@ -67,6 +78,29 @@ export async function PUT(
           collections: true,
         },
       });
+  
+      // Xóa các stoneSizes cũ không còn trong danh sách mới
+      const oldStoneSizes = await prisma.stoneSize.findMany({ where: { productId } });
+      const newIds = (stoneSizes as any[]).filter((s) => s.id).map((s) => s.id);
+      const toDelete = oldStoneSizes.filter((s) => !newIds.includes(s.id));
+      if (toDelete.length > 0) {
+        await prisma.stoneSize.deleteMany({ where: { id: { in: toDelete.map((s) => s.id) } } });
+      }
+      // Thêm mới hoặc cập nhật stoneSizes
+      for (const s of stoneSizes as any[]) {
+        if (s.id) {
+          // Update
+          await prisma.stoneSize.update({
+            where: { id: s.id },
+            data: { size: s.size, price: parseFloat(s.price) }
+          });
+        } else if (s.size && s.price) {
+          // Create
+          await prisma.stoneSize.create({
+            data: { size: s.size, price: parseFloat(s.price), productId }
+          });
+        }
+      }
   
       // Handle image updates
       const imageFiles = formData.getAll("images") as File[];
@@ -138,6 +172,7 @@ export async function PUT(
           images: true,
           category: true,
           collections: true,
+          stoneSizes: true,
         },
       });
   

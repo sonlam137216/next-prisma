@@ -143,7 +143,7 @@ export default async function ProductsPage() {
   return (
     <>
       {/* Breadcrumb (now above banner) */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 mt-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6 mt-10">
         <nav className="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
           <ol className="list-reset flex">
             <li>
@@ -155,7 +155,7 @@ export default async function ProductsPage() {
         </nav>
       </div>
       {/* Banner Image (below breadcrumb) */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6">
         <div className="relative w-full h-[350px] mb-8">
           <Image
             src="/images/products/f92fc962-aa88-4fd8-9b9a-07ad2c49fb99.jpg"
@@ -167,7 +167,7 @@ export default async function ProductsPage() {
         </div>
       </div>
       <Suspense fallback={
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-1">
               <div className="h-[400px] bg-gray-100 animate-pulse rounded-lg" />

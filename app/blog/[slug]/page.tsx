@@ -93,7 +93,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   if (!data?.post) {
     return (
-      <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+      <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Blog Post Not Found</h1>
           <p className="text-muted-foreground mb-8">
@@ -111,7 +111,7 @@ export default async function BlogDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
+    <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
       {/* Back Button */}
       <div className="mb-8">
         <Button variant="ghost" asChild>

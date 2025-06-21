@@ -15,6 +15,7 @@ export interface Collection {
 interface Product {
   id: number
   name: string
+  stoneSizes: import("@/app/types/product").StoneSize[]
 }
 
 interface CollectionsState {

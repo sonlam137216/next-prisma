@@ -63,6 +63,7 @@ export interface Product extends Omit<PrismaProduct, 'category' | 'collections' 
     createdAt: string;
     updatedAt: string;
   }[];
+  stoneSizes: import("@/app/types/product").StoneSize[];
 }
 
 export interface CartItem {
@@ -73,6 +74,8 @@ export interface CartItem {
   quantity: number;
   imageUrl: string;
   maxQuantity: number; // The available stock
+  selectedStoneSize?: { size: string };
+  wristSize?: number; // Size cổ tay (cm)
 }
 
 interface BlogPost {
@@ -234,13 +237,15 @@ export const useDashboardStore = create<DashboardState>()(
           const imageUrl = mainImage ? mainImage.url : "";
 
           const newItem: CartItem = {
-            id: Date.now(), // Unique identifier for cart item
+            id: Date.now(),
             productId: product.id,
             name: product.name,
             price: product.price,
             quantity: Math.min(quantity, product.quantity),
             imageUrl,
             maxQuantity: product.quantity,
+            selectedStoneSize: (product as any).selectedStoneSize ? { size: (product as any).selectedStoneSize.size } : undefined,
+            wristSize: (product as any).wristSize,
           };
 
           set({ cart: [...cart, newItem] });

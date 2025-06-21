@@ -93,11 +93,13 @@ export default function PaymentPage() {
         country: formData.country,
         postalCode: formData.postalCode || undefined,
         orderItems: cart.map(item => ({
-          productId: Number(item.productId), // Ensure this is a number, not a string
+          productId: Number(item.productId),
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          imageUrl: item.imageUrl
+          imageUrl: item.imageUrl,
+          stoneSize: item.selectedStoneSize ? item.selectedStoneSize.size : undefined,
+          wristSize: item.wristSize,
         }))
       };
 
@@ -395,6 +397,8 @@ type CartItem = {
   price: number;
   quantity: number;
   imageUrl?: string;
+  selectedStoneSize?: { size: string };
+  wristSize?: number;
 };
 
 type OrderSummaryProps = {
@@ -409,7 +413,7 @@ function OrderSummary({ cart, subtotal, shippingCost, total }: OrderSummaryProps
     <div>
       <div className="space-y-4 mb-5">
         {cart.map((item) => (
-          <div key={item.id} className="flex gap-3">
+          <div key={item.id} className="flex items-center gap-4 border-b py-4">
             <div className="relative h-16 w-16 rounded-md overflow-hidden border flex-shrink-0 bg-white">
               {item.imageUrl ? (
                 <Image
@@ -427,9 +431,18 @@ function OrderSummary({ cart, subtotal, shippingCost, total }: OrderSummaryProps
                 {item.quantity}
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-medium truncate">{item.name}</h4>
-              <p className="text-gray-500 text-sm">${item.price.toFixed(2)}</p>
+            <div className="flex-1">
+              <div className="font-semibold">{item.name}</div>
+              {(item.selectedStoneSize || item.wristSize) && (
+                <div className="text-sm text-gray-500 space-y-1">
+                  {item.selectedStoneSize && (
+                    <div>Size đá: {item.selectedStoneSize.size}</div>
+                  )}
+                  {item.wristSize && (
+                    <div>Cổ tay: {item.wristSize}cm</div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="text-sm font-medium">
               ${(item.price * item.quantity).toFixed(2)}

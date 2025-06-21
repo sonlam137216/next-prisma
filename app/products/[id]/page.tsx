@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { StoneSize } from '@/app/types/product';
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -45,6 +46,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedStoneSize, setSelectedStoneSize] = useState<StoneSize | null>(null);
+  const [wristSize, setWristSize] = useState(12); // Default 12cm
   
   // Fetch product data
   useEffect(() => {
@@ -61,6 +64,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         if (foundProduct && foundProduct.category) {
           await fetchProducts(1, 20);
           await fetchCategories();
+        }
+        
+        if (foundProduct && foundProduct.stoneSizes && foundProduct.stoneSizes.length > 0) {
+          setSelectedStoneSize(foundProduct.stoneSizes[0]);
         }
       } catch (error) {
         console.error('Error loading product:', error);
@@ -116,6 +123,13 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   };
   
+  const handleWristSizeChange = (amount: number) => {
+    const newWristSize = wristSize + amount;
+    if (newWristSize >= 8 && newWristSize <= 25) { // Giới hạn từ 8cm đến 25cm
+      setWristSize(newWristSize);
+    }
+  };
+  
   const handleGoBack = () => {
     router.push('/products');
   };
@@ -123,19 +137,24 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   // Add to cart handler
   const handleAddToCart = () => {
     if (!product || !product.inStock) return;
-  
-  setIsAddingToCart(true);
-  
-  // Pass the actual product object to addToCart
-  addToCart(product, quantity);
-  
-  // Show toast notification
-  toast('Thêm vào giỏ hàng thành công', {
-    description: `Đã thêm ${quantity} ${product.name} vào giỏ hàng.`,
-    duration: 3000
-  });
-  
-  setIsAddingToCart(false);
+    if (product.stoneSizes && product.stoneSizes.length > 0 && !selectedStoneSize) {
+      toast('Vui lòng chọn size viên đá!', { duration: 2000 });
+      return;
+    }
+    setIsAddingToCart(true);
+    // Truyền thông tin size viên đá và wristSize vào product
+    const productToAdd = {
+      ...product,
+      price: selectedStoneSize ? selectedStoneSize.price : product.price,
+      selectedStoneSize: selectedStoneSize ? { size: selectedStoneSize.size } : undefined,
+      wristSize: wristSize,
+    };
+    addToCart(productToAdd, quantity);
+    toast('Thêm vào giỏ hàng thành công', {
+      description: `Đã thêm ${quantity} ${product.name}${selectedStoneSize ? ` (Size: ${selectedStoneSize.size})` : ''}${wristSize ? ` (Cổ tay: ${wristSize}cm)` : ''} vào giỏ hàng.`,
+      duration: 3000
+    });
+    setIsAddingToCart(false);
   };
   
   // Buy now handler - Add to cart and open cart sidebar
@@ -243,21 +262,71 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </Badge>
               )}
             </div>
+            {/* Size viên đá */}
+            {product.stoneSizes && product.stoneSizes.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2">Size Viên Đá</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {product.stoneSizes.map((s) => (
+                    <Button
+                      key={s.id}
+                      type="button"
+                      variant={selectedStoneSize?.id === s.id ? 'default' : 'outline'}
+                      className={selectedStoneSize?.id === s.id ? 'border-primary' : ''}
+                      onClick={() => setSelectedStoneSize(s)}
+                    >
+                      {s.size} ({s.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })})
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Size cổ tay */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-2">Size Cổ Tay (cm)</h3>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => handleWristSizeChange(-0.5)}
+                  disabled={wristSize <= 8}
+                >
+                  <MinusIcon size={16} />
+                </Button>
+                <span className="mx-4 w-16 text-center font-medium">{wristSize} cm</span>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => handleWristSizeChange(0.5)}
+                  disabled={wristSize >= 25}
+                >
+                  <PlusIcon size={16} />
+                </Button>
+                <span className="ml-4 text-sm text-gray-500">
+                  Tăng/giảm 0.5cm
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Kích thước từ 8cm đến 25cm
+              </p>
+            </div>
+            
             <div className="flex items-center gap-2 mb-4">
               {product.hasDiscount && product.discountStartDate && product.discountEndDate && 
                new Date() >= new Date(product.discountStartDate) && 
                new Date() <= new Date(product.discountEndDate) ? (
                 <>
                   <p className="text-3xl font-bold text-red-500">
-                    {product.discountPrice?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                    {(selectedStoneSize ? selectedStoneSize.price : product.discountPrice)?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                   </p>
                   <p className="text-xl text-gray-500 line-through">
-                    {product.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                    {(selectedStoneSize ? selectedStoneSize.price : product.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                   </p>
                 </>
               ) : (
                 <p className="text-3xl font-bold">
-                  {product.price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+                  {(selectedStoneSize ? selectedStoneSize.price : product.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
                 </p>
               )}
             </div>

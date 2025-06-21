@@ -121,7 +121,7 @@ export default function LandingPage() {
 
       {/* 3 Small Banners Row */}
       <div className="w-full flex justify-center mt-6 mb-4">
-        <div className="max-w-[1200px] w-full px-4 sm:px-5 lg:px-6">
+        <div className="max-w-[1400px] w-full px-4 sm:px-5 lg:px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Banner 1 */}
             <div className="relative rounded-xl shadow-lg overflow-hidden h-[130px] transition-all duration-300 hover:scale-105">
@@ -156,7 +156,7 @@ export default function LandingPage() {
 
       {/* Content Wrapper for all sections */}
       <div className="w-full overflow-x-hidden">
-        <div className="max-w-[1200px] mx-auto px-4">
+        <div className="max-w-[1400px] mx-auto px-4">
           {/* Featured Products Slider */}
           <section className="py-8 sm:py-12">
             <div className="w-full">
@@ -319,7 +319,7 @@ export default function LandingPage() {
         </div>
 
         <div className="relative z-10">
-          <div className="max-w-[1200px] mx-auto px-4">
+          <div className="max-w-[1400px] mx-auto px-4">
             <div className="flex justify-end">
               <div className="w-full max-w-[1000px]">
                 {/* Section Title */}
@@ -392,8 +392,104 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Info Banners Section */}
+      <section className="py-12 sm:py-16 bg-gray-50 mt-50">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6">
+          <div className="flex flex-col md:flex-row gap-4 items-stretch">
+            
+            {/* Card 1: Choose Lenses */}
+            <div className="md:w-1/3 bg-white overflow-hidden shadow-lg transform hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+              <div className="relative">
+                <Image
+                  src="/blog-content/GARNET-LUU-DO-CHARM-PHUC-1748676755615.jpg" 
+                  alt="Bí quyết chọn tròng kính"
+                  width={400}
+                  height={250}
+                  className="w-full h-[250px] object-cover"
+                />
+                <div className="absolute inset-x-0 -bottom-5 flex justify-center">
+                  <Button size="lg" className="bg-yellow-400 text-black font-bold px-8 hover:bg-yellow-500 shadow-lg">
+                    XEM NGAY
+                  </Button>
+                </div>
+              </div>
+              <div className="pt-10 pb-6 px-6 bg-[#002B6D] text-white text-center flex flex-col flex-1">
+                <h3 className="text-lg font-bold mb-2 uppercase">Chọn TRÒNG KÍNH phù hợp với nhu cầu</h3>
+                <p className="text-sm text-gray-300 mb-4">
+                  Mắt Việt cung cấp tròng kính cao cấp từ Essilor, Rodenstock, A-MO, Element...Nếu còn băn khoăn chưa biết chọn tròng nào, khảo sát ngay bạn nha!
+                </p>
+                <div className="mt-auto pt-4">
+                  <Link href="#" className="text-sm font-semibold hover:underline text-white">
+                    Xem thêm <ChevronRight className="inline h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Eye Exam */}
+            <div className="md:w-1/3 bg-white overflow-hidden shadow-lg transform hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+              <div className="relative">
+                <Image
+                  src="/blog-content/GARNET-LUU-DO-CHARM-PHUC-1748676755615.jpg"
+                  alt="Kiểm tra thị lực"
+                  width={400}
+                  height={250}
+                  className="w-full h-[250px] object-cover"
+                />
+                <div className="absolute inset-x-0 -bottom-5 flex justify-center">
+                  <Button size="lg" className="bg-yellow-400 text-black font-bold px-8 hover:bg-yellow-500 shadow-lg">
+                    ĐẶT LỊCH NGAY
+                  </Button>
+                </div>
+              </div>
+              <div className="pt-10 pb-6 px-6 bg-[#002B6D] text-white text-center flex flex-col flex-1">
+                <h3 className="text-lg font-bold mb-2 uppercase">Đặt lịch kiểm tra thị lực</h3>
+                <p className="text-sm text-gray-300 mb-4">
+                  Trải nghiệm kiểm tra thị lực tại Mắt Việt với tiêu chuẩn 12 bước từ Châu Âu hoàn toàn miễn phí. Đặt lịch ngay!
+                </p>
+                <div className="mt-auto pt-4">
+                  <Link href="#" className="text-sm font-semibold hover:underline text-white">
+                    Xem thêm <ChevronRight className="inline h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Frame Quiz */}
+            <div className="md:w-1/3 bg-white overflow-hidden shadow-lg transform hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+              <div className="relative">
+                <Image
+                  src="/blog-content/GARNET-LUU-DO-CHARM-PHUC-1748676755615.jpg"
+                  alt="Trắc nghiệm chọn gọng kính"
+                  width={400}
+                  height={250}
+                  className="w-full h-[250px] object-cover"
+                />
+                <div className="absolute inset-x-0 -bottom-5 flex justify-center">
+                  <Button size="lg" className="bg-yellow-400 text-black font-bold px-8 hover:bg-yellow-500 shadow-lg">
+                    LÀM TRẮC NGHIỆM
+                  </Button>
+                </div>
+              </div>
+              <div className="pt-10 pb-6 px-6 bg-[#002B6D] text-white text-center flex flex-col flex-1">
+                <h3 className="text-lg font-bold mb-2 uppercase">Trắc nghiệm chọn gọng kính</h3>
+                <p className="text-sm text-gray-300 mb-4">
+                  Chưa biết nên chọn gọng kính như thế nào? Cùng Mắt Việt thực hiện trắc nghiệm để tìm ra gọng kính phù hợp ngay!
+                </p>
+                <div className="mt-auto pt-4">
+                  <Link href="#" className="text-sm font-semibold hover:underline text-white">
+                    Xem thêm <ChevronRight className="inline h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* Content Wrapper for remaining sections */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-5 lg:px-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-5 lg:px-6">
         {/* Blog Posts / Latest News */}
         <section className="mt-20 py-8 sm:py-12">
           <div className="flex justify-between items-center mb-8">

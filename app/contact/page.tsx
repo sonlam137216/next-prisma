@@ -8,7 +8,7 @@ import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 
 export default function ContactPage() {
   return (
-    <div className="max-w-[1200px] mx-auto py-12 px-4 md:px-6">
+    <div className="max-w-[1400px] mx-auto py-12 px-4 md:px-6">
       {/* Hero Section */}
       <div className="text-center mb-16">
         <h1 className="text-4xl font-bold tracking-tight text-primary mb-4">Liên Hệ Với Chúng Tôi</h1>

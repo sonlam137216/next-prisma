@@ -15,7 +15,7 @@ export default function SupportLayout({
       {/* Hero Section */}
       <div className="relative h-[200px] bg-primary">
         <div className="absolute inset-0 bg-black/40" />
-        <div className="relative h-full max-w-[1200px] mx-auto px-4 flex items-center">
+        <div className="relative h-full max-w-[1400px] mx-auto px-4 flex items-center">
           <div className="text-white">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Hỗ trợ khách hàng</h1>
             <p className="text-white/80">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
@@ -24,7 +24,7 @@ export default function SupportLayout({
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1200px] mx-auto px-4 py-8">
+      <div className="max-w-[1400px] mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
