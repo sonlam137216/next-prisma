@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
+    const detailedDescription = formData.get("detailedDescription") as string;
     const price = parseFloat(formData.get("price") as string);
     const categoryId = parseInt(formData.get("categoryId") as string);
     const inStock = formData.get("inStock") === "true";
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!name || !description || !price || !categoryId || !quantity) {
+    if (!name || !price || !categoryId || !quantity) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description,
+        detailedDescription,
         price,
         categoryId,
         inStock,

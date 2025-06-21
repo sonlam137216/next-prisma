@@ -25,6 +25,7 @@ export async function PUT(
       // Extract form data
       const name = formData.get("name") as string;
       const description = formData.get("description") as string;
+      const detailedDescription = formData.get("detailedDescription") as string;
       const price = parseFloat(formData.get("price") as string);
       const quantity = parseInt(formData.get("quantity") as string);
       const categoryId = parseInt(formData.get("categoryId") as string);
@@ -57,6 +58,7 @@ export async function PUT(
         data: {
           name,
           description,
+          detailedDescription,
           price,
           quantity,
           categoryId,

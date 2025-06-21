@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { StoneSize } from '@/app/types/product';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -331,11 +332,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               )}
             </div>
             
-            {/* Chi tiết sản phẩm */}
-            <div className="bg-gray-50 rounded-md mb-6">
-              <h2 className="text-lg font-semibold mb-2">Chi tiết sản phẩm</h2>
-              <p className="text-gray-700">{product.description || 'Không có mô tả chi tiết cho sản phẩm này.'}</p>
-            </div>
+            {/* Short description */}
+            {product.description && (
+              <div className="bg-gray-50 rounded-md mb-6 text-sm text-gray-800">
+                <p>{product.description}</p>
+              </div>
+            )}
           </div>
           
           <Separator className="my-6" />
@@ -391,37 +393,50 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         </div>
       </div>
       
-      {/* Additional Information Sections */}
-      <div className="space-y-8 mt-12">
-        {/* Specifications Section */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Thông số kỹ thuật</h2>
-            <div>
-              <table className="min-w-full">
-                <tbody>
-                  <tr className="border-b">
-                    <td className="py-2 font-medium">Mã sản phẩm</td>
-                    <td className="py-2">{product.id}</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 font-medium">Danh mục</td>
-                    <td className="py-2">{product.category?.name || 'Chưa phân loại'}</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 font-medium">Tình trạng</td>
-                    <td className="py-2">{product.inStock ? 'Còn hàng' : 'Hết hàng'}</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 font-medium">Ngày thêm</td>
-                    <td className="py-2">{new Date(product.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Additional Information Sections - Thay thế phần này bằng Tabs */}
+      <Tabs defaultValue="shipping-info" className="w-full mt-12">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger className="py-2 mb-2" value="shipping-info">Thông tin giao hàng</TabsTrigger>
+          <TabsTrigger className="py-2 mb-2" value="product-details">Chi tiết sản phẩm</TabsTrigger>
+        </TabsList>
+        <TabsContent value="shipping-info">
+          <Card>
+            <CardHeader>
+              <CardTitle>Thông tin vận chuyển và hoàn trả</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="grid md:grid-cols-1 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-2">Giao Hàng</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    <li>Nội thành: Giao từ 1 – 3 ngày, Miễn phí giao hàng trong bán kính 10km</li>
+                    <li>Tỉnh khác: Giao từ 5 – 7 ngày, 30.000 VNĐ / đơn</li>
+                    <li>Lưu ý: Thời gian nhận hàng có thể thay đổi sớm hoặc muộn hơn tùy theo địa chỉ cụ thể của khách hàng.</li>
+                    <li>Trong trường hợp sản phẩm tạm hết hàng, nhân viên CSKH sẽ liên hệ trực tiếp với quý khách để thông báo về thời gian giao hàng.</li>
+                    <li>Nếu khách hàng có yêu cầu về Giấy Kiểm Định Đá, đơn hàng sẽ cộng thêm 20 ngày để hoàn thành thủ tục.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Chính sách hoàn trả</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    <li>Chúng tôi chấp nhận đổi / trả sản phẩm ngay lúc khách kiểm tra và xác nhận hàng hóa. Chúng tôi cam kết sẽ hỗ trợ và áp dụng chính sách bảo hành tốt nhất tới Quý khách, đảm bảo mọi quyền lợi Quý khách được đầy đủ.</li>
+                    <li>Những trình trạng bể, vỡ do quá trình quý khách sử dụng chúng tôi xin từ chối đổi hàng.</li>
+                    <li>Tùy vào tình hình thực tế của sản phẩm, chúng tôi sẽ cân nhắc hỗ trợ đổi / trả nếu sản phẩm lỗi hoặc các vấn đề liên quan khác.</li>
+                    <li>Chúng tôi nhận bảo hành dây đeo vĩnh viễn dành cho khách hàng nếu tình trạng dây lâu ngày bị giãn nở, cọ xát với đá gây đứt dây trong quá trình sử dụng, chi phí vận chuyển xin quý khách vui lòng tự thanh toán.</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="product-details">
+          <Card>
+            <CardContent className="space-y-2 text-sm text-gray-700 whitespace-pre-wrap">
+              {product.detailedDescription || product.description || 'Không có mô tả chi tiết cho sản phẩm này.'}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       
       {/* Related Products */}
       {relatedProducts.length > 0 && (

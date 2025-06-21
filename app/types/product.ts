@@ -11,5 +11,12 @@ export interface StoneSize {
 }
 
 export interface Product {
+  id: number;
+  name: string;
+  description: string | null;
+  detailedDescription?: string;
+  price: number;
+  quantity: number;
+  inStock: boolean;
   stoneSizes: StoneSize[];
 } 

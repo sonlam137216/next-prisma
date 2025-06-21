@@ -37,6 +37,7 @@ model Product {
   id          Int           @id @default(autoincrement())
   name        String
   description String?
+  detailedDescription String?       @db.Text
   price       Float
   quantity    Int           @default(0)
   inStock     Boolean       @default(true)

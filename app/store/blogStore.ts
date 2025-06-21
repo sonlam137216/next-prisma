@@ -70,7 +70,7 @@ const api = axios.create({
   },
 });
 
-export const useBlogStore = create<BlogState>((set) => ({
+export const useBlogStore = create<BlogState>((set, get) => ({
   posts: [],
   currentPost: null,
   featuredPost: null,
@@ -87,6 +87,7 @@ export const useBlogStore = create<BlogState>((set) => ({
 
   setSelectedCategory: (category) => {
     set({ selectedCategory: category });
+    get().fetchPosts(1, category);
   },
 
   fetchPosts: async (page, category) => {
@@ -213,8 +214,21 @@ export const useBlogStore = create<BlogState>((set) => ({
   },
 
   fetchCategories: async () => {
-    // No need to fetch from API, just use predefined categories
-    set({ categories: CATEGORIES });
+    try {
+      set({ loading: true, error: null });
+      const { data } = await api.get('/blog/categories');
+      // The API returns an object { categories: [...] }
+      if (data && data.categories) {
+        set({ categories: ['Tất cả', ...data.categories] });
+      } else {
+        set({ categories: ['Tất cả'] });
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      set({ error: error instanceof Error ? error.message : 'An error occurred' });
+    } finally {
+      set({ loading: false });
+    }
   },
 
   createPost: async (post, content, featuredImage) => {

@@ -1,6 +1,8 @@
-import { Product as PrismaProduct } from "@prisma/client";
+import { Product as PrismaProduct, Prisma } from "@prisma/client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { StoneSize } from "@/app/types/product";
+import { Category } from "@prisma/client";
 
 interface User {
   id: number;
@@ -35,35 +37,38 @@ export interface Collection {
   updatedAt: string;
 }
 
-export interface Product extends Omit<PrismaProduct, 'category' | 'collections' | 'images' | 'createdAt' | 'discountStartDate' | 'discountEndDate'> {
-  createdAt: string;
-  updatedAt?: string;
-  discountStartDate: string | null;
-  discountEndDate: string | null;
-  category?: {
+type PrismaProduct = Prisma.ProductGetPayload<{
+  include: {
+    category: true;
+    collections: true;
+    images: true;
+    stoneSizes: true;
+  }
+}>;
+
+export interface Product extends BaseProduct {
     id: number;
     name: string;
-    description: string | null;
+    description: string;
+    detailedDescription?: string;
+    price: number;
+    quantity: number;
+    inStock: boolean;
+    type: 'PHONG_THUY' | 'THOI_TRANG';
+    line: 'CAO_CAP' | 'TRUNG_CAP' | 'PHO_THONG';
     createdAt: string;
-  };
-  images: {
-    id: number;
-    url: string;
-    isMain: boolean;
-    createdAt: string;
-    updatedAt: string;
-    productId: number;
-  }[];
-  collections?: {
-    id: number;
-    name: string;
-    description: string | null;
-    imageUrl: string | null;
-    active: boolean;
-    createdAt: string;
-    updatedAt: string;
-  }[];
-  stoneSizes: import("@/app/types/product").StoneSize[];
+    category?: Category;
+    categoryId: number;
+    collections?: any[];
+    images: any[];
+    hasDiscount: boolean;
+    discountPrice: number | null;
+    discountStartDate: string | null;
+    discountEndDate: string | null;
+    discountPercentage: number | null;
+    stoneSizes: StoneSize[];
+    selectedStoneSize?: { size: string };
+    wristSize?: number;
 }
 
 export interface CartItem {

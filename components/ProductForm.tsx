@@ -39,6 +39,7 @@ import { StoneSize } from "@/app/types/product";
 const productFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
+  detailedDescription: z.string().optional(),
   price: z.coerce.number().min(0, "Price must be a positive number"),
   quantity: z.coerce.number().min(0, "Quantity must be a positive number"),
   inStock: z.boolean().default(true),
@@ -79,6 +80,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
     defaultValues: {
       name: "",
       description: "",
+      detailedDescription: "",
       price: 0,
       quantity: 0,
       inStock: true,
@@ -101,6 +103,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
         form.reset({
           name: product.name,
           description: product.description ?? '',
+          detailedDescription: product.detailedDescription ?? '',
           price: product.price,
           quantity: product.quantity,
           inStock: product.inStock,
@@ -129,6 +132,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
         form.reset({
           name: "",
           description: "",
+          detailedDescription: "",
           price: 0,
           quantity: 0,
           inStock: true,
@@ -220,6 +224,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
     const formData = new FormData();
     formData.append("name", values.name);
     formData.append("description", values.description || "");
+    formData.append("detailedDescription", values.detailedDescription || "");
     formData.append("price", values.price.toString());
     formData.append("quantity", values.quantity.toString());
     formData.append("inStock", values.inStock.toString());
@@ -395,13 +400,32 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Short Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Enter product description"
+                          placeholder="Short product description for list views"
                           {...field}
                           value={field.value || ""}
                           className="min-h-[100px]"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="detailedDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Detailed Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Detailed product description for product page"
+                          {...field}
+                          value={field.value || ""}
+                          rows={10}
                         />
                       </FormControl>
                       <FormMessage />

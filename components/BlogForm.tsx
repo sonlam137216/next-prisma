@@ -31,6 +31,13 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const blogFormSchema = z.object({
   title: z.string().min(1, {
@@ -57,6 +64,8 @@ interface BlogFormProps {
   post?: BlogPost;
   isEditing?: boolean;
 }
+
+const VALID_CATEGORIES = ["Phong thủy", "Đá quý", "Kiến thức", "Tin tức"];
 
 export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
   const router = useRouter();
@@ -226,9 +235,20 @@ export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Post category" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {VALID_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormDescription>
                       The category this post belongs to
                     </FormDescription>

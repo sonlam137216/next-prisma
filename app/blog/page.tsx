@@ -14,16 +14,24 @@ import { useBlogStore } from "@/app/store/blogStore";
 
 export default function BlogPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const blogStore = useBlogStore();
+  const { 
+    posts, 
+    categories, 
+    pagination, 
+    featuredPost,
+    fetchPosts,
+    fetchCategories,
+    fetchFeaturedPost
+  } = useBlogStore();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         await Promise.all([
-          blogStore.fetchPosts(1),
-          blogStore.fetchCategories(),
-          blogStore.fetchFeaturedPost(),
+          fetchPosts(1),
+          fetchCategories(),
+          fetchFeaturedPost(),
         ]);
       } catch (error) {
         console.error('Error fetching blog data:', error);
@@ -33,9 +41,7 @@ export default function BlogPage() {
     };
 
     fetchData();
-  }, [blogStore]);
-
-  const { posts, categories, pagination, featuredPost } = blogStore;
+  }, [fetchPosts, fetchCategories, fetchFeaturedPost]);
 
   if (isLoading) {
     return (
