@@ -10,6 +10,12 @@ CREATE TYPE "ProductType" AS ENUM ('PHONG_THUY', 'THOI_TRANG');
 -- CreateEnum
 CREATE TYPE "ProductLine" AS ENUM ('CAO_CAP', 'TRUNG_CAP', 'PHO_THONG');
 
+-- CreateEnum
+CREATE TYPE "Menh" AS ENUM ('KIM', 'MOC', 'THUY', 'HOA', 'THO');
+
+-- CreateEnum
+CREATE TYPE "PartnerStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CONTACTED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -49,11 +55,13 @@ CREATE TABLE "Product" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "detailedDescription" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 0,
     "inStock" BOOLEAN NOT NULL DEFAULT true,
     "type" "ProductType" NOT NULL DEFAULT 'THOI_TRANG',
     "line" "ProductLine" NOT NULL DEFAULT 'PHO_THONG',
+    "menh" "Menh"[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "categoryId" INTEGER NOT NULL,
     "hasDiscount" BOOLEAN NOT NULL DEFAULT false,
@@ -124,10 +132,42 @@ CREATE TABLE "OrderItem" (
     "orderId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "imageUrl" TEXT,
+    "stoneSize" TEXT,
+    "wristSize" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "OrderItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "StoneSize" (
+    "id" SERIAL NOT NULL,
+    "size" TEXT NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "productId" INTEGER NOT NULL,
+
+    CONSTRAINT "StoneSize_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PartnerRegistration" (
+    "id" SERIAL NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "phone" TEXT NOT NULL,
+    "companyName" TEXT,
+    "businessType" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+    "city" TEXT NOT NULL,
+    "experience" TEXT,
+    "expectedRevenue" TEXT,
+    "message" TEXT,
+    "status" "PartnerStatus" NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PartnerRegistration_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -164,6 +204,9 @@ ALTER TABLE "ProductImage" ADD CONSTRAINT "ProductImage_productId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StoneSize" ADD CONSTRAINT "StoneSize_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_CollectionToProduct" ADD CONSTRAINT "_CollectionToProduct_A_fkey" FOREIGN KEY ("A") REFERENCES "Collection"("id") ON DELETE CASCADE ON UPDATE CASCADE;
