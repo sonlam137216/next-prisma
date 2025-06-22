@@ -37,8 +37,10 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'newest';
     const type = searchParams.get('type');
     const line = searchParams.get('line');
+    const menh = searchParams.get('menh');
     const validTypes = ['PHONG_THUY', 'THOI_TRANG'];
     const validLines = ['CAO_CAP', 'TRUNG_CAP', 'PHO_THONG'];
+    const validMenh = ['KIM', 'MOC', 'THUY', 'HOA', 'THO'];
 
     // Build where clause
     const where: Prisma.ProductWhereInput = {
@@ -58,6 +60,7 @@ export async function GET(request: NextRequest) {
       }),
       ...(type && validTypes.includes(type) && { type: type as ProductType }),
       ...(line && validLines.includes(line) && { line: line as ProductLine }),
+      ...(menh && validMenh.includes(menh) && { menh: { has: menh } }),
       price: {
         gte: Number(minPrice || 0),
         lte: Number(maxPrice || 1000000)

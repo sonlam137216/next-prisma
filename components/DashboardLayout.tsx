@@ -21,6 +21,7 @@ import {
   Tags,
   FileText,
   Grid,
+  Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +80,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "Collections", href: "/admin/collections", icon: Grid },
     { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { name: "Blog", href: "/admin/blog", icon: FileText },
+    { name: "Partner Registrations", href: "/admin/partner-registrations", icon: Handshake },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];

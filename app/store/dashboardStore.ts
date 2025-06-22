@@ -1,8 +1,7 @@
-import { Product as PrismaProduct, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { StoneSize } from "@/app/types/product";
-import { Category } from "@prisma/client";
+import { StoneSize, ProductType, ProductLine, Menh } from "@/app/types/product";
 
 interface User {
   id: number;
@@ -32,43 +31,45 @@ export interface Category {
 export interface Collection {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-type PrismaProduct = Prisma.ProductGetPayload<{
-  include: {
-    category: true;
-    collections: true;
-    images: true;
-    stoneSizes: true;
-  }
-}>;
+export interface ProductImage {
+  id: number;
+  url: string;
+  isMain: boolean;
+  productId: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export interface Product extends BaseProduct {
-    id: number;
-    name: string;
-    description: string;
-    detailedDescription?: string;
-    price: number;
-    quantity: number;
-    inStock: boolean;
-    type: 'PHONG_THUY' | 'THOI_TRANG';
-    line: 'CAO_CAP' | 'TRUNG_CAP' | 'PHO_THONG';
-    createdAt: string;
-    category?: Category;
-    categoryId: number;
-    collections?: any[];
-    images: any[];
-    hasDiscount: boolean;
-    discountPrice: number | null;
-    discountStartDate: string | null;
-    discountEndDate: string | null;
-    discountPercentage: number | null;
-    stoneSizes: StoneSize[];
-    selectedStoneSize?: { size: string };
-    wristSize?: number;
+export interface Product {
+  id: number;
+  name: string;
+  description: string | null;
+  detailedDescription?: string | null;
+  price: number;
+  quantity: number;
+  inStock: boolean;
+  type: ProductType;
+  line: ProductLine;
+  menh?: Menh[] | null;
+  categoryId: number;
+  hasDiscount: boolean;
+  discountPrice?: number | null;
+  discountStartDate?: string | null;
+  discountEndDate?: string | null;
+  discountPercentage?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  category?: Category;
+  collections: Collection[];
+  images: ProductImage[];
+  stoneSizes: StoneSize[];
+  selectedStoneSize?: { size: string };
+  wristSize?: number;
 }
 
 export interface CartItem {
@@ -105,10 +106,18 @@ interface ProductFilters {
   limit?: number;
   type?: string;
   line?: string;
+  menh?: string;
 }
 
 // Add type for API response
-interface ProductResponse extends Omit<PrismaProduct, 'createdAt' | 'updatedAt' | 'discountStartDate' | 'discountEndDate' | 'category' | 'collections' | 'images'> {
+interface ProductResponse extends Omit<Prisma.ProductGetPayload<{
+  include: {
+    category: true;
+    collections: true;
+    images: true;
+    stoneSizes: true;
+  }
+}>, 'createdAt' | 'updatedAt' | 'discountStartDate' | 'discountEndDate' | 'category' | 'collections' | 'images'> {
   createdAt: string;
   updatedAt: string | null;
   discountStartDate: string | null;
@@ -297,6 +306,7 @@ export const useDashboardStore = create<DashboardState>()(
           if (filters.search) params.append('search', filters.search);
           if (filters.type) params.append('type', filters.type);
           if (filters.line) params.append('line', filters.line);
+          if (filters.menh) params.append('menh', filters.menh);
           if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
           if (filters.collectionId) params.append('collectionId', String(filters.collectionId));
           if (filters.minPrice !== undefined) params.append('minPrice', String(filters.minPrice));
@@ -325,7 +335,7 @@ export const useDashboardStore = create<DashboardState>()(
               updatedAt: formatDate(image.updatedAt) || '',
               productId: image.productId
             })),
-            collections: product.collections?.map(collection => ({
+            collections: (product.collections || []).map(collection => ({
               ...collection,
               createdAt: formatDate(collection.createdAt) || '',
               updatedAt: formatDate(collection.updatedAt) || '',

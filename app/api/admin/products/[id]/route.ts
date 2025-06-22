@@ -2,6 +2,7 @@ import { cloudinary } from '@/lib/cloudinary';
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { ProductType, ProductLine } from '@/app/types/product';
+import { Menh } from '@prisma/client';
 
 export async function PUT(
     request: NextRequest,
@@ -31,6 +32,13 @@ export async function PUT(
       const categoryId = parseInt(formData.get("categoryId") as string);
       const type = formData.get("type") as string;
       const line = formData.get("line") as string;
+      const menhRaw = formData.get("menh") as string | null;
+      let menh: any[] = [];
+      if (menhRaw) {
+        try {
+          menh = JSON.parse(menhRaw);
+        } catch (e) {}
+      }
       const inStock = formData.get("inStock") === "true";
       const collectionId = formData.get("collectionId") ? parseInt(formData.get("collectionId") as string) : null;
 
@@ -64,6 +72,9 @@ export async function PUT(
           categoryId,
           type: type as ProductType,
           line: line as ProductLine,
+          menh: {
+            set: menh,
+          },
           inStock,
           hasDiscount,
           discountPrice,

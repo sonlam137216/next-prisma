@@ -39,7 +39,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     setInitialData
   } = useDashboardStore();
   const { collections, fetchCollections, setInitialCollections } = useCollectionStore();
-  const [selectedCollection, setSelectedCollection] = useState(collectionIdFromUrl || 'all');
+  const [selectedCollection, setSelectedCollection] = useState(collectionIdFromUrl || '');
   const maxPrice = 1000000
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [sortBy, setSortBy] = useState('newest');
@@ -48,6 +48,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedLine, setSelectedLine] = useState<string>('');
+  const [selectedMenh, setSelectedMenh] = useState<string>('');
 
   // Initialize with SSR data
   useEffect(() => {
@@ -85,6 +86,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
         search: searchQuery,
         type: selectedType || undefined,
         line: selectedLine || undefined,
+        menh: selectedMenh || undefined,
         collectionId: selectedCollection ? parseInt(selectedCollection) : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
@@ -97,7 +99,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [priceRange, searchQuery, selectedType, selectedLine, selectedCollection, sortBy, page, fetchProducts]);
+  }, [priceRange, searchQuery, selectedType, selectedLine, selectedMenh, selectedCollection, sortBy, page, fetchProducts]);
 
   // Reset filters when collection changes
   useEffect(() => {
@@ -105,6 +107,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
       setPriceRange([0, maxPrice]);
       setSortBy('newest');
       setPage(1);
+      setSelectedMenh('');
     }
   }, [collectionIdFromUrl, maxPrice]);
 
@@ -193,11 +196,74 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
               <h2 className="text-base font-bold mb-2">BỘ SƯU TẬP</h2>
               <div className="space-y-2 ml-2">
                 {collections.map((collection) => (
-                  <label key={collection.id} className="flex items-center gap-2">
-                    <input type="radio" name="collection" value={collection.id} checked={selectedCollection === collection.id.toString()} onChange={() => setSelectedCollection(collection.id.toString())} />
+                  <label key={collection.id} className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="collection" 
+                      value={collection.id} 
+                      checked={selectedCollection === collection.id.toString()} 
+                      onChange={() => setSelectedCollection(collection.id.toString())} 
+                    />
                     <span>{collection.name}</span>
                   </label>
                 ))}
+              </div>
+              <Separator className="my-4" />
+            </div>
+            {/* MỆNH */}
+            <div>
+              <h2 className="text-base font-bold mb-2">MỆNH</h2>
+              <div className="space-y-2 ml-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="menh" 
+                    value="KIM" 
+                    checked={selectedMenh === 'KIM'} 
+                    onChange={() => setSelectedMenh('KIM')} 
+                  />
+                  <span>Kim</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="menh" 
+                    value="MOC" 
+                    checked={selectedMenh === 'MOC'} 
+                    onChange={() => setSelectedMenh('MOC')} 
+                  />
+                  <span>Mộc</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="menh" 
+                    value="THUY" 
+                    checked={selectedMenh === 'THUY'} 
+                    onChange={() => setSelectedMenh('THUY')} 
+                  />
+                  <span>Thủy</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="menh" 
+                    value="HOA" 
+                    checked={selectedMenh === 'HOA'} 
+                    onChange={() => setSelectedMenh('HOA')} 
+                  />
+                  <span>Hỏa</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="menh" 
+                    value="THO" 
+                    checked={selectedMenh === 'THO'} 
+                    onChange={() => setSelectedMenh('THO')} 
+                  />
+                  <span>Thổ</span>
+                </label>
               </div>
               <Separator className="my-4" />
             </div>
@@ -228,6 +294,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
                   setSelectedType('');
                   setSelectedLine('');
                   setSelectedCollection('');
+                  setSelectedMenh('');
                   setPriceRange([0, maxPrice]);
                   setSortBy('newest');
                   setPage(1);

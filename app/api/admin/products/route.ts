@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { NextRequest } from 'next/server'
 import { cloudinary } from '@/lib/cloudinary'
 import { ProductType, ProductLine } from '@/app/types/product'
+import { Menh } from '@prisma/client'
 
 export async function GET() {
   try {
@@ -36,6 +37,15 @@ export async function POST(request: NextRequest) {
     const quantity = parseInt(formData.get("quantity") as string);
     const type = formData.get("type") as string;
     const line = formData.get("line") as string;
+    const menhRaw = formData.get("menh") as string | null;
+    let menh: Menh[] = [];
+    if (menhRaw) {
+      try {
+        menh = JSON.parse(menhRaw);
+      } catch (e) {
+        // ignore error if parsing fails
+      }
+    }
     const imageFiles = formData.getAll("images") as File[];
     const imageIsMain = formData.getAll("imageIsMain_0") as string[];
 
@@ -76,6 +86,9 @@ export async function POST(request: NextRequest) {
         quantity,
         type: type as ProductType,
         line: line as ProductLine,
+        menh: {
+          set: menh as any,
+        },
         hasDiscount,
         discountPrice,
         discountPercentage,

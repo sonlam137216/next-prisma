@@ -19,13 +19,14 @@ import {
   NavigationMenuTrigger,
   NavigationMenuContent,
 } from "@/components/ui/navigation-menu";
-import { JSX, SVGProps, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useDashboardStore } from "@/app/store/dashboardStore";
 import CartSidebar from "./CartSidebar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useBlogStore } from "@/app/store/blogStore";
 import { ChevronDown } from "lucide-react";
+import React from "react";
 
 export default function Header() {
   const { cart, toggleCart, fetchCategories } = useDashboardStore();
@@ -78,13 +79,13 @@ export default function Header() {
     <div className="w-full sticky top-0 bg-primary z-40 shadow-md">
       <div className="w-full px-4 md:px-8 lg:px-12 relative">
         {/* Upper Header: Logo, Search, Cart */}
-        <div className="flex h-16 sm:h-20 w-full items-center justify-between z-10 relative">
+        <div className="flex h-20 sm:h-24 w-full items-center justify-between z-10 relative">
           {/* Mobile Menu Button - Only visible on mobile */}
           <div className="lg:hidden z-20">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white hover:text-primary">
-                  <MenuIcon className="h-5 w-5" />
+                  <MenuIcon className="h-6 w-6" />
                   <span className="sr-only">Mở menu</span>
                 </Button>
               </SheetTrigger>
@@ -154,7 +155,7 @@ export default function Header() {
                 width={300}
                 height={120}
                 alt="Logo"
-                className="h-auto w-36 sm:w-44 md:w-48 lg:w-56"
+                className="h-auto w-40 sm:w-48 md:w-52 lg:w-64"
                 priority
               />
             </Link>
@@ -183,7 +184,7 @@ export default function Header() {
               aria-label="Tìm kiếm"
               className="text-white hover:text-primary"
             >
-              <SearchIcon className="h-5 w-5" />
+              <SearchIcon className="h-6 w-6" />
             </Button>
           </div>
 
@@ -193,12 +194,12 @@ export default function Header() {
               variant="ghost"
               size="sm"
               aria-label="Giỏ hàng"
-              className="relative p-1 text-white hover:text-primary"
+              className="relative p-2 text-white hover:text-primary"
               onClick={toggleCart}
             >
-              <ShoppingBagIcon className="h-6 w-6" />
+              <ShoppingBagIcon className="h-8 w-8" />
               {cartItemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-white text-primary">
+                <Badge className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center p-0 text-xs bg-white text-primary">
                   {cartItemCount > 99 ? "99+" : cartItemCount}
                 </Badge>
               )}
@@ -255,7 +256,7 @@ export default function Header() {
                         className="py-2 text-sm hover:text-primary transition-colors"
                         prefetch={false}
                       >
-                        Kinh doanh sỉ
+                        Kinh doanh sỉ /CTV
                       </Link>
                       <Link
                         href="/about/certification"
@@ -526,7 +527,7 @@ export default function Header() {
   );
 }
 
-function MenuIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
+function MenuIcon(props: React.JSX.IntrinsicAttributes & React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -548,7 +549,7 @@ function MenuIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
 }
 
 function ShoppingBagIcon(
-  props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>
+  props: React.JSX.IntrinsicAttributes & React.SVGProps<SVGSVGElement>
 ) {
   return (
     <svg
@@ -570,7 +571,7 @@ function ShoppingBagIcon(
   );
 }
 
-function SearchIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
+function SearchIcon(props: React.JSX.IntrinsicAttributes & React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}

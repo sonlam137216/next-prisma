@@ -52,6 +52,7 @@ async function getInitialData(): Promise<InitialData> {
           category: true,
           images: true,
           collections: true,
+          stoneSizes: true,
         },
         orderBy: {
           createdAt: 'desc',
@@ -65,7 +66,7 @@ async function getInitialData(): Promise<InitialData> {
     const formattedProducts: Product[] = products.map(product => ({
       id: product.id,
       name: product.name,
-      description: product.description,
+      description: product.description || '',
       price: product.price,
       discountPrice: product.discountPrice,
       discountPercentage: product.discountPercentage,
@@ -101,6 +102,7 @@ async function getInitialData(): Promise<InitialData> {
         createdAt: collection.createdAt.toISOString(),
         updatedAt: collection.updatedAt.toISOString(),
       })),
+      stoneSizes: product.stoneSizes,
     }));
 
     // Category: createdAt as string

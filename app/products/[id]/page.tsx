@@ -50,6 +50,40 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [selectedStoneSize, setSelectedStoneSize] = useState<StoneSize | null>(null);
   const [wristSize, setWristSize] = useState(12); // Default 12cm
   
+  // Helper functions for menh
+  const getMenhLabel = (menh: string) => {
+    const menhLabels: Record<string, string> = {
+      'KIM': 'Kim',
+      'MOC': 'Mộc', 
+      'THUY': 'Thủy',
+      'HOA': 'Hỏa',
+      'THO': 'Thổ'
+    };
+    return menhLabels[menh] || menh;
+  };
+  
+  const getMenhColor = (menh: string) => {
+    const menhColors: Record<string, string> = {
+      'KIM': 'bg-yellow-50 border-yellow-200 text-yellow-800',
+      'MOC': 'bg-green-50 border-green-200 text-green-800',
+      'THUY': 'bg-blue-50 border-blue-200 text-blue-800',
+      'HOA': 'bg-red-50 border-red-200 text-red-800',
+      'THO': 'bg-orange-50 border-orange-200 text-orange-800'
+    };
+    return menhColors[menh] || 'bg-gray-50 border-gray-200 text-gray-800';
+  };
+  
+  const getMenhColorDetailed = (menh: string) => {
+    const menhColors: Record<string, string> = {
+      'KIM': 'bg-yellow-100 border-yellow-300 text-yellow-800',
+      'MOC': 'bg-green-100 border-green-300 text-green-800',
+      'THUY': 'bg-blue-100 border-blue-300 text-blue-800',
+      'HOA': 'bg-red-100 border-red-300 text-red-800',
+      'THO': 'bg-orange-100 border-orange-300 text-orange-800'
+    };
+    return menhColors[menh] || 'bg-gray-100 border-gray-300 text-gray-800';
+  };
+  
   // Fetch product data
   useEffect(() => {
     const loadData = async () => {
@@ -176,7 +210,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <li>
             <Link href="/products" className="hover:underline text-gray-700">Sản phẩm</Link>
           </li>
-          {product.type && (
+          {product?.type && (
             <>
               <li><span className="mx-2">/</span></li>
               <li>
@@ -189,8 +223,21 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               </li>
             </>
           )}
+          {product?.menh && product.menh.length > 0 && (
+            <>
+              <li><span className="mx-2">/</span></li>
+              <li>
+                <Link
+                  href={`/products?menh=${product.menh[0]}`}
+                  className="hover:underline text-gray-700"
+                >
+                  {getMenhLabel(product.menh[0])}
+                </Link>
+              </li>
+            </>
+          )}
           <li><span className="mx-2">/</span></li>
-          <li className="text-primary font-semibold">{product.name}</li>
+          <li className="text-primary font-semibold">{product?.name}</li>
         </ol>
       </nav>
       {/* Back button */}
@@ -263,6 +310,24 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </Badge>
               )}
             </div>
+            
+            {/* Mệnh */}
+            {product?.menh && product.menh.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2">Mệnh</h3>
+                <div className="flex gap-2 flex-wrap">
+                  {product.menh.map((menh, index) => (
+                    <Badge key={index} variant="outline" className={getMenhColor(menh)}>
+                      {getMenhLabel(menh)}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Sản phẩm phù hợp với người mệnh {product.menh.map(menh => getMenhLabel(menh)).join(', ')}
+                </p>
+              </div>
+            )}
+            
             {/* Size viên đá */}
             {product.stoneSizes && product.stoneSizes.length > 0 && (
               <div className="mb-6">
@@ -431,8 +496,82 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         </TabsContent>
         <TabsContent value="product-details">
           <Card>
-            <CardContent className="space-y-2 text-sm text-gray-700 whitespace-pre-wrap">
-              {product.detailedDescription || product.description || 'Không có mô tả chi tiết cho sản phẩm này.'}
+            <CardHeader>
+              <CardTitle>Thông tin chi tiết sản phẩm</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-2">Thông tin cơ bản</h3>
+                  <div className="space-y-2 text-gray-700">
+                    <div className="flex justify-between">
+                      <span>Tên sản phẩm:</span>
+                      <span className="font-medium">{product.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Danh mục:</span>
+                      <span className="font-medium">{product.category?.name || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Loại sản phẩm:</span>
+                      <span className="font-medium">
+                        {product.type === 'PHONG_THUY' ? 'Phong thủy' : 'Thời trang'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Dòng sản phẩm:</span>
+                      <span className="font-medium">
+                        {product.line === 'CAO_CAP' ? 'Cao cấp' : 
+                         product.line === 'TRUNG_CAP' ? 'Trung cấp' : 'Phổ thông'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tình trạng:</span>
+                      <span className={`font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                        {product.inStock ? 'Còn hàng' : 'Hết hàng'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Số lượng:</span>
+                      <span className="font-medium">{product.quantity}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Thông tin phong thủy</h3>
+                  <div className="space-y-2 text-gray-700">
+                    {product?.menh && product.menh.length > 0 ? (
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span>Mệnh phù hợp:</span>
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          {product.menh.map((menh, index) => (
+                            <Badge key={index} variant="outline" className={getMenhColorDetailed(menh)}>
+                              {getMenhLabel(menh)}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Sản phẩm này phù hợp với người mệnh {product.menh.map(menh => getMenhLabel(menh)).join(', ')}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500">Không có thông tin mệnh</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h3 className="font-semibold mb-2">Mô tả chi tiết</h3>
+                <div className="text-gray-700 whitespace-pre-wrap">
+                  {product.detailedDescription || product.description || 'Không có mô tả chi tiết cho sản phẩm này.'}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

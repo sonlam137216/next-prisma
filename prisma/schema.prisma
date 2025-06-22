@@ -43,6 +43,7 @@ model Product {
   inStock     Boolean       @default(true)
   type        ProductType   @default(THOI_TRANG)
   line        ProductLine   @default(PHO_THONG)
+  menh        Menh[]
   createdAt   DateTime      @default(now())
   category    Category      @relation(fields: [categoryId], references: [id])
   categoryId  Int
@@ -133,10 +134,42 @@ enum ProductLine {
   PHO_THONG
 }
 
+enum Menh {
+  KIM
+  MOC
+  THUY
+  HOA
+  THO
+}
+
 model StoneSize {
   id        Int      @id @default(autoincrement())
   size      String   // Ví dụ: "10.5 Li"
   price     Float
   product   Product  @relation(fields: [productId], references: [id])
   productId Int
+}
+
+model PartnerRegistration {
+  id          Int      @id @default(autoincrement())
+  fullName    String
+  email       String
+  phone       String
+  companyName String?
+  businessType String  // Loại hình kinh doanh
+  address     String
+  city        String
+  experience  String?  // Kinh nghiệm kinh doanh
+  expectedRevenue String? // Doanh thu mong đợi
+  message     String?  // Tin nhắn bổ sung
+  status      PartnerStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum PartnerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CONTACTED
 }
