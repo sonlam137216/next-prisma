@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Đăng ký thành công', registration });
   } catch (error) {
+    console.error("Error saving partner registration:", error);
     return NextResponse.json({ message: 'Có lỗi xảy ra khi lưu thông tin.' }, { status: 500 });
   }
 } 

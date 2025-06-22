@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,7 +57,7 @@ export default function PartnerRegistrationsPage() {
     totalPages: 0,
   });
 
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -79,11 +79,11 @@ export default function PartnerRegistrationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit, searchQuery, statusFilter]);
 
   useEffect(() => {
     fetchRegistrations();
-  }, [searchQuery, statusFilter, pagination.page]);
+  }, [fetchRegistrations]);
 
   const updateStatus = async (id: number, status: string) => {
     try {

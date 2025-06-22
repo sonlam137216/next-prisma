@@ -8,6 +8,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface BlogClientProps {
   initialPosts: BlogPost[];
@@ -18,18 +19,19 @@ interface BlogClientProps {
     totalPages: number;
     totalPosts: number;
   };
+  activeCategory: string;
 }
 
-export function BlogClient({ initialPosts, initialCategories, initialPagination }: BlogClientProps) {
+export function BlogClient({ initialPosts, initialCategories, initialPagination, activeCategory }: BlogClientProps) {
   const {
     posts,
     categories,
     selectedCategory,
     loading,
     pagination,
-    setSelectedCategory,
     fetchPosts,
   } = useBlogStore();
+  const router = useRouter();
 
   // Initialize store with initial data
   useEffect(() => {
@@ -43,15 +45,14 @@ export function BlogClient({ initialPosts, initialCategories, initialPagination 
       posts: initialPosts,
       categories: initialCategories,
       pagination: initialPagination,
-      selectedCategory: "Tất cả",
+      selectedCategory: activeCategory,
       loading: false
     });
-  }, [initialPosts, initialCategories, initialPagination]);
+  }, [initialPosts, initialCategories, initialPagination, activeCategory]);
 
-  const handleCategoryChange = async (category: string) => {
-    console.log('Debug - BlogClient: Changing category to:', category);
-    setSelectedCategory(category);
-    await fetchPosts(1, category === "Tất cả" ? undefined : category);
+  const handleCategoryChange = (category: string) => {
+    const newUrl = category === "Tất cả" ? '/blog' : `/blog?category=${encodeURIComponent(category)}`;
+    router.push(newUrl, { scroll: false });
   };
 
   const handlePageChange = async (newPage: number) => {

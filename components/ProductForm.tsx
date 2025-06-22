@@ -1,6 +1,6 @@
 "use client";
 
-import { Product, useDashboardStore } from "@/app/store/dashboardStore";
+import { ExtendedProduct, useDashboardStore } from "@/app/store/dashboardStore";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -35,6 +35,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { StoneSize } from "@/app/types/product";
+import { StoneSize as PrismaStoneSize } from '@prisma/client';
 
 const MenhEnum = z.enum(["KIM", "MOC", "THUY", "HOA", "THO"]);
 
@@ -65,10 +66,16 @@ interface ImagePreview {
   id?: number;
 }
 
+interface StoneSizeForm {
+  id: number;
+  size: string;
+  price: number;
+}
+
 interface ProductFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product?: Product | null;
+  product?: ExtendedProduct | null;
   onSubmit: (formData: FormData) => Promise<void>;
 }
 
@@ -76,7 +83,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
   const { categories, fetchCategories } = useDashboardStore();
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
-  const [stoneSizes, setStoneSizes] = useState<StoneSize[]>([]);
+  const [stoneSizes, setStoneSizes] = useState<StoneSizeForm[]>([]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -125,7 +132,13 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
           }))
         );
         setDeletedImageIds([]);
-        setStoneSizes(product.stoneSizes || []);
+        setStoneSizes(
+          (product.stoneSizes || []).map(stone => ({
+            id: stone.id,
+            size: stone.size,
+            price: stone.price
+          }))
+        );
       } else {
         form.reset({
           name: "",
@@ -356,7 +369,7 @@ export function ProductForm({ open, onOpenChange, product, onSubmit }: ProductFo
                     <Button type="button" variant="outline" size="sm" onClick={handleAddStoneSize}>Thêm size</Button>
                   </div>
                   <div className="space-y-2">
-                    {stoneSizes.map((s, index) => (
+                    {stoneSizes.map((s) => (
                       <div key={s.id} className="flex items-center gap-2">
                         <Input placeholder="Size (e.g., 10 li)" value={s.size} onChange={(e) => handleStoneSizeChange(s.id, 'size', e.target.value)} className="flex-1" />
                         <Input type="number" placeholder="Price" value={s.price} onChange={(e) => handleStoneSizeChange(s.id, 'price', parseFloat(e.target.value))} className="flex-1" />

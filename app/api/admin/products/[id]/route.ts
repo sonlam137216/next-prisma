@@ -1,8 +1,14 @@
+import { ProductLine, ProductType } from '@/app/types/product';
 import { cloudinary } from '@/lib/cloudinary';
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { ProductType, ProductLine } from '@/app/types/product';
 import { Menh } from '@prisma/client';
+
+interface StoneSizeData {
+  id?: number;
+  size: string;
+  price: string | number;
+}
 
 export async function PUT(
     request: NextRequest,
@@ -33,11 +39,13 @@ export async function PUT(
       const type = formData.get("type") as string;
       const line = formData.get("line") as string;
       const menhRaw = formData.get("menh") as string | null;
-      let menh: any[] = [];
+      let menh: Menh[] = [];
       if (menhRaw) {
         try {
           menh = JSON.parse(menhRaw);
-        } catch (e) {}
+        } catch (e) {
+          console.error("Error parsing menh:", e);
+        }
       }
       const inStock = formData.get("inStock") === "true";
       const collectionId = formData.get("collectionId") ? parseInt(formData.get("collectionId") as string) : null;
@@ -51,11 +59,12 @@ export async function PUT(
   
       // Xử lý stoneSizes
       const stoneSizesRaw = formData.get("stoneSizes");
-      let stoneSizes = [];
+      let stoneSizes: StoneSizeData[] = [];
       if (stoneSizesRaw) {
         try {
           stoneSizes = JSON.parse(stoneSizesRaw as string);
         } catch (e) {
+          console.error("Error parsing stoneSizes:", e);
           return NextResponse.json({ error: "Invalid stoneSizes format" }, { status: 400 });
         }
       }
@@ -94,23 +103,23 @@ export async function PUT(
   
       // Xóa các stoneSizes cũ không còn trong danh sách mới
       const oldStoneSizes = await prisma.stoneSize.findMany({ where: { productId } });
-      const newIds = (stoneSizes as any[]).filter((s) => s.id).map((s) => s.id);
+      const newIds = stoneSizes.filter((s) => s.id).map((s) => s.id!);
       const toDelete = oldStoneSizes.filter((s) => !newIds.includes(s.id));
       if (toDelete.length > 0) {
         await prisma.stoneSize.deleteMany({ where: { id: { in: toDelete.map((s) => s.id) } } });
       }
       // Thêm mới hoặc cập nhật stoneSizes
-      for (const s of stoneSizes as any[]) {
+      for (const s of stoneSizes) {
         if (s.id) {
           // Update
           await prisma.stoneSize.update({
             where: { id: s.id },
-            data: { size: s.size, price: parseFloat(s.price) }
+            data: { size: s.size, price: parseFloat(s.price.toString()) }
           });
         } else if (s.size && s.price) {
           // Create
           await prisma.stoneSize.create({
-            data: { size: s.size, price: parseFloat(s.price), productId }
+            data: { size: s.size, price: parseFloat(s.price.toString()), productId }
           });
         }
       }

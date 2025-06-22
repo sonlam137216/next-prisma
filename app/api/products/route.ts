@@ -1,6 +1,6 @@
 // app/api/products/route.ts
 import { prisma } from "@/lib/prisma";
-import { Prisma } from '@prisma/client';
+import { Prisma, Menh } from '@prisma/client';
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
 import { cloudinary } from "@/lib/cloudinary";
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       }),
       ...(type && validTypes.includes(type) && { type: type as ProductType }),
       ...(line && validLines.includes(line) && { line: line as ProductLine }),
-      ...(menh && validMenh.includes(menh) && { menh: { has: menh } }),
+      ...(menh && validMenh.includes(menh) && { menh: { has: menh as Menh } }),
       price: {
         gte: Number(minPrice || 0),
         lte: Number(maxPrice || 1000000)

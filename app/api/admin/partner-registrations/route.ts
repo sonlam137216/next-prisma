@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma, PartnerStatus } from '@prisma/client';
 
 // GET - Lấy danh sách đăng ký cộng tác
 export async function GET(req: NextRequest) {
@@ -12,10 +13,10 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     // Xây dựng điều kiện tìm kiếm
-    const where: any = {};
+    const where: Prisma.PartnerRegistrationWhereInput = {};
     
     if (status && status !== 'ALL') {
-      where.status = status;
+      where.status = status as PartnerStatus;
     }
     
     if (search) {

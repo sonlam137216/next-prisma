@@ -1,5 +1,5 @@
 "use client";
-import { Product, useDashboardStore } from "@/app/store/dashboardStore";
+import { ExtendedProduct, useDashboardStore } from "@/app/store/dashboardStore";
 import { ProductForm } from "@/components/ProductForm";
 import { ProductsTable } from '@/components/admin/products-table';
 import { Button } from "@/components/ui/button";
@@ -26,19 +26,19 @@ export default function ProductsPage() {
   } = useDashboardStore();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [imagesDialogOpen, setImagesDialogOpen] = useState(false);
-  const [selectedProduct] = useState<Product | null>(null);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProduct] = useState<ExtendedProduct | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ExtendedProduct | null>(null);
   
   useEffect(() => {
     fetchProducts(1, 20);
   }, [fetchProducts]);
   
-  // const handleViewImages = (product: Product) => {
+  // const handleViewImages = (product: ExtendedProduct) => {
   //   setSelectedProduct(product);
   //   setImagesDialogOpen(true);
   // };
   
-  // const getMainImage = (product: Product) => {
+  // const getMainImage = (product: ExtendedProduct) => {
   //   if (!product.images || product.images.length === 0) {
   //     return null;
   //   }
@@ -52,7 +52,7 @@ export default function ProductsPage() {
     setIsFormOpen(true);
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: ExtendedProduct) => {
     setEditingProduct(product);
     setIsFormOpen(true);
   };

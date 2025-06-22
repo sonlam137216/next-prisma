@@ -25,7 +25,7 @@ export interface Category {
   name: string;
   description: string | null;
   createdAt: string;
-  products?: Product[];
+  products?: ExtendedProduct[];
 }
 
 export interface Collection {
@@ -45,7 +45,7 @@ export interface ProductImage {
   updatedAt: string;
 }
 
-export interface Product {
+export interface ExtendedProduct {
   id: number;
   name: string;
   description: string | null;
@@ -63,7 +63,7 @@ export interface Product {
   discountEndDate?: string | null;
   discountPercentage?: number | null;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   category?: Category;
   collections: Collection[];
   images: ProductImage[];
@@ -157,7 +157,7 @@ interface ApiResponse {
 
 interface DashboardState {
   users: User[];
-  products: Product[];
+  products: ExtendedProduct[];
   categories: Category[];
   blogPosts: BlogPost[];
   loadingCategories: boolean;
@@ -172,7 +172,7 @@ interface DashboardState {
   error: string | null;
 
   // Cart operations
-  addToCart: (product: Product, quantity: number) => void;
+  addToCart: (product: ExtendedProduct, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   updateCartItemQuantity: (productId: number, quantity: number) => void;
   toggleCart: () => void;
@@ -180,7 +180,7 @@ interface DashboardState {
 
   // Product operations
   fetchProducts: (page: number, limit: number, filters?: ProductFilters) => Promise<void>;
-  fetchProduct: (id: number) => Promise<Product | null>;
+  fetchProduct: (id: number) => Promise<ExtendedProduct | null>;
   addProduct: (formData: FormData) => Promise<void>;
   updateProduct: (id: number, formData: FormData) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
@@ -196,7 +196,7 @@ interface DashboardState {
   // Blog operations
   fetchBlogPosts: () => Promise<void>;
 
-  setInitialData: (products: Product[]) => void;
+  setInitialData: (products: ExtendedProduct[]) => void;
 }
 
 const formatDate = (date: Date | string | null | undefined): string | null => {
@@ -258,8 +258,8 @@ export const useDashboardStore = create<DashboardState>()(
             quantity: Math.min(quantity, product.quantity),
             imageUrl,
             maxQuantity: product.quantity,
-            selectedStoneSize: (product as any).selectedStoneSize ? { size: (product as any).selectedStoneSize.size } : undefined,
-            wristSize: (product as any).wristSize,
+            selectedStoneSize: product.selectedStoneSize ? { size: product.selectedStoneSize.size } : undefined,
+            wristSize: product.wristSize,
           };
 
           set({ cart: [...cart, newItem] });
@@ -579,7 +579,7 @@ export const useDashboardStore = create<DashboardState>()(
         }
       },
 
-      setInitialData: (products: Product[]) => {
+      setInitialData: (products: ExtendedProduct[]) => {
         set({ products });
       },
     }),

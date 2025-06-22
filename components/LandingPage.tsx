@@ -1,7 +1,7 @@
 'use client';
 
 import { useBlogStore } from "@/app/store/blogStore";
-import { Product, useDashboardStore } from "@/app/store/dashboardStore";
+import { ExtendedProduct, useDashboardStore } from "@/app/store/dashboardStore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,11 +24,11 @@ export default function LandingPage() {
     error 
   } = useDashboardStore();
   const { posts, fetchPosts, categories: blogCategories, fetchCategories: fetchBlogCategories, selectedCategory, setSelectedCategory } = useBlogStore();
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<ExtendedProduct[]>([]);
   const [, setCurrentImageIndex] = useState(0);
   const imageSliderRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState(1);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ExtendedProduct[]>([]);
 
   // Sample collection images from Unsplash
   const collectionImages = [
@@ -88,7 +88,7 @@ export default function LandingPage() {
   }, [products, selectedCategoryId]);
 
   // Add this new function to group products
-  const getProductGroups = (products: Product[], groupSize: number) => {
+  const getProductGroups = (products: ExtendedProduct[], groupSize: number) => {
     const groups = [];
     for (let i = 0; i < products.length; i += groupSize) {
       groups.push(products.slice(i, i + groupSize));

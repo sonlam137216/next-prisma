@@ -72,6 +72,7 @@ export default function PartnerRegistrationPage() {
         setErrorMessage(error.message || 'Có lỗi xảy ra khi gửi đăng ký');
       }
     } catch (error) {
+      console.error("Error saving partner registration:", error);
       setSubmitStatus('error');
       setErrorMessage('Có lỗi xảy ra khi kết nối với máy chủ');
     } finally {

@@ -1,5 +1,5 @@
 // app/products/page.tsx
-import { Category, Product } from '@/app/store/dashboardStore';
+import { Category, ExtendedProduct } from '@/app/store/dashboardStore';
 import { Collection } from '@/app/store/collectionStore';
 import { prisma } from '@/lib/prisma';
 import { Metadata } from 'next';
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 };
 
 interface InitialData {
-  products: Product[];
+  products: ExtendedProduct[];
   categories: Category[];
   collections: Collection[];
 }
@@ -63,7 +63,7 @@ async function getInitialData(): Promise<InitialData> {
     ]);
 
     // Product: format dates appropriately
-    const formattedProducts: Product[] = products.map(product => ({
+    const formattedProducts: ExtendedProduct[] = products.map(product => ({
       id: product.id,
       name: product.name,
       description: product.description || '',

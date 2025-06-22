@@ -12,27 +12,27 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 import { formatPrice } from "@/lib/utils";
-import { Product } from "@/app/store/dashboardStore";
+import { ExtendedProduct } from "@/app/store/dashboardStore";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductsTableProps {
-  products: Product[];
-  onEdit: (product: Product) => void;
+  products: ExtendedProduct[];
+  onEdit: (product: ExtendedProduct) => void;
   onDelete: (id: number) => void;
   loading?: boolean;
 }
 
 export function ProductsTable({ products = [], onEdit, onDelete, loading = false }: ProductsTableProps) {
   const [imagesDialogOpen, setImagesDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
 
-  const handleViewImages = (product: Product) => {
+  const handleViewImages = (product: ExtendedProduct) => {
     setSelectedProduct(product);
     setImagesDialogOpen(true);
   };
 
-  const getMainImage = (product: Product) => {
+  const getMainImage = (product: ExtendedProduct) => {
     if (!product.images || product.images.length === 0) {
       return null;
     }
@@ -41,7 +41,7 @@ export function ProductsTable({ products = [], onEdit, onDelete, loading = false
     return mainImage || product.images[0];
   };
 
-  const isProductDiscounted = (product: Product) => {
+  const isProductDiscounted = (product: ExtendedProduct) => {
     if (!product.hasDiscount) return false;
     const now = new Date();
     return product.discountStartDate && 

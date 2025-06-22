@@ -1,7 +1,7 @@
 'use client';
 
 import { Collection, useCollectionStore } from '@/app/store/collectionStore';
-import { Category, Product, useDashboardStore } from '@/app/store/dashboardStore';
+import { Category, ExtendedProduct, useDashboardStore } from '@/app/store/dashboardStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface InitialData {
-  products: Product[];
+  products: ExtendedProduct[];
   categories: Category[];
   collections: Collection[];
 }
@@ -125,7 +125,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   };
 
   // Add to cart handler
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: ExtendedProduct) => {
     if (!product || !product.inStock) return;
     
     setIsAddingToCart(product.id);
@@ -143,7 +143,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   };
 
   // Buy now handler
-  const handleBuyNow = (product: Product) => {
+  const handleBuyNow = (product: ExtendedProduct) => {
     handleAddToCart(product);
     setTimeout(() => toggleCart(), 300); // Open cart after a short delay
   };

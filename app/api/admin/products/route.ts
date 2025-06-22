@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       try {
         menh = JSON.parse(menhRaw);
       } catch (e) {
+        console.error("Error parsing menh:", e);
         // ignore error if parsing fails
       }
     }
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
       try {
         stoneSizes = JSON.parse(stoneSizesRaw as string);
       } catch (e) {
+        console.error("Error parsing stoneSizes:", e);
         return NextResponse.json({ error: "Invalid stoneSizes format" }, { status: 400 });
       }
     }
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
         type: type as ProductType,
         line: line as ProductLine,
         menh: {
-          set: menh as any,
+          set: menh,
         },
         hasDiscount,
         discountPrice,

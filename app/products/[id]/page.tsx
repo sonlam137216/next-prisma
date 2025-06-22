@@ -1,6 +1,7 @@
 'use client';
 
-import { Product, useDashboardStore } from '@/app/store/dashboardStore';
+import { prisma } from '@/lib/prisma';
+import { ExtendedProduct, useDashboardStore } from '@/app/store/dashboardStore';
 import MainLayout from '@/components/MainLayout';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,10 +42,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     toggleCart,
     fetchProduct 
   } = useDashboardStore();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ExtendedProduct | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<ExtendedProduct[]>([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStoneSize, setSelectedStoneSize] = useState<StoneSize | null>(null);

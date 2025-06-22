@@ -9,10 +9,11 @@ import { ArrowRight, CalendarDays, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { BlogClient } from "./BlogClient";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useBlogStore } from "@/app/store/blogStore";
+import { useSearchParams } from "next/navigation";
 
-export default function BlogPage() {
+function BlogContent() {
   const [isLoading, setIsLoading] = useState(true);
   const { 
     posts, 
@@ -23,13 +24,15 @@ export default function BlogPage() {
     fetchCategories,
     fetchFeaturedPost
   } = useBlogStore();
+  const searchParams = useSearchParams();
+  const activeCategory = searchParams.get('category') || "Tất cả";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         await Promise.all([
-          fetchPosts(1),
+          fetchPosts(1, activeCategory === "Tất cả" ? undefined : activeCategory),
           fetchCategories(),
           fetchFeaturedPost(),
         ]);
@@ -41,7 +44,7 @@ export default function BlogPage() {
     };
 
     fetchData();
-  }, [fetchPosts, fetchCategories, fetchFeaturedPost]);
+  }, [fetchPosts, fetchCategories, fetchFeaturedPost, activeCategory]);
 
   if (isLoading) {
     return (
@@ -114,7 +117,16 @@ export default function BlogPage() {
         initialPosts={posts} 
         initialCategories={categories}
         initialPagination={pagination}
+        activeCategory={activeCategory}
       />
     </div>
+  );
+}
+
+export default function BlogPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BlogContent />
+    </Suspense>
   );
 }

@@ -111,18 +111,14 @@ export default function Header() {
                     Sản phẩm phong thủy
                   </Link>
                   <div className="flex flex-col">
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-sm font-medium">Tin tức</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </div>
+                    <Link
+                      href="/blog"
+                      className="flex w-full items-center py-2 text-sm font-medium hover:text-primary transition-colors hover:bg-white/30"
+                      prefetch={false}
+                    >
+                      Tin tức
+                    </Link>
                     <div className="pl-4 space-y-2">
-                      <Link
-                        href="/blog"
-                        className="flex w-full items-center py-2 text-sm hover:text-primary transition-colors hover:bg-white/30"
-                        prefetch={false}
-                      >
-                        Tất cả
-                      </Link>
                       {blogCategories.map((category) => (
                         <Link
                           key={category}
@@ -392,18 +388,14 @@ export default function Header() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90">
+                  <NavigationMenuTrigger
+                    onClick={() => router.push('/blog')}
+                    className="text-sm font-medium text-white hover:text-primary bg-transparent hover:bg-primary/90"
+                  >
                     Tin tức
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="flex flex-col p-4 w-48 rounded-md shadow-md bg-white">
-                      <Link
-                        href="/blog"
-                        className="py-2 text-sm hover:text-primary transition-colors"
-                        prefetch={false}
-                      >
-                        Tất cả
-                      </Link>
                       {blogCategories.map((category) => (
                         <Link
                           key={category}
