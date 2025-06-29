@@ -65,7 +65,7 @@ interface BlogFormProps {
   isEditing?: boolean;
 }
 
-const VALID_CATEGORIES = ["Phong thủy", "Đá quý", "Kiến thức", "Tin tức"];
+const VALID_CATEGORIES = ["Tin tức", "Deal hot", "Bí quyết bảo quản trang sức",  "Tư vấn trang sức theo mệnh", "Thời trang nổi bật"];
 
 export default function BlogForm({ post, isEditing = false }: BlogFormProps) {
   const router = useRouter();

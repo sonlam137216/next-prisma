@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Heading {
   id: string;
@@ -32,6 +32,7 @@ export function BlogDetailClient({ post }: BlogDetailClientProps) {
   const [headings, setHeadings] = useState<Heading[]>([]);
   const [activeHeading, setActiveHeading] = useState<string | null>(null);
   const [updatedHtml, setUpdatedHtml] = useState<string>("");
+  const [isTocOpen, setIsTocOpen] = useState(true);
 
   useEffect(() => {
     if (post.content) {
@@ -91,28 +92,70 @@ export function BlogDetailClient({ post }: BlogDetailClientProps) {
     }
   };
 
+  const getIndentClass = (level: number) => {
+    switch (level) {
+      case 1: return 'ml-0';
+      case 2: return 'ml-4';
+      case 3: return 'ml-8';
+      case 4: return 'ml-12';
+      case 5: return 'ml-16';
+      case 6: return 'ml-20';
+      default: return 'ml-0';
+    }
+  };
+
   return (
     <div>
       {/* Table of Contents */}
       {headings.length > 0 && (
         <div className="mb-16">
-          <h2 className="text-2xl font-semibold mb-6">Table of Contents</h2>
-          <div className="flex flex-wrap gap-4">
-            {headings.map((heading) => (
-              <button
-                key={heading.id}
-                onClick={() => scrollToHeading(heading.id)}
-                className={cn(
-                  "inline-flex items-center px-4 py-2 rounded-lg transition-all hover:bg-gray-50",
-                  activeHeading === heading.id
-                    ? "bg-primary/5 text-primary font-medium"
-                    : "text-gray-600"
-                )}
-              >
-                {heading.text}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">Mục lục</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsTocOpen(!isTocOpen)}
+              className="flex items-center gap-2"
+            >
+              {isTocOpen ? (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  Thu gọn
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="h-4 w-4" />
+                  Mở rộng
+                </>
+              )}
+            </Button>
           </div>
+          
+          {isTocOpen && (
+            <div className="bg-gray-50 rounded-lg p-6 border">
+              <div className="space-y-2">
+                {headings.map((heading) => (
+                  <button
+                    key={heading.id}
+                    onClick={() => scrollToHeading(heading.id)}
+                    className={cn(
+                      "w-full text-left py-2 px-3 rounded-md transition-all hover:bg-white hover:shadow-sm",
+                      "flex items-center gap-2",
+                      getIndentClass(heading.level),
+                      activeHeading === heading.id
+                        ? "bg-primary/10 text-primary font-medium border-l-4 border-primary"
+                        : "text-gray-700"
+                    )}
+                  >
+                    <span className="text-xs text-gray-400 font-mono">
+                      {heading.level === 1 ? '#' : heading.level === 2 ? '##' : '###'}
+                    </span>
+                    <span className="truncate">{heading.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

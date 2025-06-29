@@ -89,7 +89,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogDetailPage({ params }: Props) {
-  const data = await fetchData(`/api/blog/${(await params).slug}`);
+  const resolvedParams = await params;
+  const data = await fetchData(`/api/blog/${resolvedParams.slug}`);
 
   if (!data?.post) {
     return (
@@ -110,50 +111,169 @@ export default async function BlogDetailPage({ params }: Props) {
     );
   }
 
+  // Fetch sidebar data from APIs
+  const [categoriesData, latestPostsData, relatedPostsData] = await Promise.all([
+    fetchData('/api/blog/categories'),
+    fetchData('/api/blog?page=1&pageSize=4'),
+    fetchData(`/api/blog?category=${encodeURIComponent(data.post.category)}&page=1&pageSize=3`)
+  ]);
+
+  const categories = categoriesData?.categories || [];
+  const latestPosts = latestPostsData?.posts || [];
+  const relatedPosts = relatedPostsData?.posts?.filter((post: any) => post.slug !== resolvedParams.slug) || [];
+
   return (
-    <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6">
-      {/* Back Button */}
-      <div className="mb-8">
-        <Button variant="ghost" asChild>
-          <Link href="/blog">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Blog
-          </Link>
-        </Button>
-      </div>
+    <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6 mt-12">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Main Content */}
+        <div className="w-full lg:w-8/12">
+          {/* Breadcrumb */}
+          <nav className="mb-4 text-sm text-muted-foreground flex items-center gap-1" aria-label="Breadcrumb">
+            <Link href="/blog" className="hover:underline text-primary">Blog</Link>
+            <span className="mx-1">/</span>
+            <Link href={`/blog?category=${encodeURIComponent(data.post.category)}`} className="hover:underline text-primary">{data.post.category}</Link>
+            <span className="mx-1">/</span>
+            <span className="font-medium text-gray-900 line-clamp-1 max-w-xs truncate">{data.post.title}</span>
+          </nav>
+          {/* Back Button */}
+          <div className="mb-8">
+            <Button variant="ghost" asChild>
+              <Link href="/blog">
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Back to Blog
+              </Link>
+            </Button>
+          </div>
 
-      {/* Featured Image */}
-      <div className="relative w-full h-[400px] mb-8 rounded-lg overflow-hidden">
-        <Image
-          src={data.post.featuredImage || '/images/blog-placeholder.jpg'}
-          alt={data.post.title}
-          fill
-          className="object-cover"
-          priority
-        />
-      </div>
+          {/* Featured Image */}
+          <div className="relative w-full h-[400px] mb-8 rounded-lg overflow-hidden">
+            <Image
+              src={data.post.featuredImage || '/images/blog-placeholder.jpg'}
+              alt={data.post.title}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
 
-      {/* Post Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">{data.post.title}</h1>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>{format(new Date(data.post.createdAt), 'dd/MM/yyyy')}</span>
+          {/* Post Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-4">{data.post.title}</h1>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>{format(new Date(data.post.createdAt), 'dd/MM/yyyy')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span>{data.post.readingTime} phút đọc</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                <span>{data.post.category}</span>
+              </div>
+            </div>
+            {data.post.description && (
+              <div className="text-lg text-gray-700 mb-2">{data.post.description}</div>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            <span>{data.post.readingTime} phút đọc</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span>{data.post.category}</span>
-          </div>
+
+          {/* Client Component for Interactive Features */}
+          <BlogDetailClient post={data.post} />
+
+          {/* Related Posts */}
+          {relatedPosts.length > 0 && (
+            <div className="mt-16">
+              <h2 className="text-3xl font-bold mb-8">Bài viết liên quan</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {relatedPosts.map((post: any) => (
+                  <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="relative h-48">
+                      <Image
+                        src={post.featuredImage || '/images/blog-placeholder.jpg'}
+                        alt={post.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{format(new Date(post.createdAt), 'dd/MM/yyyy')}</span>
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                        <Link href={`/blog/${post.slug}`} className="hover:text-primary transition-colors">
+                          {post.title}
+                        </Link>
+                      </h3>
+                      {post.description && (
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+                          {post.description}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground bg-gray-100 px-2 py-1 rounded">
+                          {post.category}
+                        </span>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>{post.readingTime} phút</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Client Component for Interactive Features */}
-      <BlogDetailClient post={data.post} />
+        {/* Sidebar */}
+        <aside className="w-full lg:w-4/12 flex-shrink-0">
+          {/* Latest Posts */}
+          <div className="bg-white rounded-lg shadow p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-6">Bài viết mới nhất</h2>
+            <ul className="space-y-6">
+              {latestPosts.map((post: any, idx: number) => (
+                <li key={post.id || idx} className="flex items-center gap-4">
+                  <div className="w-20 h-20 relative flex-shrink-0 rounded overflow-hidden">
+                    <Image 
+                      src={post.featuredImage || '/images/blog-placeholder.jpg'} 
+                      alt={post.title} 
+                      fill 
+                      className="object-cover" 
+                    />
+                  </div>
+                  <div>
+                    <Link href={`/blog/${post.slug}`} className="font-medium hover:underline line-clamp-2 block text-base">
+                      {post.title}
+                    </Link>
+                    <div className="text-sm text-muted-foreground mt-2">
+                      {format(new Date(post.createdAt), 'dd.MM.yyyy')}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Categories */}
+          <div className="bg-white rounded-lg shadow p-8">
+            <h2 className="text-2xl font-bold mb-6">Danh mục bài viết</h2>
+            <ul className="space-y-3">
+              {categories.map((cat: string, idx: number) => (
+                <li key={idx}>
+                  <Link 
+                    href={`/blog?category=${encodeURIComponent(cat)}`}
+                    className="text-base text-gray-700 hover:underline cursor-pointer block py-1"
+                  >
+                    {cat}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
