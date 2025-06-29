@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import "./globals.css";
+import "./montserrat-font.css";
 import LayoutClient from "./layout-client";
 
 export const metadata: Metadata = {
@@ -16,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="flex flex-col min-h-screen">
+    <html lang="en" className="font-sans">
+      <body className="flex flex-col min-h-screen font-sans">
         <LayoutClient>
           {children}
         </LayoutClient>

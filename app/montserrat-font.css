@@ -1,0 +1,32 @@
+/* Montserrat Font Configuration */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Đảm bảo font Montserrat được áp dụng cho toàn bộ website */
+* {
+  font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Đảm bảo font được áp dụng cho tất cả các element */
+html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, button, input, textarea, select, label, li, td, th, nav, table, form, section, article, aside, header, footer, main {
+  font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Đảm bảo font được áp dụng cho các component UI */
+.ui-component, .ui-element, .component, .element {
+  font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Đảm bảo font được áp dụng cho các element đặc biệt */
+.modal, .modal *, .dialog, .dialog *, .popover, .popover *, .tooltip, .tooltip * {
+  font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Đảm bảo font được áp dụng cho các element có class Tailwind */
+[class*="text-"], [class*="font-"], [class*="prose"] {
+  font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Đảm bảo font được áp dụng cho các element có data attribute */
+[data-font], [data-component] {
+  font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+} 

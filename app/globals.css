@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 
 @import "tailwindcss";
 
@@ -7,7 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: 'Montserrat', "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-sans: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   --font-mono: var(--font-geist-mono);
 }
 
@@ -125,18 +125,78 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  
   body {
     @apply bg-background text-foreground;
-    font-family: 'Montserrat', "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-weight: 400;
+  }
+
+  /* Đảm bảo tất cả các element đều sử dụng Montserrat */
+  *, *::before, *::after {
+    font-family: inherit;
   }
 
   h1 {
     @apply text-2xl font-bold;
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   h2 {
     @apply text-xl font-bold;
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   h3 {
     @apply text-lg font-bold;
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  h4, h5, h6 {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  p, span, div, a, button, input, textarea, select, label, li, td, th {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  
+  /* Đảm bảo các component UI cũng sử dụng Montserrat */
+  .ui-component, .ui-element {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Đảm bảo các element đặc biệt cũng sử dụng Montserrat */
+  .prose, .prose * {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Đảm bảo các form element sử dụng Montserrat */
+  input, textarea, select, button, label {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Đảm bảo các navigation element sử dụng Montserrat */
+  nav, nav * {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Đảm bảo các table element sử dụng Montserrat */
+  table, table * {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Đảm bảo các element đặc biệt khác cũng sử dụng Montserrat */
+  .modal, .modal *, .dialog, .dialog *, .popover, .popover * {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Đảm bảo các element có class Tailwind cũng sử dụng Montserrat */
+  [class*="text-"], [class*="font-"] {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  /* Fallback cho tất cả các element khác */
+  * {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   }
 }

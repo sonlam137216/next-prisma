@@ -1,5 +1,6 @@
 // app/blog/[slug]/page.tsx
 import { Button } from '@/components/ui/button';
+import { BlogPost } from '@/app/store/blogStore';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { BookOpen, Calendar, ChevronLeft, Clock } from 'lucide-react';
@@ -120,7 +121,7 @@ export default async function BlogDetailPage({ params }: Props) {
 
   const categories = categoriesData?.categories || [];
   const latestPosts = latestPostsData?.posts || [];
-  const relatedPosts = relatedPostsData?.posts?.filter((post: any) => post.slug !== resolvedParams.slug) || [];
+  const relatedPosts = relatedPostsData?.posts?.filter((post: BlogPost) => post.slug !== resolvedParams.slug) || [];
 
   return (
     <div className="max-w-[1400px] mx-auto py-12 px-4 sm:px-5 lg:px-6 mt-12">
@@ -186,7 +187,7 @@ export default async function BlogDetailPage({ params }: Props) {
             <div className="mt-16">
               <h2 className="text-3xl font-bold mb-8">Bài viết liên quan</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedPosts.map((post: any) => (
+                {relatedPosts.map((post: BlogPost) => (
                   <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="relative h-48">
                       <Image
@@ -234,7 +235,7 @@ export default async function BlogDetailPage({ params }: Props) {
           <div className="bg-white rounded-lg shadow p-8 mb-8">
             <h2 className="text-2xl font-bold mb-6">Bài viết mới nhất</h2>
             <ul className="space-y-6">
-              {latestPosts.map((post: any, idx: number) => (
+              {latestPosts.map((post: BlogPost, idx: number) => (
                 <li key={post.id || idx} className="flex items-center gap-4">
                   <div className="w-20 h-20 relative flex-shrink-0 rounded overflow-hidden">
                     <Image 
