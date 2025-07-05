@@ -58,7 +58,7 @@ async function getInitialData(): Promise<InitialData> {
           createdAt: 'desc',
         },
       }),
-      prisma.category.findMany(),
+      prisma.category.findMany({ select: true }),
       prisma.collection.findMany(),
     ]);
 
@@ -82,6 +82,7 @@ async function getInitialData(): Promise<InitialData> {
       category: product.category ? {
         id: product.category.id,
         name: product.category.name,
+        slug: product.category.slug,
         description: product.category.description,
         createdAt: product.category.createdAt.toISOString(),
       } : undefined,
@@ -109,6 +110,7 @@ async function getInitialData(): Promise<InitialData> {
     const formattedCategories: Category[] = categories.map(category => ({
       id: category.id,
       name: category.name,
+      slug: category.slug,
       description: category.description,
       createdAt: category.createdAt.toISOString(),
     }));

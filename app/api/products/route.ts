@@ -38,10 +38,21 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     const line = searchParams.get('line');
     const menh = searchParams.get('menh');
+    const categorySlug = searchParams.get('categorySlug');
     const validTypes = ['PHONG_THUY', 'THOI_TRANG'];
     const validLines = ['CAO_CAP', 'TRUNG_CAP', 'PHO_THONG'];
     const validMenh = ['KIM', 'MOC', 'THUY', 'HOA', 'THO'];
 
+    let categoryIdToUse = categoryId;
+    if (categorySlug && categorySlug !== 'all') {
+      const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
+      if (category) {
+        categoryIdToUse = category.id.toString();
+      } else {
+        // Nếu không tìm thấy category theo slug, trả về rỗng
+        return NextResponse.json({ products: [], currentPage: page, totalPages: 0, totalProducts: 0, pageSize });
+      }
+    }
     // Build where clause
     const where: Prisma.ProductWhereInput = {
       ...(search && {
@@ -50,7 +61,7 @@ export async function GET(request: NextRequest) {
           { description: { contains: search, mode: 'insensitive' } }
         ]
       }),
-      ...(categoryId && !isNaN(Number(categoryId)) && { categoryId: Number(categoryId) }),
+      ...(categoryIdToUse && !isNaN(Number(categoryIdToUse)) && { categoryId: Number(categoryIdToUse) }),
       ...(collectionId && !isNaN(Number(collectionId)) && {
         collections: {
           some: {

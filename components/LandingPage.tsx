@@ -440,7 +440,7 @@ export default function LandingPage() {
         <section className="py-8 sm:py-12">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-primary">BÀI VIẾT & SỰ KIỆN NỔI BẬT</h2>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-3">
               {blogCategories.filter(c => c !== 'Tất cả').map((category) => (
                 <Button
                   key={category}

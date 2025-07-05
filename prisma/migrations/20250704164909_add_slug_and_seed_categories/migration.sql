@@ -31,6 +31,7 @@ CREATE TABLE "User" (
 CREATE TABLE "Category" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL DEFAULT '',
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -185,6 +186,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Category_slug_key" ON "Category"("slug");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Collection_name_key" ON "Collection"("name");
 
 -- CreateIndex
@@ -213,3 +217,23 @@ ALTER TABLE "_CollectionToProduct" ADD CONSTRAINT "_CollectionToProduct_A_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "_CollectionToProduct" ADD CONSTRAINT "_CollectionToProduct_B_fkey" FOREIGN KEY ("B") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+INSERT INTO "Category" ("name", "slug", "description", "createdAt") VALUES
+  ('Trang sức', 'trang-suc', 'Các sản phẩm trang sức', NOW()),
+  ('Phong thủy', 'phong-thuy', 'Các sản phẩm phong thủy', NOW()),
+  ('Vòng tay', 'bracelets', 'Vòng tay', NOW()),
+  ('Mặt dây chuyền', 'necklaces', 'Mặt dây chuyền', NOW()),
+  ('Nhẫn', 'rings', 'Nhẫn', NOW()),
+  ('Hoa Tai', 'earrings', 'Hoa Tai', NOW()),
+  ('Vòng Bảng Nguyên Khối', 'solid-bracelets', 'Vòng Bảng Nguyên Khối', NOW()),
+  ('DZI Tây Tạng', 'tibetan-dzi', 'DZI Tây Tạng', NOW()),
+  ('Ngọc trai', 'pearls', 'Ngọc trai', NOW()),
+  ('Vòng cho Couple', 'couple-bracelets', 'Vòng cho Couple', NOW()),
+  ('Thiết kế theo yêu cầu', 'custom-design', 'Thiết kế theo yêu cầu', NOW()),
+  ('Phụ kiện thời trang', 'fashion-accessories', 'Phụ kiện thời trang', NOW()),
+  ('Trầm Hương', 'agarwood', 'Trầm Hương', NOW()),
+  ('Tượng điêu khắc', 'sculptures', 'Tượng điêu khắc', NOW()),
+  ('Vật phẩm để bàn', 'desk-items', 'Vật phẩm để bàn', NOW()),
+  ('Đá vụn', 'crushed-stones', 'Đá vụn', NOW())
+ON CONFLICT ("name") DO NOTHING;

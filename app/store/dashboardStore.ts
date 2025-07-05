@@ -23,6 +23,7 @@ interface User {
 export interface Category {
   id: number;
   name: string;
+  slug: string;
   description: string | null;
   createdAt: string;
   products?: ExtendedProduct[];
@@ -98,6 +99,7 @@ interface BlogPost {
 interface ProductFilters {
   search?: string;
   categoryId?: number;
+  categorySlug?: string;
   collectionId?: number;
   minPrice?: number;
   maxPrice?: number;
@@ -297,27 +299,26 @@ export const useDashboardStore = create<DashboardState>()(
 
       // Product operations
       fetchProducts: async (page = 1, limit = 20, filters: ProductFilters = {}) => {
-        set({ loading: true, error: null });
+        set({ loading: true });
         try {
-          const params = new URLSearchParams({
-            page: String(page),
-            limit: String(limit),
-          });
-          if (filters.search) params.append('search', filters.search);
-          if (filters.type) params.append('type', filters.type);
-          if (filters.line) params.append('line', filters.line);
-          if (filters.menh) params.append('menh', filters.menh);
-          if (filters.categoryId) params.append('categoryId', String(filters.categoryId));
-          if (filters.collectionId) params.append('collectionId', String(filters.collectionId));
-          if (filters.minPrice !== undefined) params.append('minPrice', String(filters.minPrice));
-          if (filters.maxPrice !== undefined) params.append('maxPrice', String(filters.maxPrice));
-          if (filters.sortBy) params.append('sortBy', filters.sortBy);
-          const response = await fetch(`/api/products?${params.toString()}`);
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to fetch products');
+          const params = new URLSearchParams();
+          if (filters.search) params.set('search', filters.search);
+          if (filters.categoryId) params.set('categoryId', filters.categoryId.toString());
+          if (filters.categorySlug) params.set('categorySlug', filters.categorySlug);
+          if (filters.collectionId) params.set('collectionId', filters.collectionId.toString());
+          if (filters.minPrice !== undefined) params.set('minPrice', filters.minPrice.toString());
+          if (filters.maxPrice !== undefined) params.set('maxPrice', filters.maxPrice.toString());
+          if (filters.sortBy) params.set('sortBy', filters.sortBy);
+          if (filters.page) params.set('page', filters.page.toString());
+          if (filters.limit) params.set('limit', filters.limit.toString());
+          if (filters.type) params.set('type', filters.type);
+          if (filters.line) params.set('line', filters.line);
+          if (filters.menh) params.set('menh', filters.menh);
+          const res = await fetch(`/api/products?${params.toString()}`);
+          const data = await res.json();
+          if (!data.products) {
+            throw new Error('Invalid API response');
           }
-          const data = await response.json() as ApiResponse;
           // Convert date strings to Date objects
           const products = data.products.map((product) => ({
             ...product,

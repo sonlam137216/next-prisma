@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface InitialData {
   products: ExtendedProduct[];
@@ -49,6 +50,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedLine, setSelectedLine] = useState<string>('');
   const [selectedMenh, setSelectedMenh] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Initialize with SSR data
   useEffect(() => {
@@ -88,6 +90,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
         line: selectedLine || undefined,
         menh: selectedMenh || undefined,
         collectionId: selectedCollection ? parseInt(selectedCollection) : undefined,
+        categorySlug: selectedCategory !== 'all' ? selectedCategory : undefined,
         minPrice: priceRange[0],
         maxPrice: priceRange[1],
         sortBy,
@@ -99,7 +102,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [priceRange, searchQuery, selectedType, selectedLine, selectedMenh, selectedCollection, sortBy, page, fetchProducts]);
+  }, [priceRange, searchQuery, selectedType, selectedLine, selectedMenh, selectedCollection, selectedCategory, sortBy, page, fetchProducts]);
 
   // Reset filters when collection changes
   useEffect(() => {
@@ -116,6 +119,16 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
     const typeFromUrl = searchParams.get('type');
     if (typeFromUrl && (typeFromUrl === 'PHONG_THUY' || typeFromUrl === 'THOI_TRANG')) {
       setSelectedType(typeFromUrl);
+    }
+  }, [searchParams]);
+
+  // Lấy slug từ URL (?category=slug) khi vào trang
+  useEffect(() => {
+    const categorySlugFromUrl = searchParams.get('category');
+    if (categorySlugFromUrl) {
+      setSelectedCategory(categorySlugFromUrl);
+    } else {
+      setSelectedCategory('all');
     }
   }, [searchParams]);
 
@@ -267,6 +280,26 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
               </div>
               <Separator className="my-4" />
             </div>
+            {/* DANH MỤC SẢN PHẨM */}
+            <div>
+              <h2 className="text-base font-bold mb-2">DANH MỤC</h2>
+              <div className="ml-2">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn danh mục" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất cả</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.slug}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Separator className="my-4" />
+            </div>
             {/* Price Filter */}
             <div>
               <h2 className="text-base font-bold mb-2">Khoảng giá</h2>
@@ -295,6 +328,7 @@ export default function ProductsContent({ initialData }: ProductsContentProps) {
                   setSelectedLine('');
                   setSelectedCollection('');
                   setSelectedMenh('');
+                  setSelectedCategory('all');
                   setPriceRange([0, maxPrice]);
                   setSortBy('newest');
                   setPage(1);

@@ -24,6 +24,7 @@ export function CategoriesTable({ categories, onEdit, onDelete }: CategoriesTabl
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Created At</TableHead>
+            <TableHead>Slug</TableHead>
             <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -33,6 +34,7 @@ export function CategoriesTable({ categories, onEdit, onDelete }: CategoriesTabl
               <TableCell className="font-medium">{category.name}</TableCell>
               <TableCell>{category.description || '-'}</TableCell>
               <TableCell>{new Date(category.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell>{category.slug}</TableCell>
               <TableCell>
                 <div className="flex gap-2">
                   <Button
@@ -55,7 +57,7 @@ export function CategoriesTable({ categories, onEdit, onDelete }: CategoriesTabl
           ))}
           {categories.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-6 text-gray-500">
+              <TableCell colSpan={5} className="text-center py-6 text-gray-500">
                 No categories found. Add your first category with the button above.
               </TableCell>
             </TableRow>

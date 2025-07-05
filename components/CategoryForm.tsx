@@ -18,31 +18,50 @@ interface CategoryFormProps {
 export default function CategoryForm({ open, onClose, onSubmit, initialData }: CategoryFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
-    description: initialData?.description || ''
+    description: initialData?.description || '',
+    slug: initialData?.slug || ''
   });
  
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slugEdited, setSlugEdited] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setFormData({
         name: initialData.name || '',
-        description: initialData.description || ''
+        description: initialData.description || '',
+        slug: initialData.slug || ''
       });
     } else {
       setFormData({
         name: '',
-        description: ''
+        description: '',
+        slug: ''
       });
     }
   }, [initialData]);
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, name: e.target.value }));
+    const name = e.target.value;
+    setFormData(prev => {
+      if (!slugEdited) {
+        return {
+          ...prev,
+          name,
+          slug: slugify(name)
+        };
+      }
+      return { ...prev, name };
+    });
   };
 
   const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, description: e.target.value }));
+  };
+
+  const handleSlugChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSlugEdited(true);
+    setFormData(prev => ({ ...prev, slug: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +77,17 @@ export default function CategoryForm({ open, onClose, onSubmit, initialData }: C
       setIsSubmitting(false);
     }
   };
+
+  function slugify(str: string) {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -88,6 +118,16 @@ export default function CategoryForm({ open, onClose, onSubmit, initialData }: C
               onChange={handleDescriptionChange}
               placeholder="Enter category description"
               rows={3}
+            />
+          </div>
+         
+          <div className="space-y-2">
+            <Label htmlFor="slug">Slug</Label>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={handleSlugChange}
+              required
             />
           </div>
          
